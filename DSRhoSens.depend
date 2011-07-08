@@ -1,0 +1,282 @@
+# depslib dependency file v1.0
+1310093515 source:/home/dc/bin/belle/src/DSRhoSens.cpp
+	"DSRhoSens.h"
+
+1309942204 /usr/local/include/root/TRandom1.h
+	"TRandom.h"
+
+1309942204 /usr/local/include/root/TRandom.h
+	"TNamed.h"
+
+1309942203 /usr/local/include/root/TNamed.h
+	"TObject.h"
+	"TString.h"
+
+1309942203 /usr/local/include/root/TObject.h
+	"Rtypes.h"
+	"TStorage.h"
+	"TVersionCheck.h"
+	"Riosfwd.h"
+	<stdarg.h>
+	"TBuffer.h"
+
+1309942203 /usr/local/include/root/Rtypes.h
+	"RConfig.h"
+	"DllImport.h"
+	"Rtypeinfo.h"
+	<stdio.h>
+	<string.h>
+	<snprintf.h>
+	<strlcpy.h>
+	"TGenericClassInfo.h"
+
+1309942203 /usr/local/include/root/RConfig.h
+	"RVersion.h"
+	<standards.h>
+	<stdlib.h>
+	<features.h>
+	<AvailabilityMacros.h>
+	<TargetConditionals.h>
+
+1309942203 /usr/local/include/root/RVersion.h
+
+1309942203 /usr/local/include/root/DllImport.h
+
+1309942203 /usr/local/include/root/Rtypeinfo.h
+	"RConfig.h"
+	<typeinfo>
+	<typeinfo>
+
+1309942203 /usr/local/include/root/snprintf.h
+	"RConfig.h"
+	<stdio.h>
+	<stdarg.h>
+
+1309942203 /usr/local/include/root/strlcpy.h
+	"RConfig.h"
+	<unistd.h>
+	<sys/types.h>
+
+1309942204 /usr/local/include/root/TGenericClassInfo.h
+	<vector>
+	"TSchemaHelper.h"
+
+1309942204 /usr/local/include/root/TSchemaHelper.h
+	<string>
+	"Rtypes.h"
+
+1309942203 /usr/local/include/root/TStorage.h
+	"Rtypes.h"
+
+1309942203 /usr/local/include/root/TVersionCheck.h
+	"RVersion.h"
+
+1309942203 /usr/local/include/root/Riosfwd.h
+	"RConfig.h"
+	<iostream>
+	<iosfwd>
+
+1309942203 /usr/local/include/root/TBuffer.h
+	"TObject.h"
+	<typeinfo>
+
+1309942203 /usr/local/include/root/TString.h
+	<string.h>
+	<stdio.h>
+	"Riosfwd.h"
+	"TMathBase.h"
+	<stdarg.h>
+	<string>
+
+1309942203 /usr/local/include/root/TMathBase.h
+	"Rtypes.h"
+
+1309942206 /usr/local/include/root/TH1F.h
+	"TH1.h"
+
+1309942206 /usr/local/include/root/TH1.h
+	"TAxis.h"
+	"TAttLine.h"
+	"TAttFill.h"
+	"TAttMarker.h"
+	"TArrayC.h"
+	"TArrayS.h"
+	"TArrayI.h"
+	"TArrayF.h"
+	"TArrayD.h"
+	"Foption.h"
+	"TVectorFfwd.h"
+	"TVectorDfwd.h"
+	<float.h>
+	"TFitResultPtr.h"
+
+1309942206 /usr/local/include/root/TAxis.h
+	"TNamed.h"
+	"TAttAxis.h"
+	"TArrayD.h"
+
+1309942203 /usr/local/include/root/TAttAxis.h
+	"Rtypes.h"
+	"Riosfwd.h"
+
+1309942203 /usr/local/include/root/TArrayD.h
+	"TArray.h"
+
+1309942203 /usr/local/include/root/TArray.h
+	"Rtypes.h"
+	<string.h>
+
+1309942203 /usr/local/include/root/TAttLine.h
+	"Rtypes.h"
+	"Riosfwd.h"
+
+1309942203 /usr/local/include/root/TAttFill.h
+	"Rtypes.h"
+	"Riosfwd.h"
+
+1309942203 /usr/local/include/root/TAttMarker.h
+	"Rtypes.h"
+	"Riosfwd.h"
+
+1309942203 /usr/local/include/root/TArrayC.h
+	"TArray.h"
+
+1309942204 /usr/local/include/root/TArrayS.h
+	"TArray.h"
+
+1309942203 /usr/local/include/root/TArrayI.h
+	"TArray.h"
+
+1309942203 /usr/local/include/root/TArrayF.h
+	"TArray.h"
+
+1309942206 /usr/local/include/root/Foption.h
+
+1309942206 /usr/local/include/root/TVectorFfwd.h
+	"Rtypes.h"
+
+1309942206 /usr/local/include/root/TVectorDfwd.h
+	"Rtypes.h"
+
+1309942206 /usr/local/include/root/TFitResultPtr.h
+	"Rtypes.h"
+
+1309942203 /usr/local/include/root/TApplication.h
+	"TObject.h"
+	"TQObject.h"
+	"TApplicationImp.h"
+
+1309942203 /usr/local/include/root/TQObject.h
+	"TString.h"
+	"TQClass.h"
+
+1309942203 /usr/local/include/root/TQClass.h
+	"TQObject.h"
+	"TClass.h"
+
+1309942204 /usr/local/include/root/TClass.h
+	"TDictionary.h"
+	"TString.h"
+	"TObjArray.h"
+	"TObjString.h"
+	<map>
+	<string>
+
+1309942204 /usr/local/include/root/TDictionary.h
+	"TNamed.h"
+	"Property.h"
+
+1309942203 /usr/local/include/root/Property.h
+
+1309942204 /usr/local/include/root/TObjArray.h
+	"TSeqCollection.h"
+	<iterator>
+
+1309942204 /usr/local/include/root/TSeqCollection.h
+	"TCollection.h"
+
+1309942204 /usr/local/include/root/TCollection.h
+	"TObject.h"
+	"TIterator.h"
+	"TString.h"
+
+1309942204 /usr/local/include/root/TIterator.h
+	"Rtypes.h"
+
+1309942203 /usr/local/include/root/TObjString.h
+	"TObject.h"
+	"TString.h"
+
+1309942203 /usr/local/include/root/TApplicationImp.h
+	"TString.h"
+
+1310093587 /home/dc/bin/belle/include/DSRhoSens.h
+	"TApplication.h"
+	"TFile.h"
+	"TTree.h"
+	"TRandom1.h"
+	"TH1F.h"
+	<stdio.h>
+
+1309942204 /usr/local/include/root/TFile.h
+	"TDirectoryFile.h"
+	"TUrl.h"
+
+1309942204 /usr/local/include/root/TDirectoryFile.h
+	"TDirectory.h"
+
+1309942203 /usr/local/include/root/TDirectory.h
+	"TNamed.h"
+	"TList.h"
+	"TDatime.h"
+	"TUUID.h"
+
+1309942204 /usr/local/include/root/TList.h
+	"TSeqCollection.h"
+	"TString.h"
+	<iterator>
+
+1309942203 /usr/local/include/root/TDatime.h
+	"Rtypes.h"
+
+1309942203 /usr/local/include/root/TUUID.h
+	"Rtypes.h"
+
+1309942203 /usr/local/include/root/TUrl.h
+	"TObject.h"
+	"TString.h"
+	"TMap.h"
+
+1309942204 /usr/local/include/root/TMap.h
+	"TCollection.h"
+	"THashTable.h"
+	<iterator>
+
+1309942204 /usr/local/include/root/THashTable.h
+	"TCollection.h"
+	"TString.h"
+
+1309942207 /usr/local/include/root/TTree.h
+	"TBranch.h"
+	"TObjArray.h"
+	"TAttLine.h"
+	"TAttFill.h"
+	"TAttMarker.h"
+	"TArrayD.h"
+	"TArrayI.h"
+	"TDataType.h"
+	"TClass.h"
+	"TVirtualTreePlayer.h"
+
+1309942207 /usr/local/include/root/TBranch.h
+	"TNamed.h"
+	"TObjArray.h"
+	"TAttFill.h"
+	"TDataType.h"
+
+1309942204 /usr/local/include/root/TDataType.h
+	"TDictionary.h"
+
+1309942207 /usr/local/include/root/TVirtualTreePlayer.h
+	"TObject.h"
+

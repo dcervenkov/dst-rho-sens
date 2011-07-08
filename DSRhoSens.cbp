@@ -11,13 +11,13 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
 				<Compiler>
 					<Add option="-g" />
 					<Add directory="/usr/local/include/root" />
 					<Add directory="include" />
 				</Compiler>
 				<Linker>
-					<Add library="/usr/lib/libdl.so" />
 					<Add library="/usr/local/lib/root/libAfterImage.a" />
 					<Add library="/usr/local/lib/root/libASImage.so" />
 					<Add library="/usr/local/lib/root/libASImageGui.so" />
@@ -95,7 +95,6 @@
 					<Add library="/usr/local/lib/root/libVMC.so" />
 					<Add library="/usr/local/lib/root/libX3d.so" />
 					<Add library="/usr/local/lib/root/libXMLIO.so" />
-					<Add directory="/usr/local/lib/root" />
 				</Linker>
 			</Target>
 			<Target title="Release">
