@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <vector>
+#include <stdlib.h>
 
 #include "TApplication.h"
 #include "TFile.h"
@@ -9,9 +10,28 @@
 
 #include "DSRhoSens.h"
 #include "Particle.h"
+#include "Constants.h"
 #include "ASSERT.h"
 
-int CreateEvents(std::vector< std::vector<Particle> > &events, char fileName[])
+int main(int argc, char* argv[])
+{
+    //TApplication* rootapp = new TApplication("DSRhoSens",&argc,argv); //For graphic-output apps only
+
+    ReadEvents("data/3events.root");
+    printf("# Events = %i\n",events->size());
+    for(int i = 0; i < events->size(); i++)
+    {
+        printf("Event %i # particles = %i\n",i+1,(*events)[i].size());
+        Particle* DSD0, *DSPi, *RhoPi0, *RhoPi;
+        if(GetRelevantParticles(i,DSD0, DSPi, RhoPi0, RhoPi))
+            printf("All relevant particles found\n");
+    }
+
+    //rootapp->Run(); //For graphic-output apps only
+    return 0;
+}
+
+int ReadEvents(char fileName[])
 {
     /// This function reads a ROOT file and creates an object
     /// with the following structure:
@@ -27,12 +47,12 @@ int CreateEvents(std::vector< std::vector<Particle> > &events, char fileName[])
     ///        -  ...
 
     printf("Opening file %s...\n",fileName);
-    TFile *file = new TFile(fileName);
-    if (file->IsOpen() == kTRUE)
+    TFile* file = new TFile(fileName);
+    if(file->IsOpen() == kTRUE)
         printf("File %s opened.\n",fileName);
-    TTree *tree = (TTree*)file->Get("Tree");
+    TTree* tree = (TTree*)file->Get("Tree");
 
-    events.resize(tree->GetEntries());
+    events->resize(tree->GetEntries());
 
     /// Cycle through every event in the file
     for(int eventNo = 0; eventNo < tree->GetEntries(); eventNo++)
@@ -68,41 +88,43 @@ int CreateEvents(std::vector< std::vector<Particle> > &events, char fileName[])
 
         tree->GetEntry(eventNo);
 
-        //printf("TEMP\tID\tIDHEP\tMOTHER\tDA1\tDA2\tP1\tP2\tP3\tE\n");
+        //printf("\n\nID\tIDHEP\tMOTHER\tDA1\tDA2\tP1\tP2\tP3\tE\tM\n");
 
         /// Resize the vector to its final size, so it doesn't need to
         /// resize itself many times (explained in std::vector documentation)
-        events[eventNo].resize(numParticles);
+        (*events)[eventNo].resize(numParticles);
 
         /// This loop populates the event vector with all particles of the
         /// event and sets a few variables: idhep, mass, etc.
-        for (int i = 0; i < numParticles; i++)
+        for(int i = 0; i < numParticles; i++)
         {
-            //printf("%i\t%i\t%i\t%i\t%i\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",id[i],idhep[i],\
+            //printf("%i\t%i\t%i\t%i\t%i\t%.2f\t%.2f\t%.2f\t%.2f\t%.3f\n",id[i],idhep[i],\
                    mother[i],da1[i],da2[i],p[i][0],p[i][1],p[i][2],p[i][3],p[i][4]);
 
             Particle part;
             part.SetIdhep(idhep[i]);
             part.SetM(p[i][4]);
-            for (int j = 0; j < 4; j++)
+            for(int j = 0;
+                    j < 4;
+                    j++)
             {
                 part.SetP(j,p[i][j]);
                 part.SetV(j,v[i][j]);
             }
-            events[eventNo][i] = part;
+            (*events)[eventNo][i] = part;
         }
 
         /// This loop creates relations (mother, daughters) between the particles
         /// created in the previous loop
-        for (int i = 0; i < numParticles; i++)
+        for(int i = 0; i < numParticles; i++)
         {
             if((mother[i]-1) >= 0)
-                events[eventNo][i].SetMother(events[eventNo][mother[i]-1]);
+                (*events)[eventNo][i].SetMother((*events)[eventNo][mother[i]-1]);
 
             if(da1[i] != 0)
             {
-                for (int j = 0; j <= (da2[i] - da1[i]); j++)
-                    events[eventNo][i].SetDaughter(j,events[eventNo][da1[i]-1+j]);;
+                for(int j = 0; j <= (da2[i] - da1[i]); j++)
+                    (*events)[eventNo][i].SetDaughter(j,(*events)[eventNo][da1[i]-1+j]);;
             }
         }
         //printf("\n\n\n");
@@ -113,17 +135,166 @@ int CreateEvents(std::vector< std::vector<Particle> > &events, char fileName[])
     return 0;
 }
 
-int main(int argc, char* argv[])
+bool GetDSRhoFromB0(Particle* B0, Particle* DS, Particle* Rho)
 {
-    //TApplication* rootapp = new TApplication("DSRhoSens",&argc,argv); //For graphic-output apps only
+    bool foundDS = 0;
+    bool foundRho = 0;
+    DS = 0;
+    Rho = 0;
 
-    std::vector< std::vector<Particle> >* events = new std::vector< std::vector<Particle> >;
-    CreateEvents(*events,"data/3events.root");
+    for(int i = 0; i < B0->GetNumDaughters(); i++)
+    {
+        switch(B0->GetDaughter(i)->GetIdhep())
+        {
+        case DS_IDHEP:
+            printf("Found a D*\n");
+            DS = B0->GetDaughter(i);
+            foundDS = 1;
+            break;
 
-    printf("# Events = %i\n",events->size());
-    for (int i = 0; i < events->size(); i++)
-        printf("Event %i # particles = %i\n",i+1,(*events)[i].size());
+        case RHO_IDHEP:
+            printf("Found a Rho\n");
+            Rho = B0->GetDaughter(i);
+            foundRho = 1;
+            break;
 
-    //rootapp->Run(); //For graphic-output apps only
+        case PHOTON_IDHEP:
+            printf("Found a gamma\n");
+            break;
+
+        default:
+            return 0;
+        }
+    }
+
+    if(foundDS && foundRho)
+        return 1;
+    else
+    {
+        DS = 0;
+        Rho = 0;
+        return 0;
+    }
+}
+
+bool GetD0PiFromDS(Particle* DS, Particle* D0, Particle* Pi)
+{
+    bool foundD0 = 0;
+    bool foundPi = 0;
+    D0 = 0;
+    Pi = 0;
+
+    for(int i = 0; i < DS->GetNumDaughters(); i++)
+    {
+        switch(DS->GetDaughter(i)->GetIdhep())
+        {
+        case D0_IDHEP:
+            printf("Found a D0 from D*\n");
+            D0 = DS->GetDaughter(i);
+            foundD0 = 1;
+            break;
+
+        case PI_IDHEP:
+            printf("Found a Pi from D*\n");
+            Pi = DS->GetDaughter(i);
+            foundPi = 1;
+            break;
+
+        case PHOTON_IDHEP:
+            printf("Found a gamma from D*\n");
+            break;
+
+        default:
+            return 0;
+        }
+    }
+
+    if(foundD0 && foundPi)
+        return 1;
+    else
+    {
+        D0 = 0;
+        Pi = 0;
+        return 0;
+    }
+}
+
+bool GetPi0PiFromRho(Particle* Rho, Particle* Pi0, Particle* Pi)
+{
+    bool foundPi0 = 0;
+    bool foundPi = 0;
+    Pi0 = 0;
+    Pi = 0;
+
+    for(int i = 0; i < Rho->GetNumDaughters(); i++)
+    {
+        switch(Rho->GetDaughter(i)->GetIdhep())
+        {
+        case PI0_IDHEP:
+            printf("Found a Pi0 from Rho\n");
+            Pi0 = Rho->GetDaughter(i);
+            foundPi0 = 1;
+            break;
+
+        case PI_IDHEP:
+            printf("Found a Pi from Rho\n");
+            Pi = Rho->GetDaughter(i);
+            foundPi = 1;
+            break;
+
+        case PHOTON_IDHEP:
+            printf("Found a gamma from Rho\n");
+            break;
+
+        default:
+            return 0;
+        }
+    }
+
+    if(foundPi0 && foundPi)
+        return 1;
+    else
+    {
+        Pi0 = 0;
+        Pi = 0;
+        return 0;
+    }
+}
+
+bool GetRelevantParticles(int eventNo, Particle* DSD0, Particle* DSPi, Particle* RhoPi0, Particle* RhoPi)
+{
+    /// Setting pointers to null address, so a check that all particles
+    /// were found and pointed to can be done at the end of this function
+    Particle* B0;
+    Particle* DS;
+    Particle* Rho;
+
+    for(int i = 0; i < (*events)[eventNo].size(); i++)
+    {
+        B0 = 0;
+        DS = 0;
+        Rho = 0;
+        DSD0 = 0;
+        DSPi = 0;
+        RhoPi0 = 0;
+        RhoPi = 0;
+
+        if(abs((*events)[eventNo][i].GetIdhep()) == B0_IDHEP)
+        {
+            printf("Found a B0\n");
+            B0 = &((*events)[eventNo][i]);
+            if(GetDSRhoFromB0(B0,DS,Rho))
+            {
+                if(GetD0PiFromDS(DS,DSD0,DSPi) && GetPi0PiFromRho(Rho,RhoPi0,RhoPi))
+                    return 1;
+            }
+
+        } // If block searching for B0
+    } // For cycle going through all particles in an event
+
     return 0;
 }
+
+
+
+

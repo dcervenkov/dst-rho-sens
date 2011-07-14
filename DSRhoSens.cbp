@@ -113,9 +113,8 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="include/ASSERT.h">
-			<Option target="Debug" />
-		</Unit>
+		<Unit filename="include/ASSERT.h" />
+		<Unit filename="include/Constants.h" />
 		<Unit filename="src/DSRhoSens.cpp" />
 		<Unit filename="include/DSRhoSens.h" />
 		<Unit filename="src/Particle.cpp" />
