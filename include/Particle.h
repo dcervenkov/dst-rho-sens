@@ -24,7 +24,9 @@ class Particle
 
     private:
         int m_idhep;
+        /// p = (p_x,p_y,p_z,E)
         double m_p[4];
+        /// v = (x,y,z,t)
         double m_v[4];
         double m_m;
         Particle* m_mother;

@@ -113,18 +113,12 @@ int ReadEvents(char fileName[])
             part.SetIdhep(idhep[i]);
             part.SetM(p[i][4]);
 
-            /// I want p[] to be a momentum 4-vector, therefore I save the momentum
-            /// components (0,1,2 in EvtGen) in p[1], p[2] and p[3]
-            /// Analogously for coordinates 4-vector v (the last component is time in EvtGen)
-            for(int j = 1; j < 4; j++)
+            for(int j = 0; j < 4; j++)
             {
-                part.SetP(j,p[i][j-1]);
-                part.SetV(j,v[i][j-1]);
+                part.SetP(j,p[i][j]);
+                part.SetV(j,v[i][j]);
             }
-            /// I want p[] to be a 4-vector, therefore I save the 4th component (energy in EvtGen)
-            /// in p[0]
-            part.SetP(0,p[i][3]);
-            part.SetV(0,v[i][3]);
+
             (*events)[eventNo][i] = part;
         }
 
@@ -151,7 +145,7 @@ int ReadEvents(char fileName[])
 void PrintEvent(int evtNo)
 {
     std::vector<Particle> particles = (*events)[evtNo];
-    printf("ID\tIDHEP\tE\tP1\tP2\tP3\tM\n");
+    printf("ID\tIDHEP\tP1\tP2\tP3\tE\tM\n");
     for(int i = 0; i < particles.size(); i++)
     {
         printf("%i\t%i\t%.2f\t%.2f\t%.2f\t%.2f\t%.3f\n",i+1,particles[i].GetIdhep(),\
