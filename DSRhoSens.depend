@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1310815286 source:/home/dc/bin/belle/src/DSRhoSens.cpp
+1312720966 source:/home/dc/bin/belle/src/DSRhoSens.cpp
 	<stdio.h>
 	<vector>
 	<stdlib.h>
@@ -8,6 +8,10 @@
 	"TTree.h"
 	"TRandom1.h"
 	"TH1F.h"
+	"TRotation.h"
+	"TLorentzRotation.h"
+	"TLorentzVector.h"
+	"TVector3.h"
 	"DSRhoSens.h"
 	"Particle.h"
 	"Constants.h"
@@ -221,7 +225,7 @@
 1309942203 /usr/local/include/root/TApplicationImp.h
 	"TString.h"
 
-1310814490 /home/dc/bin/belle/include/DSRhoSens.h
+1312720967 /home/dc/bin/belle/include/DSRhoSens.h
 	"Particle.h"
 
 1309942204 /usr/local/include/root/TFile.h
@@ -289,11 +293,86 @@
 1310113471 /home/dc/bin/belle/include/ASSERT.h
 	<iostream>
 
-1310809759 source:/home/dc/bin/belle/src/Particle.cpp
+1312721077 source:/home/dc/bin/belle/src/Particle.cpp
 	"Particle.h"
 	"ASSERT.h"
 
-1310809759 /home/dc/bin/belle/include/Particle.h
+1312721040 /home/dc/bin/belle/include/Particle.h
 
 1310642458 /home/dc/bin/belle/include/Constants.h
+
+1309942209 /usr/local/include/root/TRotation.h
+	"TObject.h"
+	"TVector3.h"
+
+1309942209 /usr/local/include/root/TVector3.h
+	"TError.h"
+	"TVector2.h"
+	"TMatrix.h"
+
+1309942203 /usr/local/include/root/TError.h
+	"Rtypes.h"
+	<stdarg.h>
+
+1309942209 /usr/local/include/root/TVector2.h
+	"TObject.h"
+
+1309942206 /usr/local/include/root/TMatrix.h
+	"TMatrixF.h"
+
+1309942206 /usr/local/include/root/TMatrixF.h
+	"TMatrixT.h"
+	"TMatrixFfwd.h"
+	"TMatrixFUtils.h"
+
+1309942206 /usr/local/include/root/TMatrixT.h
+	"TMatrixTBase.h"
+	"TMatrixTUtils.h"
+	<vecLib/vBLAS.h>
+
+1309942206 /usr/local/include/root/TMatrixTBase.h
+	<limits>
+	"TNamed.h"
+	"TMatrixFBasefwd.h"
+	"TMatrixDBasefwd.h"
+	"TVectorFfwd.h"
+	"TVectorDfwd.h"
+	"TError.h"
+
+1309942206 /usr/local/include/root/TMatrixFBasefwd.h
+	"Rtypes.h"
+
+1309942205 /usr/local/include/root/TMatrixDBasefwd.h
+	"Rtypes.h"
+
+1309942206 /usr/local/include/root/TMatrixTUtils.h
+	"TMatrixTBase.h"
+
+1309942206 /usr/local/include/root/TMatrixFfwd.h
+	"Rtypes.h"
+
+1309942206 /usr/local/include/root/TMatrixFUtils.h
+	"TMatrixTUtils.h"
+	"TMatrixFUtilsfwd.h"
+
+1309942206 /usr/local/include/root/TMatrixFUtilsfwd.h
+	"Rtypes.h"
+
+1309942209 /usr/local/include/root/TLorentzRotation.h
+	"TRotation.h"
+	"TLorentzVector.h"
+
+1309942209 /usr/local/include/root/TLorentzVector.h
+	"TMath.h"
+	"TVector3.h"
+	"TRotation.h"
+
+1309942204 /usr/local/include/root/TMath.h
+	"Rtypes.h"
+	"TMathBase.h"
+	"TError.h"
+	<algorithm>
+	<limits>
+	<float.h>
+	<math.h>
 

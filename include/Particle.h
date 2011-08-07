@@ -8,19 +8,19 @@ class Particle
     public:
         Particle();
         ~Particle();
-        int GetIdhep();
+        int GetIdhep() const;
         void SetIdhep(int val);
-        double GetP(int i);
+        double GetP(int i) const;
         void SetP(int i, double val);
-        double GetV(int i);
+        double GetV(int i) const;
         void SetV(int i, double val);
-        double GetM();
+        double GetM() const;
         void SetM(double val);
-        Particle* GetMother();
+        Particle* GetMother() const;
         void SetMother(Particle& val);
-        Particle* GetDaughter(int i);
+        Particle* GetDaughter(int i) const;
         void SetDaughter(int i, Particle& val);
-        int GetNumDaughters();
+        int GetNumDaughters() const;
 
     private:
         int m_idhep;

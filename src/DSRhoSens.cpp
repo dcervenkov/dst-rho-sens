@@ -7,6 +7,10 @@
 #include "TTree.h"
 #include "TRandom1.h"
 #include "TH1F.h"
+#include "TRotation.h"
+#include "TLorentzRotation.h"
+#include "TLorentzVector.h"
+#include "TVector3.h"
 
 #include "DSRhoSens.h"
 #include "Particle.h"
@@ -23,14 +27,15 @@ int main(int argc, char* argv[])
     {
         printf("\n\nEvent %i # particles = %i\n",i+1,(*events)[i].size());
         PrintEvent(i);
-        Particle *DSD0, *DSPi, *RhoPi0, *RhoPi;
+        Particle *DS, *DSD0, *DSPi, *Rho, *RhoPi0, *RhoPi;
         /// I want pointers to the particles returned, therefore I have to
         /// pass the function a pointer address, so the function can write in it
-        if(GetRelevantParticles(i, &DSD0, &DSPi, &RhoPi0, &RhoPi))
+        if(GetRelevantParticles(i, &DS, &DSD0, &DSPi, &Rho, &RhoPi0, &RhoPi))
         {
             printf("All relevant particles found\n");
-            //printf("D0 IDHEP: %i\tE: %f GeV\n", DSD0->GetIdhep(),DSD0->GetP(0));
-            //printf("Pi0 IDHEP: %i\tE: %f GeV\n", RhoPi0->GetIdhep(),RhoPi0->GetP(0));
+            //printf("DS IDHEP: %i\tE: %f GeV\n", DS->GetIdhep(),DS->GetP(3));
+            //printf("D0 IDHEP: %i\tE: %f GeV\n", DSD0->GetIdhep(),DSD0->GetP(3));
+            //printf("Pi0 IDHEP: %i\tE: %f GeV\n", RhoPi0->GetIdhep(),RhoPi0->GetP(3));
         }
 
     }
@@ -163,26 +168,26 @@ void PrintEvent(int evtNo)
 /// of a pointer, in other words a pointer to a pointer. Therefore, the
 /// following function takes pointer to a pointer to a particle (Particle**)
 /// as argument(s).
-bool GetRelevantParticles(int eventNo, Particle** DSD0, Particle** DSPi, Particle** RhoPi0, Particle** RhoPi)
+bool GetRelevantParticles(int eventNo, Particle** DS, Particle** DSD0, Particle** DSPi, \
+                          Particle** Rho, Particle** RhoPi0, Particle** RhoPi)
 {
     /// Setting pointers to null address, so a check that all particles
     /// were found and pointed to can be done at the end of this function
     Particle* B0 = 0;
-    Particle* DS = 0;
-    Particle* Rho = 0;
 
     /// This cycles through all particles in an event
     for(int i = 0; i < (*events)[eventNo].size(); i++)
     {
         /// All pointers are initialized to null for safety
         B0 = 0;
-        DS = 0;
-        Rho = 0;
+
         /// You don't want to have e.g. DSD0 = 0, because that would set
         /// the POINTER TO A POINTER that points to a particle to null.
         /// What you want to do is set the POINTER TO A PARTICLE to null,
         /// because you don't yet know which particle it should point to.
         /// Therefore you must use one dereference.
+        *DS = 0;
+        *Rho = 0;
         *DSD0 = 0;
         *DSPi = 0;
         *RhoPi0 = 0;
@@ -192,9 +197,9 @@ bool GetRelevantParticles(int eventNo, Particle** DSD0, Particle** DSPi, Particl
         {
             printf("Found a B0\n");
             B0 = &(*events)[eventNo][i];
-            if(GetDSRhoFromB0(B0,&DS,&Rho))
+            if(GetDSRhoFromB0(B0,DS,Rho))
             {
-                if(GetD0PiFromDS(DS,DSD0,DSPi) && GetPi0PiFromRho(Rho,RhoPi0,RhoPi))
+                if(GetD0PiFromDS(*DS,DSD0,DSPi) && GetPi0PiFromRho(*Rho,RhoPi0,RhoPi))
                     return 1;
             }
             printf("This branch doesn't match\n");
@@ -204,7 +209,7 @@ bool GetRelevantParticles(int eventNo, Particle** DSD0, Particle** DSPi, Particl
     return 0;
 }
 
-bool GetDSRhoFromB0(Particle* B0, Particle** DS, Particle** Rho)
+bool GetDSRhoFromB0(const Particle* const B0, Particle** DS, Particle** Rho)
 {
     bool foundDS = 0;
     bool foundRho = 0;
@@ -247,7 +252,7 @@ bool GetDSRhoFromB0(Particle* B0, Particle** DS, Particle** Rho)
     }
 }
 
-bool GetD0PiFromDS(Particle* DS, Particle** D0, Particle** Pi)
+bool GetD0PiFromDS(const Particle* const DS, Particle** D0, Particle** Pi)
 {
     bool foundD0 = 0;
     bool foundPi = 0;
@@ -290,7 +295,7 @@ bool GetD0PiFromDS(Particle* DS, Particle** D0, Particle** Pi)
     }
 }
 
-bool GetPi0PiFromRho(Particle* Rho, Particle** Pi0, Particle** Pi)
+bool GetPi0PiFromRho(const Particle* const Rho, Particle** Pi0, Particle** Pi)
 {
     bool foundPi0 = 0;
     bool foundPi = 0;

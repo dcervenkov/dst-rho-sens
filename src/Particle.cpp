@@ -22,7 +22,7 @@ Particle::~Particle()
     //dtor
 }
 
-int Particle::GetIdhep()
+int Particle::GetIdhep() const
 {
     return m_idhep;
 }
@@ -32,7 +32,7 @@ void Particle::SetIdhep(int val)
     m_idhep = val;
 }
 
-double Particle::GetP(int i)
+double Particle::GetP(int i) const
 {
     ASSERT(i >= 0 && i < 4);
     return m_p[i];
@@ -44,7 +44,7 @@ void Particle::SetP(int i, double val)
     m_p[i] = val;
 }
 
-double Particle::GetV(int i)
+double Particle::GetV(int i) const
 {
     ASSERT(i >= 0 && i < 4);
     return m_v[i];
@@ -56,7 +56,7 @@ void Particle::SetV(int i, double val)
     m_v[i] = val;
 }
 
-double Particle::GetM()
+double Particle::GetM() const
 {
     return m_m;
 }
@@ -66,7 +66,7 @@ void Particle::SetM(double val)
     m_m = val;
 }
 
-Particle* Particle::GetMother()
+Particle* Particle::GetMother() const
 {
     return m_mother;
 }
@@ -76,7 +76,7 @@ void Particle::SetMother(Particle& val)
     m_mother = &val;
 }
 
-Particle* Particle::GetDaughter(int i)
+Particle* Particle::GetDaughter(int i) const
 {
     ASSERT(i < maxDaughters);
     return m_daughter[i];
@@ -89,7 +89,7 @@ void Particle::SetDaughter(int i, Particle& val)
     m_numDaughters++;
 }
 
-int Particle::GetNumDaughters()
+int Particle::GetNumDaughters() const
 {
     return m_numDaughters;
 }
