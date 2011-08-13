@@ -92,3 +92,30 @@ int Particle::GetNumDaughters() const
 {
     return m_numDaughters;
 }
+
+void Particle::RotateP(TRotation rot)
+{
+    TLorentzRotation lrot(rot);
+    m_p = lrot * m_p;
+}
+
+void Particle::BoostP(TVector3 beta)
+{
+    TLorentzRotation lb(beta);
+    m_p = lb * m_p;
+}
+
+TVector3 Particle::GetBoost()
+{
+    return m_p.BoostVector();
+}
+
+double Particle::GetPhi()
+{
+    return m_p.Phi();
+}
+
+double Particle::GetTheta()
+{
+    return m_p.Theta();
+}

@@ -23,22 +23,32 @@ int main(int argc, char* argv[])
 
     ReadEvents("data/DSRho_exp07-0.root");
     printf("# Events = %i\n",events->size());
-    TRotation rot;
-    for(int i = 0; i < 3; i++)
+    for(int i = 0; i < 10; i++)
     {
-        printf("\n\nEvent %i # particles = %i\n",i+1,(*events)[i].size());
-        PrintEvent(i);
-        Particle *DS, *DSD0, *DSPi, *Rho, *RhoPi0, *RhoPi;
+        //printf("\n\nEvent %i # particles = %i\n",i+1,(*events)[i].size());
+        //PrintEvent(i);
+        Particle* B0 = 0;
+        Particle* DS = 0;
+        Particle* DSD0 = 0;
+        Particle* DSPi = 0;
+        Particle* Rho = 0;
+        Particle* RhoPi0 = 0;
+        Particle* RhoPi = 0;
+        double chi = 0;
+        double theta_a = 0;
+        double theta_b = 0;
+
         /// I want pointers to the particles returned, therefore I have to
         /// pass the function a pointer address, so the function can write in it
-        if(GetRelevantParticles(i, &DS, &DSD0, &DSPi, &Rho, &RhoPi0, &RhoPi))
+        if(GetRelevantParticles(i,&B0, &DS, &DSD0, &DSPi, &Rho, &RhoPi0, &RhoPi))
         {
-            printf("All relevant particles found\n");
-
-            //printf("DS IDHEP: %i\tE: %f GeV\n", DS->GetIdhep(),DS->GetP(3));
-            //printf("D0 IDHEP: %i\tE: %f GeV\n", DSD0->GetIdhep(),DSD0->GetP(3));
-            //printf("Pi0 IDHEP: %i\tE: %f GeV\n", RhoPi0->GetIdhep(),RhoPi0->GetP(3));
+            //printf("All relevant particles found\n");
+            TransformHel(B0,DS,DSD0,DSPi,Rho,RhoPi0,RhoPi);
+            GetAngles(DSD0,RhoPi,chi,theta_a,theta_b);
+            printf("chi: %0.4f\tth_a: %0.4f\tth_b: %0.4f\n",chi,theta_a,theta_b);
         }
+        else
+            printf("WARNING: Could not find all relevant particles in event #%i\n",i+1);
 
     }
 
@@ -120,9 +130,11 @@ int ReadEvents(char fileName[])
             part.SetIdhep(idhep[i]);
             //part.SetM(p[i][4]);
 
-            for(int j = 0; j < 4; j++)
-            {
-                part.SetP(j,p[i][j]);
+            for(int j = 0;
+        j < 4;
+        j++)
+        {
+            part.SetP(j,p[i][j]);
                 part.SetV(j,v[i][j]);
             }
 
@@ -162,6 +174,20 @@ void PrintEvent(int evtNo)
     printf("\n");
 }
 
+void PrintRelevantParticles(const Particle* DS,const Particle* DSD0,const Particle* DSPi, \
+                            const Particle* Rho,const Particle* RhoPi0,const Particle* RhoPi)
+{
+    printf("Part\tPx\tPy\tPz\tE\tM\n");
+    printf("D*\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t\n", DS->GetP(0), DS->GetP(1), DS->GetP(2), DS->GetP(3), DS->GetM());
+    printf("D0\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t\n", DSD0->GetP(0), DSD0->GetP(1), DSD0->GetP(2), DSD0->GetP(3), DSD0->GetM());
+    printf("Pi\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t\n\n", DSPi->GetP(0), DSPi->GetP(1), DSPi->GetP(2), DSPi->GetP(3), DSPi->GetM());
+
+    printf("Rho\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t\n", Rho->GetP(0), Rho->GetP(1), Rho->GetP(2), Rho->GetP(3), Rho->GetM());
+    printf("Pi0\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t\n", RhoPi0->GetP(0), RhoPi0->GetP(1), RhoPi0->GetP(2), RhoPi0->GetP(3), RhoPi0->GetM());
+    printf("Pi\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t\n\n\n", RhoPi->GetP(0), RhoPi->GetP(1), RhoPi->GetP(2), RhoPi->GetP(3), RhoPi->GetM());
+
+}
+
 /// When you pass a pointer to a function, a new pointer in the function's
 /// scope is created and initialized to point at the same address as the
 /// original pointer. Therefore you cannot reassign the original pointer
@@ -171,24 +197,18 @@ void PrintEvent(int evtNo)
 /// of a pointer, in other words a pointer to a pointer. Therefore, the
 /// following function takes pointer to a pointer to a particle (Particle**)
 /// as argument(s).
-bool GetRelevantParticles(int eventNo, Particle** DS, Particle** DSD0, Particle** DSPi, \
+bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** DSD0, Particle** DSPi, \
                           Particle** Rho, Particle** RhoPi0, Particle** RhoPi)
 {
-    /// Setting pointers to null address, so a check that all particles
-    /// were found and pointed to can be done at the end of this function
-    Particle* B0 = 0;
-
     /// This cycles through all particles in an event
     for(int i = 0; i < (*events)[eventNo].size(); i++)
     {
-        /// All pointers are initialized to null for safety
-        B0 = 0;
-
         /// You don't want to have e.g. DSD0 = 0, because that would set
         /// the POINTER TO A POINTER that points to a particle to null.
         /// What you want to do is set the POINTER TO A PARTICLE to null,
         /// because you don't yet know which particle it should point to.
         /// Therefore you must use one dereference.
+        *B0 = 0;
         *DS = 0;
         *Rho = 0;
         *DSD0 = 0;
@@ -198,14 +218,14 @@ bool GetRelevantParticles(int eventNo, Particle** DS, Particle** DSD0, Particle*
 
         if(abs((*events)[eventNo][i].GetIdhep()) == B0_IDHEP)
         {
-            printf("Found a B0\n");
-            B0 = &(*events)[eventNo][i];
-            if(GetDSRhoFromB0(B0,DS,Rho))
+            //printf("Found a B0\n");
+            *B0 = &(*events)[eventNo][i];
+            if(GetDSRhoFromB0(*B0,DS,Rho))
             {
                 if(GetD0PiFromDS(*DS,DSD0,DSPi) && GetPi0PiFromRho(*Rho,RhoPi0,RhoPi))
                     return 1;
             }
-            printf("This branch doesn't match\n");
+            //printf("This branch doesn't match\n");
         } // If block searching for B0
     } // For cycle going through all particles in an event
 
@@ -225,19 +245,19 @@ bool GetDSRhoFromB0(const Particle* const B0, Particle** DS, Particle** Rho)
         switch(abs(B0->GetDaughter(i)->GetIdhep()))
         {
         case DS_IDHEP:
-            printf("Found a D*\n");
+            //printf("Found a D*\n");
             *DS = B0->GetDaughter(i);
             foundDS = 1;
             break;
 
         case RHO_IDHEP:
-            printf("Found a Rho\n");
+            //printf("Found a Rho\n");
             *Rho = B0->GetDaughter(i);
             foundRho = 1;
             break;
 
         case PHOTON_IDHEP:
-            printf("Found a gamma\n");
+            //printf("Found a gamma\n");
             break;
 
         default:
@@ -268,19 +288,19 @@ bool GetD0PiFromDS(const Particle* const DS, Particle** D0, Particle** Pi)
         switch(abs(DS->GetDaughter(i)->GetIdhep()))
         {
         case D0_IDHEP:
-            printf("Found a D0 from D*\n");
+            //printf("Found a D0 from D*\n");
             *D0 = DS->GetDaughter(i);
             foundD0 = 1;
             break;
 
         case PI_IDHEP:
-            printf("Found a Pi from D*\n");
+            //printf("Found a Pi from D*\n");
             *Pi = DS->GetDaughter(i);;
             foundPi = 1;
             break;
 
         case PHOTON_IDHEP:
-            printf("Found a gamma from D*\n");
+            //printf("Found a gamma from D*\n");
             break;
 
         default:
@@ -311,19 +331,19 @@ bool GetPi0PiFromRho(const Particle* const Rho, Particle** Pi0, Particle** Pi)
         switch(abs(Rho->GetDaughter(i)->GetIdhep()))
         {
         case PI0_IDHEP:
-            printf("Found a Pi0 from Rho\n");
+            //printf("Found a Pi0 from Rho\n");
             *Pi0 = Rho->GetDaughter(i);
             foundPi0 = 1;
             break;
 
         case PI_IDHEP:
-            printf("Found a Pi from Rho\n");
+            //printf("Found a Pi from Rho\n");
             *Pi = Rho->GetDaughter(i);
             foundPi = 1;
             break;
 
         case PHOTON_IDHEP:
-            printf("Found a gamma from Rho\n");
+            //printf("Found a gamma from Rho\n");
             break;
 
         default:
@@ -365,5 +385,50 @@ TRotation GetRotationToZ(const Particle* const part)
 
     return rot;
 }
+
+void TransformHel(Particle* B0, Particle* DS, Particle* DSD0, Particle* DSPi, \
+                  Particle* Rho, Particle* RhoPi0, Particle* RhoPi)
+{
+    //PrintRelevantParticles(DS, DSD0, DSPi, Rho, RhoPi0, RhoPi);
+
+    TVector3 B0Beta = B0->GetBoost();
+    DS->BoostP(-B0Beta);
+    DSD0->BoostP(-B0Beta);
+    DSPi->BoostP(-B0Beta);
+    Rho->BoostP(-B0Beta);
+    RhoPi->BoostP(-B0Beta);
+    RhoPi0->BoostP(-B0Beta);
+
+    //PrintRelevantParticles(DS, DSD0, DSPi, Rho, RhoPi0, RhoPi);
+
+    TRotation rot = GetRotationToZ(DS);
+    DS->RotateP(rot);
+    DSD0->RotateP(rot);
+    DSPi->RotateP(rot);
+    Rho->RotateP(rot);
+    RhoPi->RotateP(rot);
+    RhoPi0->RotateP(rot);
+
+    //PrintRelevantParticles(DS, DSD0, DSPi, Rho, RhoPi0, RhoPi);
+
+    TVector3 DSBeta = DS->GetBoost();
+    TVector3 RhoBeta = Rho->GetBoost();
+    DS->BoostP(-DSBeta);
+    DSD0->BoostP(-DSBeta);
+    DSPi->BoostP(-DSBeta);
+    Rho->BoostP(-RhoBeta);
+    RhoPi->BoostP(-RhoBeta);
+    RhoPi0->BoostP(-RhoBeta);
+
+    //PrintRelevantParticles(DS, DSD0, DSPi, Rho, RhoPi0, RhoPi);
+}
+
+void GetAngles(Particle* a, Particle* b, double& chi, double& theta_a, double& theta_b)
+{
+    chi = 2*PI + a->GetPhi() - b->GetPhi();
+    theta_a = a->GetTheta();
+    theta_b = PI - b->GetTheta();
+}
+
 
 

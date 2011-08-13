@@ -1,6 +1,8 @@
 #ifndef CONSTANTS_H_INCLUDED
 #define CONSTANTS_H_INCLUDED
 
+static const double PI = 3.141592;
+
 static const int B0_IDHEP = 511;
 static const int DS_IDHEP = 413;
 static const int RHO_IDHEP = 213;

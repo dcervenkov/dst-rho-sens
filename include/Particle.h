@@ -20,6 +20,11 @@ class Particle
         Particle* GetDaughter(int i) const;
         void SetDaughter(int i, Particle& val);
         int GetNumDaughters() const;
+        void RotateP(TRotation rot);
+        void BoostP(TVector3 beta);
+        TVector3 GetBoost();
+        double GetPhi();
+        double GetTheta();
 
     private:
         int m_idhep;
