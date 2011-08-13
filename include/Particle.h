@@ -15,7 +15,6 @@ class Particle
         double GetV(int i) const;
         void SetV(int i, double val);
         double GetM() const;
-        void SetM(double val);
         Particle* GetMother() const;
         void SetMother(Particle& val);
         Particle* GetDaughter(int i) const;
@@ -25,10 +24,9 @@ class Particle
     private:
         int m_idhep;
         /// p = (p_x,p_y,p_z,E)
-        double m_p[4];
+        TLorentzVector m_p;
         /// v = (x,y,z,t)
-        double m_v[4];
-        double m_m;
+        TLorentzVector m_v;
         Particle* m_mother;
         Particle* m_daughter[maxDaughters];
         int m_numDaughters;

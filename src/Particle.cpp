@@ -1,3 +1,8 @@
+#include "TRotation.h"
+#include "TLorentzRotation.h"
+#include "TLorentzVector.h"
+#include "TVector3.h"
+
 #include "Particle.h"
 #include "ASSERT.h"
 
@@ -9,7 +14,6 @@ Particle::Particle()
         m_p[i] = 0;
         m_v[i] = 0;
     }
-    m_m = -1;
     m_mother = 0;
     for(int i = 0; i < maxDaughters; i++)
         m_daughter[i] = 0;
@@ -58,12 +62,7 @@ void Particle::SetV(int i, double val)
 
 double Particle::GetM() const
 {
-    return m_m;
-}
-
-void Particle::SetM(double val)
-{
-    m_m = val;
+    return m_p.M();
 }
 
 Particle* Particle::GetMother() const

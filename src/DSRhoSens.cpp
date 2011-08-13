@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
 
     ReadEvents("data/DSRho_exp07-0.root");
     printf("# Events = %i\n",events->size());
+    TRotation rot;
     for(int i = 0; i < 3; i++)
     {
         printf("\n\nEvent %i # particles = %i\n",i+1,(*events)[i].size());
@@ -33,6 +34,7 @@ int main(int argc, char* argv[])
         if(GetRelevantParticles(i, &DS, &DSD0, &DSPi, &Rho, &RhoPi0, &RhoPi))
         {
             printf("All relevant particles found\n");
+
             //printf("DS IDHEP: %i\tE: %f GeV\n", DS->GetIdhep(),DS->GetP(3));
             //printf("D0 IDHEP: %i\tE: %f GeV\n", DSD0->GetIdhep(),DSD0->GetP(3));
             //printf("Pi0 IDHEP: %i\tE: %f GeV\n", RhoPi0->GetIdhep(),RhoPi0->GetP(3));
@@ -116,7 +118,7 @@ int ReadEvents(char fileName[])
 
             Particle part;
             part.SetIdhep(idhep[i]);
-            part.SetM(p[i][4]);
+            //part.SetM(p[i][4]);
 
             for(int j = 0; j < 4; j++)
             {
@@ -144,6 +146,7 @@ int ReadEvents(char fileName[])
 
     file->Close();
     delete file;
+    file = 0;
     return 0;
 }
 
@@ -337,4 +340,30 @@ bool GetPi0PiFromRho(const Particle* const Rho, Particle** Pi0, Particle** Pi)
         return 0;
     }
 }
+
+/// This function returns a rotation needed to transform the momentum of the
+/// given particle so that it is wholly in the direction of the Z axis
+TRotation GetRotationToZ(const Particle* const part)
+{
+    TVector3 tMom; // tMom stands for threeMomentum
+    TRotation rot;
+
+    tMom.SetXYZ(part->GetP(0),part->GetP(1),part->GetP(2));
+
+    double phi = acos(tMom.Z()/(sqrt((tMom.Y())*(tMom.Y())+(tMom.Z())*(tMom.Z()))));
+    if(tMom.Y() < 0)
+        rot.RotateX(-phi);
+    else
+        rot.RotateX(phi);
+
+    tMom = rot*tMom;
+    double theta = acos(tMom.Z()/(sqrt((tMom.Z())*(tMom.Z())+(tMom.X())*(tMom.X()))));
+    if(tMom.X() < 0)
+        rot.RotateY(theta);
+    else
+        rot.RotateY(-theta);
+
+    return rot;
+}
+
 

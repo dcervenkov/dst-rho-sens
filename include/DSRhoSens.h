@@ -10,4 +10,4 @@ bool GetRelevantParticles(int eventNo, Particle** DS, Particle** DSD0, Particle*
 bool GetDSRhoFromB0(const Particle* const B0, Particle** DS, Particle** Rho);
 bool GetD0PiFromDS(const Particle* const DS, Particle** D0, Particle** Pi);
 bool GetPi0PiFromRho(const Particle* const Rho, Particle** Pi0, Particle** Pi);
-TRotation GetRotation(Particle* DS);
+TRotation GetRotationToZ(const Particle* const DS);
