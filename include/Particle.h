@@ -1,7 +1,7 @@
 #ifndef PARTICLE_H_INCLUDED
 #define PARTICLE_H_INCLUDED
 
-static const int maxDaughters = 10;
+static const int maxDaughters = 20;
 
 class Particle
 {

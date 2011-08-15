@@ -4,6 +4,8 @@
 
 #include "TApplication.h"
 #include "TFile.h"
+#include "TCanvas.h"
+#include "TPad.h"
 #include "TTree.h"
 #include "TRandom1.h"
 #include "TH1F.h"
@@ -17,14 +19,61 @@
 #include "Constants.h"
 #include "ASSERT.h"
 
+//#define VERBOSE
+#define GRAPHIC
+
+TH1D *hChi = new TH1D("hChi", "Chi distribution", 100, 0, 4*PI);
+TH1D *hThA = new TH1D("hThA", "Theta A distribution", 100, 0, PI);
+TH1D *hThB = new TH1D("hThB", "Theta B distribution", 100, 0, PI);
+
 int main(int argc, char* argv[])
 {
-    //TApplication* rootapp = new TApplication("DSRhoSens",&argc,argv); //For graphic-output apps only
-
-    ReadEvents("data/DSRho_exp07-0.root");
-    printf("# Events = %i\n",events->size());
-    for(int i = 0; i < 10; i++)
+    #ifdef GRAPHIC
+    TApplication* rootapp = new TApplication("DSRhoSens",&argc,argv); //For graphic-output apps only
+    /// When using TApplication it removes arguments it "handles" from
+    /// the argument array. E.g. -b, -x, -q, --help, <dir>, <file>, etc.
+    /// For more info read TApplication's GetOptions function help.
+    /// The solution is to use rootapp->Argc() and rootapp->Argv(i).
+    /// The next few lines are for compatibility of GRAPHIC vs. non-GRAPHIC.
+    argc = rootapp->Argc();
+    for(int i = 0; i < argc; i++)
     {
+        argv[i] = rootapp->Argv(i);
+    }
+    #endif
+
+
+    for(int i = 1; i < argc; i++)
+    {
+        ReadEvents(argv[i]);
+        Analyze();
+    }
+
+    #ifdef GRAPHIC
+    TCanvas* c1 = new TCanvas("c1","Canvas",800,600);
+    c1->Divide(2,2);
+    c1->cd(1);
+    hChi->Draw();
+    c1->cd(2);
+    hThA->Draw();
+    c1->cd(3);
+    hThB->Draw();
+
+    printf("\nProgram execution has finished.\n");
+    rootapp->Run(); //For graphic-output apps only
+    #endif
+
+    return 0;
+}
+
+void Analyze()
+{
+    printf("# Events = %i\n",events->size());
+
+    for(int i = 0; i < events->size(); i++)
+    {
+        //if(i != 2043)
+        //    continue;
         //printf("\n\nEvent %i # particles = %i\n",i+1,(*events)[i].size());
         //PrintEvent(i);
         Particle* B0 = 0;
@@ -42,18 +91,19 @@ int main(int argc, char* argv[])
         /// pass the function a pointer address, so the function can write in it
         if(GetRelevantParticles(i,&B0, &DS, &DSD0, &DSPi, &Rho, &RhoPi0, &RhoPi))
         {
-            //printf("All relevant particles found\n");
+            #ifdef VERBOSE
+            printf("All relevant particles found\n");
+            #endif
             TransformHel(B0,DS,DSD0,DSPi,Rho,RhoPi0,RhoPi);
             GetAngles(DSD0,RhoPi,chi,theta_a,theta_b);
-            printf("chi: %0.4f\tth_a: %0.4f\tth_b: %0.4f\n",chi,theta_a,theta_b);
+            //printf("chi: %0.4f\tth_a: %0.4f\tth_b: %0.4f\n",chi,theta_a,theta_b);
+            hChi->Fill(chi);
+            hThA->Fill(theta_a);
+            hThB->Fill(theta_b);
         }
         else
             printf("WARNING: Could not find all relevant particles in event #%i\n",i+1);
-
     }
-
-    //rootapp->Run(); //For graphic-output apps only
-    return 0;
 }
 
 int ReadEvents(char fileName[])
@@ -77,6 +127,7 @@ int ReadEvents(char fileName[])
         printf("File %s opened.\n",fileName);
     TTree* tree = (TTree*)file->Get("Tree");
 
+    events->clear();
     events->resize(tree->GetEntries());
 
     /// Cycle through every event in the file
@@ -113,7 +164,8 @@ int ReadEvents(char fileName[])
 
         tree->GetEntry(eventNo);
 
-        //printf("\n\nID\tIDHEP\tMOTHER\tDA1\tDA2\tP1\tP2\tP3\tE\tM\n");
+        //if(eventNo == 2044)
+        //    PrintEventOrig(eventNo,numParticles,id,idhep,mother,da1,da2,p,v);
 
         /// Resize the vector to its final size, so it doesn't need to
         /// resize itself many times (explained in std::vector documentation)
@@ -123,18 +175,12 @@ int ReadEvents(char fileName[])
         /// event and sets a few variables: idhep, mass, etc.
         for(int i = 0; i < numParticles; i++)
         {
-            //printf("%i\t%i\t%i\t%i\t%i\t%.2f\t%.2f\t%.2f\t%.2f\t%.3f\n",id[i],idhep[i],\
-            mother[i],da1[i],da2[i],p[i][0],p[i][1],p[i][2],p[i][3],p[i][4]);
-
             Particle part;
             part.SetIdhep(idhep[i]);
-            //part.SetM(p[i][4]);
 
-            for(int j = 0;
-        j < 4;
-        j++)
-        {
-            part.SetP(j,p[i][j]);
+            for(int j = 0; j < 4; j++)
+            {
+                part.SetP(j,p[i][j]);
                 part.SetV(j,v[i][j]);
             }
 
@@ -151,7 +197,11 @@ int ReadEvents(char fileName[])
             if(da1[i] != 0)
             {
                 for(int j = 0; j <= (da2[i] - da1[i]); j++)
-                    (*events)[eventNo][i].SetDaughter(j,(*events)[eventNo][da1[i]-1+j]);;
+                {
+                    (*events)[eventNo][i].SetDaughter(j,(*events)[eventNo][da1[i]-1+j]);
+                    //if(j > 9)
+                        //printf("eventno: %i\n",eventNo);
+                }
             }
         }
     }
@@ -165,11 +215,25 @@ int ReadEvents(char fileName[])
 void PrintEvent(int evtNo)
 {
     std::vector<Particle> particles = (*events)[evtNo];
+    printf("Event %i\n",evtNo);
     printf("ID\tIDHEP\tP1\tP2\tP3\tE\tM\n");
     for(int i = 0; i < particles.size(); i++)
     {
         printf("%i\t%i\t%.2f\t%.2f\t%.2f\t%.2f\t%.3f\n",i+1,particles[i].GetIdhep(),\
                particles[i].GetP(0),particles[i].GetP(1),particles[i].GetP(2),particles[i].GetP(3),particles[i].GetM());
+    }
+    printf("\n");
+}
+
+void PrintEventOrig(int evtNo, int numParticles, int* id, int* idhep, int* mother, \
+                    int* da1, int* da2, double (*p)[5], double (*v)[4])
+{
+    printf("Event %i\n",evtNo);
+    printf("ID\tIDHEP\tMOTHER\tDA1\tDA2\tP1\tP2\tP3\tE\tM\n");
+    for(int i = 0; i < numParticles; i++)
+    {
+        printf("%i\t%i\t%i\t%i\t%i\t%.2f\t%.2f\t%.2f\t%.2f\t%.3f\n",id[i],idhep[i],\
+            mother[i],da1[i],da2[i],p[i][0],p[i][1],p[i][2],p[i][3],p[i][4]);
     }
     printf("\n");
 }
@@ -218,14 +282,18 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
 
         if(abs((*events)[eventNo][i].GetIdhep()) == B0_IDHEP)
         {
-            //printf("Found a B0\n");
+            #ifdef VERBOSE
+            printf("Found a B0\n");
+            #endif
             *B0 = &(*events)[eventNo][i];
             if(GetDSRhoFromB0(*B0,DS,Rho))
             {
                 if(GetD0PiFromDS(*DS,DSD0,DSPi) && GetPi0PiFromRho(*Rho,RhoPi0,RhoPi))
                     return 1;
             }
-            //printf("This branch doesn't match\n");
+            #ifdef VERBOSE
+            printf("This branch doesn't match\n");
+            #endif
         } // If block searching for B0
     } // For cycle going through all particles in an event
 
@@ -245,19 +313,25 @@ bool GetDSRhoFromB0(const Particle* const B0, Particle** DS, Particle** Rho)
         switch(abs(B0->GetDaughter(i)->GetIdhep()))
         {
         case DS_IDHEP:
-            //printf("Found a D*\n");
+            #ifdef VERBOSE
+            printf("Found a D*\n");
+            #endif
             *DS = B0->GetDaughter(i);
             foundDS = 1;
             break;
 
         case RHO_IDHEP:
-            //printf("Found a Rho\n");
+            #ifdef VERBOSE
+            printf("Found a Rho\n");
+            #endif
             *Rho = B0->GetDaughter(i);
             foundRho = 1;
             break;
 
         case PHOTON_IDHEP:
-            //printf("Found a gamma\n");
+            #ifdef VERBOSE
+            printf("Found a gamma\n");
+            #endif
             break;
 
         default:
@@ -288,19 +362,25 @@ bool GetD0PiFromDS(const Particle* const DS, Particle** D0, Particle** Pi)
         switch(abs(DS->GetDaughter(i)->GetIdhep()))
         {
         case D0_IDHEP:
-            //printf("Found a D0 from D*\n");
+            #ifdef VERBOSE
+            printf("Found a D0 from D*\n");
+            #endif
             *D0 = DS->GetDaughter(i);
             foundD0 = 1;
             break;
 
         case PI_IDHEP:
-            //printf("Found a Pi from D*\n");
+            #ifdef VERBOSE
+            printf("Found a Pi from D*\n");
+            #endif
             *Pi = DS->GetDaughter(i);;
             foundPi = 1;
             break;
 
         case PHOTON_IDHEP:
-            //printf("Found a gamma from D*\n");
+            #ifdef VERBOSE
+            printf("Found a gamma from D*\n");
+            #endif
             break;
 
         default:
@@ -331,19 +411,25 @@ bool GetPi0PiFromRho(const Particle* const Rho, Particle** Pi0, Particle** Pi)
         switch(abs(Rho->GetDaughter(i)->GetIdhep()))
         {
         case PI0_IDHEP:
-            //printf("Found a Pi0 from Rho\n");
+            #ifdef VERBOSE
+            printf("Found a Pi0 from Rho\n");
+            #endif
             *Pi0 = Rho->GetDaughter(i);
             foundPi0 = 1;
             break;
 
         case PI_IDHEP:
-            //printf("Found a Pi from Rho\n");
+            #ifdef VERBOSE
+            printf("Found a Pi from Rho\n");
+            #endif
             *Pi = Rho->GetDaughter(i);
             foundPi = 1;
             break;
 
         case PHOTON_IDHEP:
-            //printf("Found a gamma from Rho\n");
+            #ifdef VERBOSE
+            printf("Found a gamma from Rho\n");
+            #endif
             break;
 
         default:

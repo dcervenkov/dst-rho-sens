@@ -5,6 +5,7 @@ static std::vector< std::vector<Particle> >* events = new std::vector< std::vect
 
 int ReadEvents(char fileName[]);
 void PrintEvent(int evtNo);
+void PrintEventOrig(int evtNo,int numParticles,int* id,int* idhep,int* mother,int* da1,int* da2,double (*p)[5],double (*v)[4]);
 void PrintRelevantParticles(const Particle* DS,const Particle* DSD0,const Particle* DSPi, \
                           const Particle* Rho,const Particle* RhoPi0,const Particle* RhoPi);
 bool GetRelevantParticles(int eventNo, Particle** B, Particle** DS, Particle** DSD0, Particle** DSPi, \
@@ -15,4 +16,5 @@ bool GetPi0PiFromRho(const Particle* const Rho, Particle** Pi0, Particle** Pi);
 TRotation GetRotationToZ(const Particle* const DS);
 void TransformHel (Particle* B0, Particle* DS, Particle* DSD0, Particle* DSPi, \
                            Particle* Rho, Particle* RhoPi0, Particle* RhoPi);
-void GetAngles(Particle* a, Particle* b, double& chi, double& theta_a, double& theta_b);
+void GetAngles(Particle* const a, Particle* const b, double& chi, double& theta_a, double& theta_b);
+void Analyze();
