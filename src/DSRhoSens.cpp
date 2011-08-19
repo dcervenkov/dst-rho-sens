@@ -8,7 +8,8 @@
 #include "TPad.h"
 #include "TTree.h"
 #include "TRandom1.h"
-#include "TH1F.h"
+#include "TH1D.h"
+#include "TH2D.h"
 #include "TRotation.h"
 #include "TLorentzRotation.h"
 #include "TLorentzVector.h"
@@ -25,6 +26,8 @@
 TH1D *hChi = new TH1D("hChi", "Chi distribution", 100, 0, 4*PI);
 TH1D *hThA = new TH1D("hThA", "Theta A distribution", 100, 0, PI);
 TH1D *hThB = new TH1D("hThB", "Theta B distribution", 100, 0, PI);
+TH2D *hG = new TH2D("hG","Gamma distribution", 30, 0, PI, 30, 0, PI);
+
 
 int main(int argc, char* argv[])
 {
@@ -34,7 +37,8 @@ int main(int argc, char* argv[])
     /// the argument array. E.g. -b, -x, -q, --help, <dir>, <file>, etc.
     /// For more info read TApplication's GetOptions function help.
     /// The solution is to use rootapp->Argc() and rootapp->Argv(i).
-    /// The next few lines are for compatibility of GRAPHIC vs. non-GRAPHIC.
+    /// The next few lines are for compatibility of GRAPHIC vs. non-GRAPHIC -
+    /// they recreate the original argc and argv when using GRAPHIC.
     argc = rootapp->Argc();
     for(int i = 0; i < argc; i++)
     {
@@ -58,6 +62,9 @@ int main(int argc, char* argv[])
     hThA->Draw();
     c1->cd(3);
     hThB->Draw();
+    c1->cd(4);
+    hG->SetOption("box");
+    hG->Draw();
 
     printf("\nProgram execution has finished.\n");
     rootapp->Run(); //For graphic-output apps only
@@ -87,6 +94,9 @@ void Analyze()
         double theta_a = 0;
         double theta_b = 0;
 
+        double theta_t = 0;
+        double phi_t = 0;
+
         /// I want pointers to the particles returned, therefore I have to
         /// pass the function a pointer address, so the function can write in it
         if(GetRelevantParticles(i,&B0, &DS, &DSD0, &DSPi, &Rho, &RhoPi0, &RhoPi))
@@ -95,11 +105,15 @@ void Analyze()
             printf("All relevant particles found\n");
             #endif
             TransformHel(B0,DS,DSD0,DSPi,Rho,RhoPi0,RhoPi);
-            GetAngles(DSD0,RhoPi,chi,theta_a,theta_b);
+            //TransformTrans(B0,DS,DSD0,DSPi,Rho,RhoPi0,RhoPi);
+            //GetAnglesTrans(DSD0,RhoPi,theta_t,phi_t,theta_b);
+            GetAnglesHel(DSD0,RhoPi,chi,theta_a,theta_b);
+            //printf("th_t: %0.4f\tphi_t: %0.4f\tth_b: %0.4f\n",theta_t,phi_t,theta_b);
             //printf("chi: %0.4f\tth_a: %0.4f\tth_b: %0.4f\n",chi,theta_a,theta_b);
             hChi->Fill(chi);
             hThA->Fill(theta_a);
             hThB->Fill(theta_b);
+            hG->Fill(theta_a,theta_b);
         }
         else
             printf("WARNING: Could not find all relevant particles in event #%i\n",i+1);
@@ -472,6 +486,81 @@ TRotation GetRotationToZ(const Particle* const part)
     return rot;
 }
 
+TRotation GetZRotationToX(const Particle* const part)
+{
+    TVector3 tMom; // tMom stands for threeMomentum
+    TRotation rot;
+
+    tMom.SetXYZ(part->GetP(0),part->GetP(1),part->GetP(2));
+
+    double phi = acos(tMom.X()/(sqrt((tMom.X())*(tMom.X())+(tMom.Y())*(tMom.Y()))));
+    if(tMom.Y() < 0)
+        rot.RotateZ(phi);
+    else
+        rot.RotateZ(-phi);
+
+    return rot;
+}
+
+void TransformTrans(Particle* B0, Particle* DS, Particle* DSD0, Particle* DSPi, \
+                  Particle* Rho, Particle* RhoPi0, Particle* RhoPi)
+{
+    //PrintRelevantParticles(DS, DSD0, DSPi, Rho, RhoPi0, RhoPi);
+
+    TVector3 B0Beta = B0->GetBoost();
+    DS->BoostP(-B0Beta);
+    DSD0->BoostP(-B0Beta);
+    DSPi->BoostP(-B0Beta);
+    Rho->BoostP(-B0Beta);
+    RhoPi->BoostP(-B0Beta);
+    RhoPi0->BoostP(-B0Beta);
+
+    //PrintRelevantParticles(DS, DSD0, DSPi, Rho, RhoPi0, RhoPi);
+
+    TRotation rot = GetRotationToZ(DS);
+    DS->RotateP(rot);
+    DSD0->RotateP(rot);
+    DSPi->RotateP(rot);
+    Rho->RotateP(rot);
+    RhoPi->RotateP(rot);
+    RhoPi0->RotateP(rot);
+
+    //PrintRelevantParticles(DS, DSD0, DSPi, Rho, RhoPi0, RhoPi);
+
+    TRotation rot2 = GetZRotationToX(RhoPi);
+    DS->RotateP(rot2);
+    DSD0->RotateP(rot2);
+    DSPi->RotateP(rot2);
+    Rho->RotateP(rot2);
+    RhoPi->RotateP(rot2);
+    RhoPi0->RotateP(rot2);
+
+    //PrintRelevantParticles(DS, DSD0, DSPi, Rho, RhoPi0, RhoPi);
+
+    TRotation rot3;
+    rot3.RotateX(PI/2);
+    rot3.RotateZ(PI/2);
+    DS->RotateP(rot3);
+    DSD0->RotateP(rot3);
+    DSPi->RotateP(rot3);
+    Rho->RotateP(rot3);
+    RhoPi->RotateP(rot3);
+    RhoPi0->RotateP(rot3);
+
+    //PrintRelevantParticles(DS, DSD0, DSPi, Rho, RhoPi0, RhoPi);
+
+    TVector3 DSBeta = DS->GetBoost();
+    TVector3 RhoBeta = Rho->GetBoost();
+    DS->BoostP(-DSBeta);
+    DSD0->BoostP(-DSBeta);
+    DSPi->BoostP(-DSBeta);
+    Rho->BoostP(-RhoBeta);
+    RhoPi->BoostP(-RhoBeta);
+    RhoPi0->BoostP(-RhoBeta);
+
+    //PrintRelevantParticles(DS, DSD0, DSPi, Rho, RhoPi0, RhoPi);
+}
+
 void TransformHel(Particle* B0, Particle* DS, Particle* DSD0, Particle* DSPi, \
                   Particle* Rho, Particle* RhoPi0, Particle* RhoPi)
 {
@@ -509,12 +598,18 @@ void TransformHel(Particle* B0, Particle* DS, Particle* DSD0, Particle* DSPi, \
     //PrintRelevantParticles(DS, DSD0, DSPi, Rho, RhoPi0, RhoPi);
 }
 
-void GetAngles(Particle* a, Particle* b, double& chi, double& theta_a, double& theta_b)
+void GetAnglesHel(Particle* a, Particle* b, double& chi, double& theta_a, double& theta_b)
 {
     chi = 2*PI + a->GetPhi() - b->GetPhi();
     theta_a = a->GetTheta();
     theta_b = PI - b->GetTheta();
 }
 
+void GetAnglesTrans(Particle* a, Particle* b, double& theta_t, double& phi_t, double& theta_b)
+{
+    theta_t = a->GetTheta();
+    phi_t = a->GetPhi();
+    theta_b = PI - b->GetPhi();
+}
 
 
