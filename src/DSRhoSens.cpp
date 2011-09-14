@@ -15,18 +15,37 @@
 #include "TLorentzVector.h"
 #include "TVector3.h"
 
+#include "RooFit.h"
+#include "RooRealVar.h"
+#include "RooPlot.h"
+#include "RooDataSet.h"
+#include "RooArgSet.h"
+#include "RooGenericPdf.h"
+
+
 #include "DSRhoSens.h"
 #include "Particle.h"
 #include "Constants.h"
 #include "ASSERT.h"
 
+#define DEBUG
 //#define VERBOSE
 #define GRAPHIC
+#define HELICITY
+//#define TRANSVERSITY
 
-TH1D *hChi = new TH1D("hChi", "Chi distribution", 100, 0, 4*PI);
-TH1D *hThA = new TH1D("hThA", "Theta A distribution", 100, 0, PI);
-TH1D *hThB = new TH1D("hThB", "Theta B distribution", 100, 0, PI);
+#ifdef HELICITY
+TH1D *hChi = new TH1D("hChi", "Chi distribution", 50, 0, 4*PI);
+TH1D *hThA = new TH1D("hThA", "Theta A distribution", 50, 0, PI);
+TH1D *hThB = new TH1D("hThB", "Theta B distribution", 50, 0, PI);
 TH2D *hG = new TH2D("hG","Gamma distribution", 30, 0, PI, 30, 0, PI);
+#endif
+
+#ifdef TRANSVERSITY
+TH1D *hPhiT = new TH1D("hPhiT", "Phi T distribution", 50, -PI, PI);
+TH1D *hThT = new TH1D("hThT", "Theta T distribution", 50, 0, PI);
+TH1D *hThB = new TH1D("hThB", "Theta B distribution", 50, 0, PI);
+#endif
 
 
 int main(int argc, char* argv[])
@@ -46,25 +65,89 @@ int main(int argc, char* argv[])
     }
     #endif
 
+    #ifdef HELICITY
+    RooRealVar tha("tha","tha",0,PI);
+    RooRealVar thb("thb","thb",0,PI);
+    RooRealVar hp2("hp2","hp2",0,1);
+    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tha,thb));
+    RooGenericPdf* pdf = new RooGenericPdf("pdf","Generic PDF","hp2*sin(tha)*sin(tha)*sin(tha)*sin(thb)*sin(thb)*sin(thb)",RooArgSet(tha,thb,hp2));
+    #endif
+
+    #ifdef TRANSVERSITY
+    RooRealVar phit("phit","phit",-PI,PI);
+    RooRealVar tht("tht","tht",0,PI);
+    RooRealVar thb("thb","thb",0,PI);
+    RooRealVar ap2("ap2","ap2",0,1);
+    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(phit,tht,thb));
+    RooGenericPdf* pdf = new RooGenericPdf("pdf","Generic PDF","ap2*sin(phit)*sin(phit)*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)",RooArgSet(phit,tht,thb,ap2));
+    #endif
 
     for(int i = 1; i < argc; i++)
     {
         ReadEvents(argv[i]);
-        Analyze();
+        Analyze(dataSet);
     }
 
+
+
     #ifdef GRAPHIC
-    TCanvas* c1 = new TCanvas("c1","Canvas",800,600);
-    c1->Divide(2,2);
-    c1->cd(1);
-    hChi->Draw();
-    c1->cd(2);
-    hThA->Draw();
-    c1->cd(3);
-    hThB->Draw();
-    c1->cd(4);
-    hG->SetOption("box");
-    hG->Draw();
+    TCanvas* cc = new TCanvas("cc","Canvas",800,600);
+
+        #ifdef HELICITY
+        cc->Divide(2,2);
+        cc->cd(1);
+        hChi->Draw();
+        cc->cd(2);
+        hThA->Draw();
+        cc->cd(3);
+        hThB->Draw();
+        cc->cd(4);
+        hG->SetOption("box");
+        hG->Draw();
+
+        TCanvas* c1 = new TCanvas("c1","c1");
+        pdf->fitTo(*dataSet);
+        RooPlot* xframe = tha.frame();
+        dataSet->plotOn(xframe);
+        pdf->plotOn(xframe);
+        xframe->Draw();
+
+        TCanvas* c2 = new TCanvas("c2","c2");
+        RooPlot* yframe = thb.frame();
+        dataSet->plotOn(yframe);
+        pdf->plotOn(yframe);
+        yframe->Draw();
+        #endif
+
+        #ifdef TRANSVERSITY
+        cc->Divide(2,2);
+        cc->cd(1);
+        hPhiT->Draw();
+        cc->cd(2);
+        hThT->Draw();
+        cc->cd(3);
+        hThB->Draw();
+        cc->cd(4);
+
+        TCanvas* c1 = new TCanvas("c1","c1");
+        pdf->fitTo(*dataSet);
+        RooPlot* xframe = phit.frame();
+        dataSet->plotOn(xframe);
+        pdf->plotOn(xframe);
+        xframe->Draw();
+
+        TCanvas* c2 = new TCanvas("c2","c2");
+        RooPlot* yframe = tht.frame();
+        dataSet->plotOn(yframe);
+        pdf->plotOn(yframe);
+        yframe->Draw();
+
+        TCanvas* c3 = new TCanvas("c3","c3");
+        RooPlot* zframe = thb.frame();
+        dataSet->plotOn(zframe);
+        pdf->plotOn(zframe);
+        zframe->Draw();
+        #endif
 
     printf("\nProgram execution has finished.\n");
     rootapp->Run(); //For graphic-output apps only
@@ -73,14 +156,12 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void Analyze()
+void Analyze(RooDataSet* dataSet)
 {
     printf("# Events = %i\n",events->size());
 
     for(int i = 0; i < events->size(); i++)
     {
-        //if(i != 2043)
-        //    continue;
         //printf("\n\nEvent %i # particles = %i\n",i+1,(*events)[i].size());
         //PrintEvent(i);
         Particle* B0 = 0;
@@ -90,12 +171,18 @@ void Analyze()
         Particle* Rho = 0;
         Particle* RhoPi0 = 0;
         Particle* RhoPi = 0;
+
+        #ifdef HELICITY
         double chi = 0;
         double theta_a = 0;
         double theta_b = 0;
+        #endif
 
-        double theta_t = 0;
+        #ifdef TRANSVERSITY
         double phi_t = 0;
+        double theta_t = 0;
+        double theta_b = 0;
+        #endif
 
         /// I want pointers to the particles returned, therefore I have to
         /// pass the function a pointer address, so the function can write in it
@@ -104,16 +191,40 @@ void Analyze()
             #ifdef VERBOSE
             printf("All relevant particles found\n");
             #endif
+
+            #ifdef HELICITY
             TransformHel(B0,DS,DSD0,DSPi,Rho,RhoPi0,RhoPi);
-            //TransformTrans(B0,DS,DSD0,DSPi,Rho,RhoPi0,RhoPi);
-            //GetAnglesTrans(DSD0,RhoPi,theta_t,phi_t,theta_b);
             GetAnglesHel(DSD0,RhoPi,chi,theta_a,theta_b);
-            //printf("th_t: %0.4f\tphi_t: %0.4f\tth_b: %0.4f\n",theta_t,phi_t,theta_b);
-            //printf("chi: %0.4f\tth_a: %0.4f\tth_b: %0.4f\n",chi,theta_a,theta_b);
             hChi->Fill(chi);
             hThA->Fill(theta_a);
             hThB->Fill(theta_b);
             hG->Fill(theta_a,theta_b);
+
+            RooRealVar tha("tha","tha",0,PI);
+            RooRealVar thb("thb","thb",0,PI);
+            tha = theta_a;
+            thb = theta_b;
+            dataSet->add(RooArgSet(tha,thb));
+            //printf("chi: %0.4f\tth_a: %0.4f\tth_b: %0.4f\n",chi,theta_a,theta_b);
+            #endif
+
+            #ifdef TRANSVERSITY
+            TransformTrans(B0,DS,DSD0,DSPi,Rho,RhoPi0,RhoPi);
+            GetAnglesTrans(DSD0,RhoPi,theta_t,phi_t,theta_b);
+            hPhiT->Fill(phi_t);
+            hThT->Fill(theta_t);
+            hThB->Fill(theta_b);
+
+            RooRealVar phit("phit","phit",-PI,PI);
+            RooRealVar tht("tht","tht",0,PI);
+            RooRealVar thb("thb","thb",0,PI);
+            phit = phi_t;
+            tht = theta_t;
+            thb = theta_b;
+            dataSet->add(RooArgSet(phit,tht,thb));
+            //printf("th_t: %0.4f\tphi_t: %0.4f\tth_b: %0.4f\n",theta_t,phi_t,theta_b);
+            #endif
+
         }
         else
             printf("WARNING: Could not find all relevant particles in event #%i\n",i+1);
@@ -186,7 +297,7 @@ int ReadEvents(char fileName[])
         (*events)[eventNo].resize(numParticles);
 
         /// This loop populates the event vector with all particles of the
-        /// event and sets a few variables: idhep, mass, etc.
+        /// event and sets non-relation variables: idhep, momentum, position
         for(int i = 0; i < numParticles; i++)
         {
             Particle part;
@@ -211,11 +322,7 @@ int ReadEvents(char fileName[])
             if(da1[i] != 0)
             {
                 for(int j = 0; j <= (da2[i] - da1[i]); j++)
-                {
                     (*events)[eventNo][i].SetDaughter(j,(*events)[eventNo][da1[i]-1+j]);
-                    //if(j > 9)
-                        //printf("eventno: %i\n",eventNo);
-                }
             }
         }
     }
@@ -611,5 +718,3 @@ void GetAnglesTrans(Particle* a, Particle* b, double& theta_t, double& phi_t, do
     phi_t = a->GetPhi();
     theta_b = PI - b->GetPhi();
 }
-
-

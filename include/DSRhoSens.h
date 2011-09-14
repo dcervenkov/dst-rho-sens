@@ -21,4 +21,4 @@ void TransformTrans(Particle* B0, Particle* DS, Particle* DSD0, Particle* DSPi, 
                     Particle* Rho, Particle* RhoPi0, Particle* RhoPi);
 void GetAnglesHel(Particle* a, Particle* b, double& chi, double& theta_a, double& theta_b);
 void GetAnglesTrans(Particle* a, Particle* b, double& theta_t, double& phi_t, double& theta_b);
-void Analyze();
+void Analyze(RooDataSet* dataSet);

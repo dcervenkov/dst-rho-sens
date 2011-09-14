@@ -11,10 +11,9 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/DSRho_exp07-0.root" />
+				<Option parameters="data/100000_hel/DSRho_exp*-0.root" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="-DDEBUG" />
 					<Add directory="/usr/local/include/root" />
 					<Add directory="include" />
 				</Compiler>
@@ -96,6 +95,9 @@
 					<Add library="/usr/local/lib/root/libVMC.so" />
 					<Add library="/usr/local/lib/root/libX3d.so" />
 					<Add library="/usr/local/lib/root/libXMLIO.so" />
+					<Add library="/usr/local/lib/root/libRooFit.so" />
+					<Add library="/usr/local/lib/root/libRooFitCore.so" />
+					<Add library="/usr/local/lib/root/libRooStats.so" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -116,10 +118,10 @@
 		</Compiler>
 		<Unit filename="include/ASSERT.h" />
 		<Unit filename="include/Constants.h" />
-		<Unit filename="src/DSRhoSens.cpp" />
 		<Unit filename="include/DSRhoSens.h" />
-		<Unit filename="src/Particle.cpp" />
 		<Unit filename="include/Particle.h" />
+		<Unit filename="src/DSRhoSens.cpp" />
+		<Unit filename="src/Particle.cpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />
