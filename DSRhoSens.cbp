@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/100000_hel/DSRho_exp*-0.root" />
+				<Option parameters="data/100000_hel/DSRho_exp19-0.root" />
 				<Compiler>
 					<Add option="-g" />
 					<Add directory="/usr/local/include/root" />

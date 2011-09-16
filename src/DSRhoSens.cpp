@@ -35,7 +35,7 @@
 //#define TRANSVERSITY
 
 #ifdef HELICITY
-TH1D *hChi = new TH1D("hChi", "Chi distribution", 50, 0, 4*PI);
+TH1D *hChi = new TH1D("hChi", "Chi distribution", 50, 0, 2*PI);
 TH1D *hThA = new TH1D("hThA", "Theta A distribution", 50, 0, PI);
 TH1D *hThB = new TH1D("hThB", "Theta B distribution", 50, 0, PI);
 TH2D *hG = new TH2D("hG","Gamma distribution", 30, 0, PI, 30, 0, PI);
@@ -707,7 +707,22 @@ void TransformHel(Particle* B0, Particle* DS, Particle* DSD0, Particle* DSPi, \
 
 void GetAnglesHel(Particle* a, Particle* b, double& chi, double& theta_a, double& theta_b)
 {
-    chi = 2*PI + a->GetPhi() - b->GetPhi();
+    double a_phi = a->GetPhi();
+    double b_phi = b->GetPhi();
+
+    /// GetPhi() returns phi from -PI to PI. The formula for chi works only when phi is
+    /// from 0 to 2PI and that's the reason for these two ifs.
+    if(a_phi < 0)
+        a_phi = 2*PI + a_phi;
+
+    if(b_phi < 0)
+        b_phi = 2*PI + b_phi;
+
+    if(a_phi >= b_phi)
+        chi = a_phi - b_phi;
+    else
+        chi = 2*PI - (b_phi - a_phi);
+
     theta_a = a->GetTheta();
     theta_b = PI - b->GetTheta();
 }
