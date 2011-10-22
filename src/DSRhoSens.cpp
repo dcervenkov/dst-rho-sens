@@ -2,6 +2,8 @@
 #include <vector>
 #include <stdlib.h>
 
+#include "TROOT.h"
+#include "TStyle.h"
 #include "TApplication.h"
 #include "TFile.h"
 #include "TCanvas.h"
@@ -21,6 +23,14 @@
 #include "RooDataSet.h"
 #include "RooArgSet.h"
 #include "RooGenericPdf.h"
+#include "RooFitResult.h"
+
+#include "RooGaussian.h"
+#include "RooProdPdf.h"
+#include "RooNLLVar.h"
+#include "RooMinuit.h"
+#include "RooPolynomial.h"
+#include "RooAddPdf.h"
 
 
 #include "DSRhoSens.h"
@@ -68,9 +78,60 @@ int main(int argc, char* argv[])
     #ifdef HELICITY
     RooRealVar tha("tha","tha",0,PI);
     RooRealVar thb("thb","thb",0,PI);
-    RooRealVar hp2("hp2","hp2",0,1);
-    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tha,thb));
-    RooGenericPdf* pdf = new RooGenericPdf("pdf","Generic PDF","hp2*sin(tha)*sin(tha)*sin(tha)*sin(thb)*sin(thb)*sin(thb)",RooArgSet(tha,thb,hp2));
+    RooRealVar chi("chi","chi",0,2*PI);
+
+    //RooRealVar hp2("hp2","hp2",0.2);
+    //RooRealVar h02("h02","h02",0.5);
+    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tha,thb,chi));
+    //RooGenericPdf* pdf1 = new RooGenericPdf("pdf1","Generic PDF1","sin(tha)*sin(tha)*sin(tha)*sin(thb)*sin(thb)*sin(thb)",RooArgSet(tha,thb));
+    //RooGenericPdf* pdf2 = new RooGenericPdf("pdf2","Generic PDF2","cos(tha)*cos(tha)*sin(tha)*cos(thb)*cos(thb)*sin(thb)",RooArgSet(tha,thb));
+
+    RooRealVar hp("hp","hp",1,0,1);
+    RooRealVar hpa("hpa","hpa",0,2*PI);
+    RooFormulaVar hpr("hpr","hp*cos(hpa)",RooArgSet(hp,hpa));
+    RooFormulaVar hpi("hpi","hp*sin(hpa)",RooArgSet(hp,hpa));
+    RooRealVar h0("h0","h0",0,0,1);
+    RooRealVar h0a("h0a","h0a",0,2*PI);
+    RooFormulaVar h0r("h0r","h0*cos(h0a)",RooArgSet(h0,h0a));
+    RooFormulaVar h0i("h0i","h0*sin(h0a)",RooArgSet(h0,h0a));
+    RooFormulaVar hm("hm","1-hp-h0",RooArgSet(hp,h0));
+    RooRealVar hma("hma","hma",0,0,2*PI);
+    RooFormulaVar hmr("hmr","hm*cos(hma)",RooArgSet(hm,hma));
+    RooFormulaVar hmi("hmi","hm*sin(hma)",RooArgSet(hm,hma));
+
+    RooFormulaVar hatr("hatr","hp*cos(hpa) + hm*cos(hma)",RooArgSet(hp,hpa,hm,hma));
+    RooFormulaVar hati("hati","hp*sin(hpa) + hm*sin(hma)",RooArgSet(hp,hpa,hm,hma));
+    RooFormulaVar hat("hat","sqrt(hatr*hatr + hati*hati)",RooArgSet(hatr,hati));
+    RooFormulaVar hata("hata","atan2(hati,hatr)",RooArgSet(hati,hatr));
+
+    RooFormulaVar hstr("hstr","hp*cos(hpa) - hm*cos(hma)",RooArgSet(hp,hpa,hm,hma));
+    RooFormulaVar hsti("hsti","hp*sin(hpa) - hm*sin(hma)",RooArgSet(hp,hpa,hm,hma));
+    RooFormulaVar hst("hst","sqrt(hstr*hstr + hsti*hsti)",RooArgSet(hstr,hsti));
+    RooFormulaVar hsta("hsta","atan2(hsti,hstr)",RooArgSet(hsti,hstr));
+
+    RooArgSet varSet(tha,thb,hp,hpa,hpr,hpi,h0,h0a,h0r);
+    varSet.add(h0i);
+    varSet.add(hm);
+    varSet.add(hma);
+    varSet.add(hmr);
+    varSet.add(hmi);
+    varSet.add(hat);
+    varSet.add(hata);
+    varSet.add(hst);
+    varSet.add(hsta);
+    varSet.add(chi);
+
+    RooRealVar f("f","fraction",0.5,0,1);
+    //RooAddPdf* npdf = new RooAddPdf("pdf","p+0",RooArgList(*pdf1,*pdf2),f);
+
+    //RooGenericPdf* pdf = new RooGenericPdf("pdf","Generic PDF","(hp*hp+hm*hm)*sin(tha)*sin(tha)*sin(tha)*sin(thb)*sin(thb)*sin(thb)+4*h0*h0*cos(tha)*cos(tha)*sin(tha)*cos(thb)*cos(thb)*sin(thb)",RooArgSet(tha,thb,hp,h0,hm));
+    RooGenericPdf* pdf = new RooGenericPdf("pdf","Generic PDF","f*sin(tha)*sin(tha)*sin(tha)*sin(thb)*sin(thb)*sin(thb)+(1-f)*cos(tha)*cos(tha)*sin(tha)*cos(thb)*cos(thb)*sin(thb)",RooArgSet(tha,thb,f));
+    const char* pdfFormula =   "(hp*hp+hm*hm)*sin(tha)*sin(tha)*sin(tha)*sin(thb)*sin(thb)*sin(thb)+\
+                                4*h0*h0*cos(tha)*cos(tha)*sin(tha)*cos(thb)*cos(thb)*sin(thb)+\
+                                2*(hp*hm*cos(hpa-hma)*cos(2*chi)-hp*hm*sin(hpa-hma)*sin(2*chi))*sin(tha)*sin(tha)*sin(tha)*sin(thb)*sin(thb)*sin(thb)+\
+                                (hat*h0*cos(hata-h0a)*cos(chi)-hst*h0*sin(hsta-h0a)*sin(chi))*sin(2*tha)*sin(tha)*sin(2*thb)*sin(thb)";
+
+    //RooGenericPdf* pdf = new RooGenericPdf("pdf","Generic PDF",pdfFormula,varSet);
     #endif
 
     #ifdef TRANSVERSITY
@@ -89,70 +150,79 @@ int main(int argc, char* argv[])
     }
 
 
+    //RooDataSet* data = pdf->generate(RooArgSet(tha,thb),10000);
+
+    RooFitResult* result = pdf->fitTo(*dataSet,RooFit::Save());//,RooFit::NumCPU(2));
+    result->Print();
+    RooPlot* xframe = tha.frame();
+    dataSet->plotOn(xframe);
+    pdf->plotOn(xframe);
+    pdf->paramOn(xframe);
+    xframe->Draw();
 
     #ifdef GRAPHIC
-    TCanvas* cc = new TCanvas("cc","Canvas",800,600);
-
-        #ifdef HELICITY
-        cc->Divide(2,2);
-        cc->cd(1);
-        hChi->Draw();
-        cc->cd(2);
-        hThA->Draw();
-        cc->cd(3);
-        hThB->Draw();
-        cc->cd(4);
-        hG->SetOption("box");
-        hG->Draw();
-
-        TCanvas* c1 = new TCanvas("c1","c1");
-        pdf->fitTo(*dataSet);
-        RooPlot* xframe = tha.frame();
-        dataSet->plotOn(xframe);
-        pdf->plotOn(xframe);
-        xframe->Draw();
-
-        TCanvas* c2 = new TCanvas("c2","c2");
-        RooPlot* yframe = thb.frame();
-        dataSet->plotOn(yframe);
-        pdf->plotOn(yframe);
-        yframe->Draw();
-        #endif
-
-        #ifdef TRANSVERSITY
-        cc->Divide(2,2);
-        cc->cd(1);
-        hPhiT->Draw();
-        cc->cd(2);
-        hThT->Draw();
-        cc->cd(3);
-        hThB->Draw();
-        cc->cd(4);
-
-        TCanvas* c1 = new TCanvas("c1","c1");
-        pdf->fitTo(*dataSet);
-        RooPlot* xframe = phit.frame();
-        dataSet->plotOn(xframe);
-        pdf->plotOn(xframe);
-        xframe->Draw();
-
-        TCanvas* c2 = new TCanvas("c2","c2");
-        RooPlot* yframe = tht.frame();
-        dataSet->plotOn(yframe);
-        pdf->plotOn(yframe);
-        yframe->Draw();
-
-        TCanvas* c3 = new TCanvas("c3","c3");
-        RooPlot* zframe = thb.frame();
-        dataSet->plotOn(zframe);
-        pdf->plotOn(zframe);
-        zframe->Draw();
-        #endif
-
+//    TCanvas* cc = new TCanvas("cc","Canvas",800,600);
+//
+//        #ifdef HELICITY
+//        cc->Divide(2,2);
+//        cc->cd(1);
+//        hChi->Draw();
+//        cc->cd(2);
+//        hThA->Draw();
+//        cc->cd(3);
+//        hThB->Draw();
+//        cc->cd(4);
+//        hG->SetOption("box");
+//        hG->Draw();
+//
+//        TCanvas* c2 = new TCanvas("c2","c2");
+//
+//        pdf->fitTo(*dataSet);
+//        RooPlot* xframe = tha.frame();
+//        toySet->plotOn(xframe);
+//        pdf->plotOn(xframe);
+//        xframe->Draw();
+//
+//        TCanvas* c3 = new TCanvas("c3","c3");
+//        RooPlot* yframe = thb.frame();
+//        //toySet->plotOn(yframe);
+//        pdf->plotOn(yframe);
+//        yframe->Draw();
+//        #endif
+//
+//        #ifdef TRANSVERSITY
+//        cc->Divide(2,2);
+//        cc->cd(1);
+//        hPhiT->Draw();
+//        cc->cd(2);
+//        hThT->Draw();
+//        cc->cd(3);
+//        hThB->Draw();
+//        cc->cd(4);
+//
+//        TCanvas* c1 = new TCanvas("c1","c1");
+//        pdf->fitTo(*dataSet);
+//        RooPlot* xframe = phit.frame();
+//        dataSet->plotOn(xframe);
+//        pdf->plotOn(xframe);
+//        xframe->Draw();
+//
+//        TCanvas* c2 = new TCanvas("c2","c2");
+//        RooPlot* yframe = tht.frame();
+//        dataSet->plotOn(yframe);
+//        pdf->plotOn(yframe);
+//        yframe->Draw();
+//
+//        TCanvas* c3 = new TCanvas("c3","c3");
+//        RooPlot* zframe = thb.frame();
+//        dataSet->plotOn(zframe);
+//        pdf->plotOn(zframe);
+//        zframe->Draw();
+//        #endif
+//
     printf("\nProgram execution has finished.\n");
     rootapp->Run(); //For graphic-output apps only
     #endif
-
     return 0;
 }
 
@@ -161,6 +231,7 @@ void Analyze(RooDataSet* dataSet)
     printf("# Events = %i\n",events->size());
 
     for(int i = 0; i < events->size(); i++)
+    //for(int i = 0; i < 3; i++)
     {
         //printf("\n\nEvent %i # particles = %i\n",i+1,(*events)[i].size());
         //PrintEvent(i);
@@ -173,7 +244,7 @@ void Analyze(RooDataSet* dataSet)
         Particle* RhoPi = 0;
 
         #ifdef HELICITY
-        double chi = 0;
+        double dChi = 0;
         double theta_a = 0;
         double theta_b = 0;
         #endif
@@ -194,17 +265,19 @@ void Analyze(RooDataSet* dataSet)
 
             #ifdef HELICITY
             TransformHel(B0,DS,DSD0,DSPi,Rho,RhoPi0,RhoPi);
-            GetAnglesHel(DSD0,RhoPi,chi,theta_a,theta_b);
-            hChi->Fill(chi);
+            GetAnglesHel(DSD0,RhoPi,dChi,theta_a,theta_b);
+            hChi->Fill(dChi);
             hThA->Fill(theta_a);
             hThB->Fill(theta_b);
             hG->Fill(theta_a,theta_b);
 
             RooRealVar tha("tha","tha",0,PI);
             RooRealVar thb("thb","thb",0,PI);
+            RooRealVar chi("chi","chi",0,2*PI);
             tha = theta_a;
             thb = theta_b;
-            dataSet->add(RooArgSet(tha,thb));
+            chi = dChi;
+            dataSet->add(RooArgSet(tha,thb,chi));
             //printf("chi: %0.4f\tth_a: %0.4f\tth_b: %0.4f\n",chi,theta_a,theta_b);
             #endif
 
