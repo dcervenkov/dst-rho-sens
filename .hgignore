@@ -1,3 +1,9 @@
-Debug
-data
-misc
+syntax: glob
+
+DSRho*/data
+DSRho*/bin
+DSRho*/obj
+*.save
+*.layout
+*.tgz
+old_eclipse_stuff

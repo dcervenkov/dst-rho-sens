@@ -37,7 +37,7 @@
 #include "RooAddPdf.h"
 
 
-#include "DSRhoSens.h"
+#include "DSRhoFit.h"
 #include "Particle.h"
 #include "Constants.h"
 #include "ASSERT.h"
@@ -101,14 +101,14 @@ int main(int argc, char* argv[])
     RooGenericPdf* pdf = new RooGenericPdf("pdf","Generic PDF","ap2*sin(phit)*sin(phit)*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)",RooArgSet(phit,tht,thb,ap2));
     #endif
 
-    for(int i = 2; i < argc; i++)
-    {
-        ReadEvents(argv[i]);
-        Analyze(dataSet);
-    }
+//    for(int i = 2; i < argc; i++)
+//    {
+//        ReadEvents(argv[i]);
+//        Analyze(dataSet);
+//    }
 
     //dataSet->write(argv[1]);
-    //dataSet = RooDataSet::read("dataset",RooArgList(tha,thb,chi));
+    dataSet = RooDataSet::read("data/dataset_org_hel",RooArgList(tha,thb,chi));
     Fit(dataSet,tha,thb,chi);
 
     timer.Stop();

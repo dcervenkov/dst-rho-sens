@@ -1,0 +1,178 @@
+# depslib dependency file v1.0
+1313753308 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/Particle.cpp
+	"TRotation.h"
+	"TLorentzRotation.h"
+	"TLorentzVector.h"
+	"TVector3.h"
+	"Particle.h"
+	"ASSERT.h"
+
+1313755653 /usr/local/include/root/TRotation.h
+	"TObject.h"
+	"TVector3.h"
+
+1313755650 /usr/local/include/root/TObject.h
+	"Rtypes.h"
+	"TStorage.h"
+	"TVersionCheck.h"
+	"Riosfwd.h"
+	<stdarg.h>
+	"TBuffer.h"
+
+1313755650 /usr/local/include/root/Rtypes.h
+	"RConfig.h"
+	"DllImport.h"
+	"Rtypeinfo.h"
+	<stdio.h>
+	<string.h>
+	<snprintf.h>
+	<strlcpy.h>
+	"TGenericClassInfo.h"
+
+1313755650 /usr/local/include/root/RConfig.h
+	"RVersion.h"
+	<standards.h>
+	<stdlib.h>
+	<features.h>
+	<AvailabilityMacros.h>
+	<TargetConditionals.h>
+
+1313755650 /usr/local/include/root/RVersion.h
+
+1313755650 /usr/local/include/root/DllImport.h
+
+1313755650 /usr/local/include/root/Rtypeinfo.h
+	"RConfig.h"
+	<typeinfo>
+	<typeinfo>
+
+1313755650 /usr/local/include/root/snprintf.h
+	"RConfig.h"
+	<stdio.h>
+	<stdarg.h>
+
+1313755650 /usr/local/include/root/strlcpy.h
+	"RConfig.h"
+	<unistd.h>
+	<sys/types.h>
+
+1313755651 /usr/local/include/root/TGenericClassInfo.h
+	<vector>
+	"TSchemaHelper.h"
+
+1313755651 /usr/local/include/root/TSchemaHelper.h
+	<string>
+	"Rtypes.h"
+
+1313755650 /usr/local/include/root/TStorage.h
+	"Rtypes.h"
+
+1313755650 /usr/local/include/root/TVersionCheck.h
+	"RVersion.h"
+
+1313755650 /usr/local/include/root/Riosfwd.h
+	"RConfig.h"
+	<iostream>
+	<iosfwd>
+
+1313755650 /usr/local/include/root/TBuffer.h
+	"TObject.h"
+	<typeinfo>
+
+1313755653 /usr/local/include/root/TVector3.h
+	"TError.h"
+	"TVector2.h"
+	"TMatrix.h"
+
+1313755650 /usr/local/include/root/TError.h
+	"Rtypes.h"
+	<stdarg.h>
+
+1313755653 /usr/local/include/root/TVector2.h
+	"TObject.h"
+
+1313755651 /usr/local/include/root/TMatrix.h
+	"TMatrixF.h"
+
+1313755651 /usr/local/include/root/TMatrixF.h
+	"TMatrixT.h"
+	"TMatrixFfwd.h"
+	"TMatrixFUtils.h"
+
+1313755651 /usr/local/include/root/TMatrixT.h
+	"TMatrixTBase.h"
+	"TMatrixTUtils.h"
+	<vecLib/vBLAS.h>
+
+1313755651 /usr/local/include/root/TMatrixTBase.h
+	<limits>
+	"TNamed.h"
+	"TMatrixFBasefwd.h"
+	"TMatrixDBasefwd.h"
+	"TVectorFfwd.h"
+	"TVectorDfwd.h"
+	"TError.h"
+
+1313755650 /usr/local/include/root/TNamed.h
+	"TObject.h"
+	"TString.h"
+
+1313755650 /usr/local/include/root/TString.h
+	<string.h>
+	<stdio.h>
+	"Riosfwd.h"
+	"TMathBase.h"
+	<stdarg.h>
+	<string>
+
+1313755650 /usr/local/include/root/TMathBase.h
+	"Rtypes.h"
+
+1313755651 /usr/local/include/root/TMatrixFBasefwd.h
+	"Rtypes.h"
+
+1313755651 /usr/local/include/root/TMatrixDBasefwd.h
+	"Rtypes.h"
+
+1313755651 /usr/local/include/root/TVectorFfwd.h
+	"Rtypes.h"
+
+1313755651 /usr/local/include/root/TVectorDfwd.h
+	"Rtypes.h"
+
+1313755651 /usr/local/include/root/TMatrixTUtils.h
+	"TMatrixTBase.h"
+
+1313755651 /usr/local/include/root/TMatrixFfwd.h
+	"Rtypes.h"
+
+1313755651 /usr/local/include/root/TMatrixFUtils.h
+	"TMatrixTUtils.h"
+	"TMatrixFUtilsfwd.h"
+
+1313755651 /usr/local/include/root/TMatrixFUtilsfwd.h
+	"Rtypes.h"
+
+1313755653 /usr/local/include/root/TLorentzRotation.h
+	"TRotation.h"
+	"TLorentzVector.h"
+
+1313755653 /usr/local/include/root/TLorentzVector.h
+	"TMath.h"
+	"TVector3.h"
+	"TRotation.h"
+
+1313755651 /usr/local/include/root/TMath.h
+	"Rtypes.h"
+	"TMathBase.h"
+	"TError.h"
+	<algorithm>
+	<limits>
+	<float.h>
+	<math.h>
+
+1313753308 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/Particle.h
+
+1313753308 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/ASSERT.h
+	<iostream>
+
