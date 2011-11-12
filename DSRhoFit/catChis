@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat data/org_many/chi/* | awk '{print $1}'
