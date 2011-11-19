@@ -3,7 +3,9 @@ syntax: glob
 DSRho*/data
 DSRho*/bin
 DSRho*/obj
+DSRho*/plots
 *.save
 *.layout
 *.tgz
 old_eclipse_stuff
+DSRhoFit/scripts/hist_add

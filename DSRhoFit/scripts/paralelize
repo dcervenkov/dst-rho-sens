@@ -1,0 +1,9 @@
+#!/bin/bash
+
+for ((i = 0; i < 2; i++))
+do
+    let b=i*50
+    let b=b+1
+    let e=b+49
+    ./getHistos $b $e &
+done

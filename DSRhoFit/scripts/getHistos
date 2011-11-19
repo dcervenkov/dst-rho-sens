@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for ((i = $1; i <= $2; i++))
+do
+    ../bin/Release/DSRhoFit ../data/org_many/dataset_org_$i ../data/org_many/histos/histo_$i.root
+done

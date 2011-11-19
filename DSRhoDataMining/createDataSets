@@ -2,5 +2,5 @@
 
 for ((i = 1; i <= 100; i++))
 do
-    ./DSRhoDataMining data/org_many/dataset_org_$i data/org_many/root/DSRho_exp*-$i.root
+    bin/Release/DSRhoDataMining data/org_many/dataset_trans_org_$i data/org_many/root/DSRho_exp*-$i.root
 done

@@ -5,14 +5,14 @@ void chi2plot() {
 //Author: Rene Brun
 
    ifstream in;
-   in.open("data/org_many/chi/chi");
+   in.open("../data/org_many/chi/chi");
 
    Double_t chi2;
    Int_t nlines = 0;
    Float_t low = 15000;
-   Float_t high = 19000;
+   Float_t high = 17500;
    Float_t ndof = 15995;
-   //TFile *f = new TFile("chi2.root","RECREATE");
+   TFile *f = new TFile("chi2.root","RECREATE");
    TH1F *h1 = new TH1F("h1","chi2 distribution with 15995 d.o.f.",50,low,high);
    TH1F *h2 = new TH1F("h2","chi2red distribution with 15995 d.o.f.",50,low/ndof,high/ndof);
 
@@ -34,5 +34,5 @@ void chi2plot() {
    cc->cd(2);
    h2->Draw();
 
-   //f->Write();
+   f->Write();
 }

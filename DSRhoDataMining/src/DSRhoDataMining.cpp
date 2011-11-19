@@ -44,8 +44,8 @@
 
 #define DEBUG
 //#define VERBOSE
-#define HELICITY
-//#define TRANSVERSITY
+//#define HELICITY
+#define TRANSVERSITY
 
 #ifdef HELICITY
 TH1D *hChi = new TH1D("hChi", "Chi distribution", 50, 0, 2*PI);
@@ -81,14 +81,14 @@ int main(int argc, char* argv[])
     #endif
 
     #ifdef TRANSVERSITY
-    RooRealVar phit("phit","phit",-PI,PI);
     RooRealVar tht("tht","tht",0,PI);
     RooRealVar thb("thb","thb",0,PI);
-    RooRealVar ap2("ap2","ap2",0,1);
-    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(phit,tht,thb));
+    RooRealVar phit("phit","phit",-PI,PI);
+    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit));
     #endif
 
     /// The argv[0] is path and name of the program itself, argv[1] is the output filename
+    /// so input files start at argv[2].
     for(int i = 2; i < argc; i++)
     {
         ReadEvents(argv[i]);
@@ -166,13 +166,13 @@ void Analyze(RooDataSet* dataSet)
             hThT->Fill(theta_t);
             hThB->Fill(theta_b);
 
-            RooRealVar phit("phit","phit",-PI,PI);
             RooRealVar tht("tht","tht",0,PI);
             RooRealVar thb("thb","thb",0,PI);
-            phit = phi_t;
+            RooRealVar phit("phit","phit",-PI,PI);
             tht = theta_t;
             thb = theta_b;
-            dataSet->add(RooArgSet(phit,tht,thb));
+            phit = phi_t;
+            dataSet->add(RooArgSet(tht,thb,phit));
             //printf("th_t: %0.4f\tphi_t: %0.4f\tth_b: %0.4f\n",theta_t,phi_t,theta_b);
             #endif
 

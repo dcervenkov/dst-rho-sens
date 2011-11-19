@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="dataset_org_hel data/org_hel/DSRho_exp*-0.root" />
+				<Option parameters="data/test data/org_hel/DSRho_exp*-0.root" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
