@@ -1,5 +1,5 @@
 #include <stdio.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 
 #include "TROOT.h"
 #include "TStyle.h"
@@ -16,6 +16,7 @@
 #include "TMath.h"
 
 #include "RooFit.h"
+#include "RooGlobalFunc.h"
 #include "RooRealVar.h"
 #include "RooPlot.h"
 #include "RooDataSet.h"
@@ -42,19 +43,25 @@
 //#define HELICITY
 #define TRANSVERSITY
 
-#ifdef HELICITY
-TH1D *hChi = new TH1D("hChi", "Chi distribution", 50, 0, 2*PI);
-TH1D *hThA = new TH1D("hThA", "Theta A distribution", 50, 0, PI);
-TH1D *hThB = new TH1D("hThB", "Theta B distribution", 50, 0, PI);
-TH2D *hG = new TH2D("hG","Gamma distribution", 30, 0, PI, 30, 0, PI);
-#endif
+const Int_t tha_bins = 20;
+const Int_t thb_bins = 20;
+const Int_t chi_bins = 40;
+RooRealVar tha("tha","tha",0,PI);
+RooRealVar thb("thb","thb",0,PI);
+RooRealVar chi("chi","chi",0,2*PI);
 
-#ifdef TRANSVERSITY
-TH1D *hPhiT = new TH1D("hPhiT", "Phi T distribution", 50, -PI, PI);
-TH1D *hThT = new TH1D("hThT", "Theta T distribution", 50, 0, PI);
-TH1D *hThB = new TH1D("hThB", "Theta B distribution", 50, 0, PI);
-#endif
+const Int_t tht_bins = 20;
+const Int_t phit_bins = 40;
+RooRealVar tht("tht","tht",0,PI);
+RooRealVar phit("phit","phit",-PI,PI);
 
+char* inputFile = 0;
+char* outputFile = 0;
+
+Double_t par1_input = 0.275;
+Double_t par2_input = 0.57;
+Double_t par3_input = 0.936;
+Double_t par4_input = 2.84;
 
 int main(int argc, char* argv[])
 {
@@ -75,8 +82,24 @@ int main(int argc, char* argv[])
     }
     #endif
 
+    if(argc < 3)
+    {
+        #ifdef HELICITY
+        printf("Usage: DSRhoFit inputFile outputFile [hp] [hpa] [h0] [hma]\n");
+        #endif
+        #ifdef TRANSVERSITY
+        printf("Usage: DSRhoFit inputFile outputFile [ap] [apa] [a0] [ata]\n");
+        #endif
+        return 1;
+    }
+
     inputFile = argv[1];
     outputFile = argv[2];
+
+    par1_input = atof(argv[3]);
+    par2_input = atof(argv[4]);
+    par3_input = atof(argv[5]);
+    par4_input = atof(argv[6]);
 
     TStopwatch timer;
     timer.Start();
@@ -93,64 +116,10 @@ int main(int argc, char* argv[])
     FitTrans(dataSet,tht,thb,phit);
     #endif
 
-
-
     timer.Stop();
     timer.Print();
 
     #ifdef GRAPHIC
-//    TCanvas* cc = new TCanvas("cc","Canvas",800,600);
-
-        #ifdef HELICITY
-//    	RooPlot* frame1 = chi.frame();
-//        RooPlot* frame2 = tha.frame();
-//        RooPlot* frame3 = thb.frame();
-//        dataSet_binned->plotOn(frame1);
-//        pdf->plotOn(frame1);
-//        dataSet_binned->plotOn(frame2);
-//        pdf->plotOn(frame2);
-//        dataSet_binned->plotOn(frame3);
-//        pdf->plotOn(frame3);
-//        cc->Divide(2,2);
-//        cc->cd(1);
-//        frame1->Draw();
-//        cc->cd(2);
-//    	frame2->Draw();
-//    	cc->cd(3);
-//    	frame3->Draw();
-//    	printf("chi1red = %f\nchi2red = %f\nchi3red = %f\n",frame1->chiSquare(5),frame2->chiSquare(5),frame3->chiSquare(5));
-        #endif
-
-        #ifdef TRANSVERSITY
-        cc->Divide(2,2);
-        cc->cd(1);
-        hPhiT->Draw();
-        cc->cd(2);
-        hThT->Draw();
-        cc->cd(3);
-        hThB->Draw();
-        cc->cd(4);
-
-        TCanvas* c1 = new TCanvas("c1","c1");
-        pdf->fitTo(*dataSet);
-        RooPlot* xframe = phit.frame();
-        dataSet->plotOn(xframe);
-        pdf->plotOn(xframe);
-        xframe->Draw();
-
-        TCanvas* c2 = new TCanvas("c2","c2");
-        RooPlot* yframe = tht.frame();
-        dataSet->plotOn(yframe);
-        pdf->plotOn(yframe);
-        yframe->Draw();
-
-        TCanvas* c3 = new TCanvas("c3","c3");
-        RooPlot* zframe = thb.frame();
-        dataSet->plotOn(zframe);
-        pdf->plotOn(zframe);
-        zframe->Draw();
-        #endif
-
     printf("\nProgram execution has finished.\n");
     rootapp->Run(); //For graphic-output apps only
     #endif
@@ -164,25 +133,17 @@ int FitHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar& ch
      * The f one gets from fitting with the following PDF is actually (|H+|^2 + |H-|^2)
      * viz formula (35) in BN419. Equvivalentely (1-f) = |H0|^2.
      **/
-    RooRealVar f("f","fraction",0.5,0,1);
-//    RooRealVar c1("c1","c1 var",0.05,0,0.5);
-//    RooRealVar c2("c2","c2 var",0.05,0,0.5);
 
-    //RooRealVar hp("hp","hp",0.152,0,0.3);
-    RooRealVar hp("hp","hp",0.152);
-    //RooRealVar hpa("hpa","hpa",1.47,0,2*PI);
-    RooRealVar hpa("hpa","hpa",1.47);
+    RooRealVar hp("hp","hp",par1_input,0,0.3);
+    RooRealVar hpa("hpa","hpa",par2_input,0,2*PI);
     RooFormulaVar hpr("hpr","hp*cos(hpa)",RooArgSet(hp,hpa));
     RooFormulaVar hpi("hpi","hp*sin(hpa)",RooArgSet(hp,hpa));
-    //RooRealVar h0("h0","h0",0.936,0.8,1);
-    RooRealVar h0("h0","h0",0.936);
-    //RooRealVar h0a("h0a","h0a",0,0,2*PI);
+    RooRealVar h0("h0","h0",par3_input,0.8,1);
     RooRealVar h0a("h0a","h0a",0);
     RooFormulaVar h0r("h0r","h0*cos(h0a)",RooArgSet(h0,h0a));
     RooFormulaVar h0i("h0i","h0*sin(h0a)",RooArgSet(h0,h0a));
     RooFormulaVar hm("hm","sqrt(1-hp*hp-h0*h0)",RooArgSet(hp,h0));
-    //RooRealVar hma("hma","hma",0.19,0,2*PI);
-    RooRealVar hma("hma","hma",0.19);
+    RooRealVar hma("hma","hma",par4_input,0,2*PI);
     RooFormulaVar hmr("hmr","hm*cos(hma)",RooArgSet(hm,hma));
     RooFormulaVar hmi("hmi","hm*sin(hma)",RooArgSet(hm,hma));
 
@@ -222,74 +183,18 @@ int FitHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar& ch
 
     RooGenericPdf* pdf = new RooGenericPdf("pdf","Generic PDF",pdfFormula,varSet);
 
-    RooGenericPdf* pdf_int_chi = new RooGenericPdf("pdf_int_chi","pdf_int_chi","f*sin(tha)*sin(tha)*sin(tha)*sin(thb)*sin(thb)*sin(thb)+(1-f)*4*cos(tha)*cos(tha)*sin(tha)*cos(thb)*cos(thb)*sin(thb)",RooArgSet(tha,thb,f));
-    //RooGenericPdf* pdf_int_chi_thb = new RooGenericPdf("pdf_int_chi","pdf_int_chi","f*(4/3)*sin(tha)*sin(tha)*sin(tha)+(1-f)*(2/3)*4*cos(tha)*cos(tha)*sin(tha)",RooArgSet(tha,f));
-    //RooGenericPdf* pdf_int_tha_thb = new RooGenericPdf("pdf_int_tha_thb","pdf_int_tha_thb","1+2*(c1*cos(2*chi)-c2*sin(2*chi))",RooArgSet(c1,c2,chi));
+    RooFitResult* result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true));//,RooFit::NumCPU(2));
+    result->Print();
 
     chi.setBins(chi_bins);
 	tha.setBins(tha_bins);
 	thb.setBins(thb_bins);
 
-    //printf("(int_thb_chi) chi^2 = %f\n",frame1->chiSquare(5));
-
-
-
-//    RooFormulaVar h0fit("h0fit","sqrt(1-f)",f);
-//    h0 = h0fit;
-//    h0fit.Print();
-//    h0.Print();
-//    h0.setConstant(true);
-    //c1 = 0.0138;
-    //c2 = 0.0462;
-    //c1.setConstant(true);
-    //c2.setConstant(true);
-
-//    RooFitResult* result2 = pdf_int_tha_thb->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true));
-//    result2->Print();
-//    c1.Print();
-//    c2.Print();
-//    h0.Print();
-    //printf("h0 = %f\n",h0.getVal());
-//    c1.setConstant(true);
-//    c2.setConstant(true);
-
-
-//	printf("(int_tha_chi) chi^2 = %f\n",frame2->chiSquare(5));
-
-
-//	printf("(int_tha_thb) chi^2 = %f\n",frame3->chiSquare(5));
-
-	//RooRealVar c1err("c1err","c1err",c1.getError());
-	//RooRealVar c2err("c2err","c2err",c2.getError());
-	//RooGaussian* c1_constraint = new RooGaussian("c1_constraint","c1_constraint",hptr,c1,c1err);
-	//RooGaussian* c2_constraint = new RooGaussian("c2_constraint","c2_constraint",hpti,c2,c2err);
-
-    //RooFitResult* result3 = pdf->fitTo(*dataSet,RooFit::ExternalConstraints(RooArgSet(*c1_constraint,*c2_constraint)),RooFit::Save(),RooFit::Timer(true));
-    //RooFitResult* result3 = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true));
-    //result3->Print();
-
-    hp.Print();
-    hpa.Print();
-    h0.Print();
-    h0a.Print();
-    hm.Print();
-    hma.Print();
-//    c1.Print();
-//    c2.Print();
-//    hptr.Print();
-//    hpti.Print();
-
-//    tha = PI/2;
-//    thb = PI/2;
-//    chi = PI/4;
-//    printf("*** pdf value = %f\n",pdf->getVal());
-
-
     RooRandom::randomGenerator()->SetSeed(0);
 
 	RooDataHist* dataSet_binned = new RooDataHist("dataSet_binned","dataSet_binned",RooArgSet(chi,tha,thb),*dataSet);
     //RooDataHist* dataSet_binned = pdf->generateBinned(RooArgSet(tha,thb,chi),dataSet->numEntries(),kFALSE);
-    RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(tha,thb,chi),dataSet->numEntries(),kTRUE);
+    //RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(tha,thb,chi),dataSet->numEntries(),kTRUE);
 
 	RooChi2Var chi2Var("chi2Var","chi2Var",*pdf,*dataSet_binned);
 
@@ -306,97 +211,40 @@ int FitHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar& ch
 	_prob->setVal(TMath::Prob(_chi2->getVal(),static_cast<int>(_ndof->getVal())));
 
 	printf("chi2 = %f\nndof = %f\nchi2red = %f\nprob = %f\n",_chi2->getVal(),_ndof->getVal(),_chi2red->getVal(),_prob->getVal());
-    //WriteToFile(_chi2->getVal());
 
+//    Int_t numParameters = 13;
+//	Double_t recoveredParameters[13] = {_chi2red->getVal(),hp.getVal(),hp.getError(),hpa.getVal(),hpa.getError(),
+//                                                   h0.getVal(),h0.getError(),h0a.getVal(),h0a.getError(),hm.getVal(),
+//                                                   hm.getPropagatedError(*result),hma.getVal(),hma.getError()};
+//
+//    WriteToFile(numParameters, recoveredParameters);
 
-//    RooFitResult* result = pdf_int_chi->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true));//,RooFit::NumCPU(2));
-//    result->Print();
+    SavePlots(dataSet,pdf,tht,thb,phit);
 
-    TFile* file = new TFile("plots/frames.root","RECREATE");
-    TCanvas* c1 = new TCanvas("c1","c1",1000,800);
-
-    RooPlot* frame1 = tha.frame();
-    pdf_binned->plotOn(frame1,RooFit::MarkerColor(2),RooFit::Name("pdf"));
-    dataSet_binned->plotOn(frame1,RooFit::MarkerColor(3),RooFit::Name("gen data"));
-    pdf->plotOn(frame1);
-    //dataSet->plotOn(frame1,RooFit::Name("data"));
-    frame1->Draw();
-    frame1->Write();
-    c1->SaveAs("plots/frame1.png");
-
-    RooPlot* frame2 = thb.frame();
-    pdf_binned->plotOn(frame2,RooFit::MarkerColor(2),RooFit::Name("pdf"));
-    dataSet_binned->plotOn(frame2,RooFit::MarkerColor(3),RooFit::Name("gen data"));
-    //dataSet->plotOn(frame2,RooFit::Name("data"));
-	pdf->plotOn(frame2);
-	frame2->Draw();
-    c1->SaveAs("plots/frame2.png");
-
-    RooPlot* frame3 = chi.frame();
-    pdf_binned->plotOn(frame3,RooFit::MarkerColor(2),RooFit::Name("pdf"));
-    dataSet_binned->plotOn(frame3,RooFit::MarkerColor(3),RooFit::Name("gen data"));
-    //dataSet->plotOn(frame3,RooFit::Name("data"));
-	pdf->plotOn(frame3);
-	frame3->Draw();
-    c1->SaveAs("plots/frame3.png");
-
-    file->Close();
-
-    TH2* h2 = dynamic_cast<TH2*>(dataSet_binned->createHistogram("h2",tha,RooFit::YVar(thb)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/tha_thb_data.png");
-
-    h2 = dynamic_cast<TH2*>(pdf_binned->createHistogram("h2",tha,RooFit::YVar(thb)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/tha_thb_pdf.png");
-
-    h2 = dynamic_cast<TH2*>(pdf_binned->createHistogram("h2",tha,RooFit::YVar(chi)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/tha_chi_pdf.png");
-
-    h2 = dynamic_cast<TH2*>(dataSet_binned->createHistogram("h2",tha,RooFit::YVar(chi)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/tha_chi_data.png");
-
-    h2 = dynamic_cast<TH2*>(pdf_binned->createHistogram("h2",thb,RooFit::YVar(chi)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/thb_chi_pdf.png");
-
-    h2 = dynamic_cast<TH2*>(dataSet_binned->createHistogram("h2",thb,RooFit::YVar(chi)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/thb_chi_data.png");
-
-
-    GetChi2(dataSet_binned,pdf_binned);
+//    GetChi2(dataSet_binned,pdf_binned);
 
     return 0;
 }
 
 int FitTrans(RooDataSet* dataSet, RooRealVar& tht, RooRealVar& thb, RooRealVar& phit)
 {
-
-    RooRealVar f("f","fraction",0.5,0,1);
-//    RooRealVar c1("c1","c1 var",0.05,0,0.5);
-//    RooRealVar c2("c2","c2 var",0.05,0,0.5);
-
-    RooRealVar ap("ap","ap",0.275);
-    RooRealVar apa("apa","apa",0.57);
+    RooRealVar ap("ap","ap",par1_input,0.1,0.4);
+    RooRealVar apa("apa","apa",par2_input,0,2*PI);
     RooFormulaVar apr("apr","ap*cos(apa)",RooArgSet(ap,apa));
     RooFormulaVar api("api","ap*sin(apa)",RooArgSet(ap,apa));
-    RooRealVar a0("a0","a0",0.936);
+    RooRealVar a0("a0","a0",par3_input,0.8,1);
     RooRealVar a0a("a0a","a0a",0);
     RooFormulaVar a0r("a0r","a0*cos(a0a)",RooArgSet(a0,a0a));
     RooFormulaVar a0i("a0i","a0*sin(a0a)",RooArgSet(a0,a0a));
     RooFormulaVar at("at","sqrt(1-ap*ap-a0*a0)",RooArgSet(ap,a0));
-    RooRealVar ata("ata","ata",2.84);
+    RooRealVar ata("ata","ata",par4_input,0,2*PI);
     RooFormulaVar atr("atr","at*cos(ata)",RooArgSet(at,ata));
     RooFormulaVar ati("ati","at*sin(ata)",RooArgSet(at,ata));
+
+//    ap.setConstant();
+//    apa.setConstant();
+//    a0.setConstant();
+//    ata.setConstant();
 
     RooFormulaVar ap0r("ap0r","ap*a0*cos(-apa+a0a)",RooArgSet(ap,apa,a0,a0a));
     RooFormulaVar a0ti("a0ti","a0*at*sin(-a0a+ata)",RooArgSet(a0,a0a,at,ata));
@@ -416,24 +264,18 @@ int FitTrans(RooDataSet* dataSet, RooRealVar& tht, RooRealVar& thb, RooRealVar& 
 
     RooGenericPdf* pdf = new RooGenericPdf("pdf","Generic PDF",pdfFormula,varSet);
 
-    //RooGenericPdf* pdf_int_phit = new RooGenericPdf("pdf_int_phit","pdf_int_phit","f*sin(tha)*sin(tha)*sin(tha)*sin(thb)*sin(thb)*sin(thb)+(1-f)*4*cos(tha)*cos(tha)*sin(tha)*cos(thb)*cos(thb)*sin(thb)",RooArgSet(tht,thb,phit));
-    //RooGenericPdf* pdf_int_chi_thb = new RooGenericPdf("pdf_int_chi","pdf_int_chi","f*(4/3)*sin(tha)*sin(tha)*sin(tha)+(1-f)*(2/3)*4*cos(tha)*cos(tha)*sin(tha)",RooArgSet(tha,f));
-    RooGenericPdf* pdf_int_thb_phit = new RooGenericPdf("pdf_int_tht_phit","pdf_int_tht_phit","(1-f)*sin(tht)*sin(tht)*sin(tht)+f*2*cos(tht)*cos(tht)*sin(tht)",RooArgSet(f,tht,thb,phit));
+    RooFitResult* result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true));//,RooFit::NumCPU(2));
+    result->Print();
 
     tht.setBins(tht_bins);
     thb.setBins(thb_bins);
     phit.setBins(phit_bins);
 
-    //printf("(int_thb_chi) chi^2 = %f\n",frame1->chiSquare(5));
-    //printf("(int_tha_chi) chi^2 = %f\n",frame2->chiSquare(5));
-    //printf("(int_tha_thb) chi^2 = %f\n",frame3->chiSquare(5));
-
-
     RooRandom::randomGenerator()->SetSeed(0);
 
-	//RooDataHist* dataSet_binned = new RooDataHist("dataSet_binned","dataSet_binned",RooArgSet(tht,thb,phit),*dataSet);
-    RooDataHist* dataSet_binned = pdf->generateBinned(RooArgSet(tht,thb,phit),dataSet->numEntries(),kFALSE);
-    RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(tht,thb,phit),dataSet->numEntries(),kTRUE);
+	RooDataHist* dataSet_binned = new RooDataHist("dataSet_binned","dataSet_binned",RooArgSet(tht,thb,phit),*dataSet);
+    //RooDataHist* dataSet_binned = pdf->generateBinned(RooArgSet(tht,thb,phit),dataSet->numEntries(),kFALSE);
+    //RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(tht,thb,phit),dataSet->numEntries(),kTRUE);
 
 	RooChi2Var chi2Var("chi2Var","chi2Var",*pdf,*dataSet_binned);
 
@@ -450,74 +292,17 @@ int FitTrans(RooDataSet* dataSet, RooRealVar& tht, RooRealVar& thb, RooRealVar& 
 	_prob->setVal(TMath::Prob(_chi2->getVal(),static_cast<int>(_ndof->getVal())));
 
 	printf("chi2 = %f\nndof = %f\nchi2red = %f\nprob = %f\n",_chi2->getVal(),_ndof->getVal(),_chi2red->getVal(),_prob->getVal());
-    //WriteToFile(_chi2->getVal());
 
+//	Int_t numParameters = 13;
+//	Double_t recoveredParameters[13] = {_chi2red->getVal(),ap.getVal(),ap.getError(),apa.getVal(),apa.getError(),
+//                                                   a0.getVal(),a0.getError(),a0a.getVal(),a0a.getError(),at.getVal(),
+//                                                   at.getPropagatedError(*result),ata.getVal(),ata.getError()};
+//
+//    WriteToFile(numParameters, recoveredParameters);
 
-//    RooFitResult* result = pdf_int_chi->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true));//,RooFit::NumCPU(2));
-//    result->Print();
+    SavePlots(dataSet,pdf,tht,thb,phit);
 
-    TFile* file = new TFile("plots/frames.root","RECREATE");
-    TCanvas* c1 = new TCanvas("c1","c1",800,600);
-
-    RooPlot* frame1 = tht.frame();
-    pdf_binned->plotOn(frame1,RooFit::MarkerColor(2),RooFit::Name("pdf"));
-    dataSet_binned->plotOn(frame1,RooFit::MarkerColor(3),RooFit::Name("gen data"));
-    pdf->plotOn(frame1);
-    //dataSet->plotOn(frame1,RooFit::Name("data"));
-    frame1->Draw();
-    frame1->Write();
-    c1->SaveAs("plots/frame1.png");
-
-    RooPlot* frame2 = thb.frame();
-    pdf_binned->plotOn(frame2,RooFit::MarkerColor(2),RooFit::Name("pdf"));
-    dataSet_binned->plotOn(frame2,RooFit::MarkerColor(3),RooFit::Name("gen data"));
-    //dataSet->plotOn(frame2,RooFit::Name("data"));
-	pdf->plotOn(frame2);
-	frame2->Draw();
-    c1->SaveAs("plots/frame2.png");
-
-    RooPlot* frame3 = phit.frame();
-    pdf_binned->plotOn(frame3,RooFit::MarkerColor(2),RooFit::Name("pdf"));
-    dataSet_binned->plotOn(frame3,RooFit::MarkerColor(3),RooFit::Name("gen data"));
-    //dataSet->plotOn(frame3,RooFit::Name("data"));
-	pdf->plotOn(frame3);
-	frame3->Draw();
-    c1->SaveAs("plots/frame3.png");
-
-    file->Close();
-
-    TH2* h2 = dynamic_cast<TH2*>(dataSet_binned->createHistogram("h2",tht,RooFit::YVar(thb)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/tht_thb_data.png");
-
-    h2 = dynamic_cast<TH2*>(pdf_binned->createHistogram("h2",tht,RooFit::YVar(thb)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/tht_thb_pdf.png");
-
-    h2 = dynamic_cast<TH2*>(pdf_binned->createHistogram("h2",tht,RooFit::YVar(phit)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/tht_phit_pdf.png");
-
-    h2 = dynamic_cast<TH2*>(dataSet_binned->createHistogram("h2",tht,RooFit::YVar(phit)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/tht_phit_data.png");
-
-    h2 = dynamic_cast<TH2*>(pdf_binned->createHistogram("h2",thb,RooFit::YVar(phit)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/thb_phit_pdf.png");
-
-    h2 = dynamic_cast<TH2*>(dataSet_binned->createHistogram("h2",thb,RooFit::YVar(phit)));
-    h2->SetOption("colz");
-    h2->Draw();
-    c1->SaveAs("plots/thb_phit_data.png");
-
-
-    GetChi2Trans(dataSet_binned,pdf_binned);
+//    GetChi2Trans(dataSet_binned,pdf_binned);
 
     return 0;
 }
@@ -548,19 +333,19 @@ Double_t GetChi2(RooDataHist* data, RooDataHist* pdf)
         }
     }
 
-//    TCanvas* c2 = new TCanvas("c2","c2");
-//    c2->Divide(2);
-//    c2->cd(1);
-//    hdchi->Draw();
-//    c2->cd(2);
+    TCanvas* c2 = new TCanvas("c2","c2");
+    c2->Divide(2);
+    c2->cd(1);
+    hdchi->Draw();
+    c2->cd(2);
     hdchi2->SetOption("colz");
     //hdchi2->SetMinimum(0);
     //hdchi2->SetMaximum(100);
     hdchi2->SetStats(kFALSE);
-    hdchi2->SaveAs(outputFile);
-//    hdchi2->Draw();
-//    c2->SaveAs("plots/dchi.root");
-//    c2->SaveAs("plots/dchi.png");
+//    hdchi2->SaveAs(outputFile);
+    hdchi2->Draw();
+    c2->SaveAs("plots/dchi.root");
+    c2->SaveAs("plots/dchi.png");
     printf("my chi2 = %f\n",mychi2);
     return 3; //mychi2;
 }
@@ -597,8 +382,8 @@ Double_t GetChi2Trans(RooDataHist* data, RooDataHist* pdf)
     hdchi->Draw();
     c2->cd(2);
     hdchi2->SetOption("colz");
-    hdchi2->SetMinimum(0);
-    hdchi2->SetMaximum(1000);
+    //hdchi2->SetMinimum(0);
+    //hdchi2->SetMaximum(1000);
     hdchi2->SetStats(kFALSE);
     //hdchi2->SaveAs(outputFile);
     hdchi2->Draw();
@@ -608,18 +393,144 @@ Double_t GetChi2Trans(RooDataHist* data, RooDataHist* pdf)
     return 3; //mychi2;
 }
 
-void WriteToFile(Double_t var1)//, Double_t var2, Double_t var3, Double_t var4)
+void WriteToFile(Int_t numEntries, Double_t* vars)
 {
     FILE* pFile;
     pFile = fopen (outputFile,"w");
     if (pFile!=NULL)
     {
-        //fprintf(pFile,"%f %f %f %f\n",var1,var2,var3,var4);
-        fprintf(pFile,"%f\n",var1);
+        for(Int_t i = 0; i < numEntries; i++, vars++)
+        {
+            fprintf(pFile,"%f ",*vars);
+        }
+        //fprintf(pFile,"\n");
         fclose (pFile);
     }
     else
         printf("ERROR: couldn't open file %s for writing!\n",outputFile);
 
     return;
+}
+
+void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3)
+{
+    TFile* file = new TFile("plots/projections.root","RECREATE");
+    TCanvas* c1 = new TCanvas("c1","c1",800,600);
+    TString path;
+    RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(tht,thb,phit),dataSet->numEntries(),kTRUE);
+
+    RooPlot* frame1 = var1.frame();
+    dataSet->plotOn(frame1,RooFit::Name("data"));
+    pdf->plotOn(frame1);
+    frame1->Draw();
+    frame1->Write();
+    path = "plots/proj_";
+    path += var1.GetName();
+    path += ".png";
+    c1->SaveAs(path);
+
+    RooPlot* frame2 = var2.frame();
+    dataSet->plotOn(frame2,RooFit::Name("data"));
+    pdf->plotOn(frame2);
+    frame2->Draw();
+    frame2->Write();
+    path = "plots/proj_";
+    path += var2.GetName();
+    path += ".png";
+    c1->SaveAs(path);
+
+    RooPlot* frame3 = var3.frame();
+    dataSet->plotOn(frame3,RooFit::Name("data"));
+    pdf->plotOn(frame3);
+    frame3->Draw();
+    frame3->Write();
+    path = "plots/proj_";
+    path += var3.GetName();
+    path += ".png";
+    c1->SaveAs(path);
+
+
+    TH2* h2_1_pdf = dynamic_cast<TH2*>(pdf_binned->createHistogram("h2_1_pdf",var1,RooFit::YVar(var2)));
+    h2_1_pdf->SetOption("colz");
+    h2_1_pdf->SetStats(kFALSE);
+    h2_1_pdf->SetMinimum(0);
+    h2_1_pdf->Draw();
+    h2_1_pdf->Write();
+    path = "plots/proj_";
+    path += var1.GetName();
+    path += "_";
+    path += var2.GetName();
+    path += "_pdf.png";
+    c1->SaveAs(path);
+
+    TH2* h2_1_data = dynamic_cast<TH2*>(dataSet->createHistogram("h2_1_data",var1,RooFit::YVar(var2)));
+    h2_1_data->SetOption("colz");
+    h2_1_data->SetStats(kFALSE);
+    h2_1_data->SetMinimum(0);
+    h2_1_data->SetMaximum(h2_1_pdf->GetMaximum());
+    h2_1_data->Draw();
+    h2_1_data->Write();
+    path = "plots/proj_";
+    path += var1.GetName();
+    path += "_";
+    path += var2.GetName();
+    path += "_data.png";
+    c1->SaveAs(path);
+
+    TH2* h2_2_pdf = dynamic_cast<TH2*>(pdf_binned->createHistogram("h2_2_pdf",var1,RooFit::YVar(var3)));
+    h2_2_pdf->SetOption("colz");
+    h2_2_pdf->SetStats(kFALSE);
+    h2_2_pdf->SetMinimum(0);
+    h2_2_pdf->Draw();
+    h2_2_pdf->Write();
+    path = "plots/proj_";
+    path += var1.GetName();
+    path += "_";
+    path += var3.GetName();
+    path += "_pdf.png";
+    c1->SaveAs(path);
+
+    TH2* h2_2_data = dynamic_cast<TH2*>(dataSet->createHistogram("h2_2_data",var1,RooFit::YVar(var3)));
+    h2_2_data->SetOption("colz");
+    h2_2_data->SetStats(kFALSE);
+    h2_2_data->SetMinimum(0);
+    h2_2_data->SetMaximum(h2_2_pdf->GetMaximum());
+    h2_2_data->Draw();
+    h2_2_data->Write();
+    path = "plots/proj_";
+    path += var1.GetName();
+    path += "_";
+    path += var3.GetName();
+    path += "_data.png";
+    c1->SaveAs(path);
+
+    TH2* h2_3_pdf = dynamic_cast<TH2*>(pdf_binned->createHistogram("h2_3_pdf",var2,RooFit::YVar(var3)));
+    h2_3_pdf->SetOption("colz");
+    h2_3_pdf->SetStats(kFALSE);
+    h2_3_pdf->SetMinimum(0);
+    h2_3_pdf->Draw();
+    h2_3_pdf->Write();
+    path = "plots/proj_";
+    path += var2.GetName();
+    path += "_";
+    path += var3.GetName();
+    path += "_pdf.png";
+    c1->SaveAs(path);
+
+    TH2* h2_3_data = dynamic_cast<TH2*>(dataSet->createHistogram("h2_3_data",var2,RooFit::YVar(var3)));
+    h2_3_data->SetOption("colz");
+    h2_3_data->SetStats(kFALSE);
+    h2_3_data->SetMinimum(0);
+    h2_3_data->SetMaximum(h2_3_pdf->GetMaximum());
+    h2_3_data->Draw();
+    h2_3_data->Write();
+    path = "plots/proj_";
+    path += var2.GetName();
+    path += "_";
+    path += var3.GetName();
+    path += "_data.png";
+    c1->SaveAs(path);
+
+    file->Close();
+
 }
