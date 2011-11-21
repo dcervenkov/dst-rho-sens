@@ -43,25 +43,12 @@
 //#define HELICITY
 #define TRANSVERSITY
 
-const Int_t tha_bins = 20;
-const Int_t thb_bins = 20;
-const Int_t chi_bins = 40;
-RooRealVar tha("tha","tha",0,PI);
-RooRealVar thb("thb","thb",0,PI);
-RooRealVar chi("chi","chi",0,2*PI);
-
-const Int_t tht_bins = 20;
-const Int_t phit_bins = 40;
-RooRealVar tht("tht","tht",0,PI);
-RooRealVar phit("phit","phit",-PI,PI);
+const Int_t var1_bins = 20;
+const Int_t var2_bins = 20;
+const Int_t var3_bins = 40;
 
 char* inputFile = 0;
 char* outputFile = 0;
-
-Double_t par1_input = 0.275;
-Double_t par2_input = 0.57;
-Double_t par3_input = 0.936;
-Double_t par4_input = 2.84;
 
 int main(int argc, char* argv[])
 {
@@ -82,38 +69,44 @@ int main(int argc, char* argv[])
     }
     #endif
 
-    if(argc < 3)
+    if(argc != 7)
     {
         #ifdef HELICITY
-        printf("Usage: DSRhoFit inputFile outputFile [hp] [hpa] [h0] [hma]\n");
+        printf("Usage: DSRhoFit inputFile outputFile hp hpa h0 hma\n");
         #endif
         #ifdef TRANSVERSITY
-        printf("Usage: DSRhoFit inputFile outputFile [ap] [apa] [a0] [ata]\n");
+        printf("Usage: DSRhoFit inputFile outputFile ap apa a0 ata\n");
         #endif
         return 1;
     }
 
-    inputFile = argv[1];
-    outputFile = argv[2];
-
-    par1_input = atof(argv[3]);
-    par2_input = atof(argv[4]);
-    par3_input = atof(argv[5]);
-    par4_input = atof(argv[6]);
-
     TStopwatch timer;
     timer.Start();
+
+    /// This is so I have to change only the next block if I change the number,
+    /// ordering, etc. of arguments
+    inputFile = argv[1];
+    outputFile = argv[2];
+    Double_t par_input[4];
+    for(Int_t i = 0; i < 4; i++)
+        par_input[i] = atof(argv[i+3]);
+
+    RooRealVar tha("tha","tha",0,PI);
+    RooRealVar thb("thb","thb",0,PI);
+    RooRealVar chi("chi","chi",0,2*PI);
+    RooRealVar tht("tht","tht",0,PI);
+    RooRealVar phit("phit","phit",-PI,PI);
 
     #ifdef HELICITY
     RooDataSet* dataSet = new RooDataSet("data","data",RooArgList(tha,thb,chi));
     dataSet = RooDataSet::read(inputFile,RooArgList(tha,thb,chi));
-    FitHel(dataSet,tha,thb,chi);
+    FitHel(dataSet,tha,thb,chi,par_input);
     #endif
 
     #ifdef TRANSVERSITY
     RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit));
     dataSet = RooDataSet::read(inputFile,RooArgList(tht,thb,phit));
-    FitTrans(dataSet,tht,thb,phit);
+    FitTrans(dataSet,tht,thb,phit,par_input);
     #endif
 
     timer.Stop();
@@ -121,31 +114,30 @@ int main(int argc, char* argv[])
 
     #ifdef GRAPHIC
     printf("\nProgram execution has finished.\n");
-    rootapp->Run(); //For graphic-output apps only
+    rootapp->Run();
     #endif
     return 0;
 }
 
-int FitHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar& chi)
+int FitHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar& chi, Double_t* par_input)
 {
-
-    /**
-     * The f one gets from fitting with the following PDF is actually (|H+|^2 + |H-|^2)
-     * viz formula (35) in BN419. Equvivalentely (1-f) = |H0|^2.
-     **/
-
-    RooRealVar hp("hp","hp",par1_input,0,0.3);
-    RooRealVar hpa("hpa","hpa",par2_input,0,2*PI);
+    RooRealVar hp("hp","hp",par_input[0],0,0.3);
+    RooRealVar hpa("hpa","hpa",par_input[1],0,2*PI);
     RooFormulaVar hpr("hpr","hp*cos(hpa)",RooArgSet(hp,hpa));
     RooFormulaVar hpi("hpi","hp*sin(hpa)",RooArgSet(hp,hpa));
-    RooRealVar h0("h0","h0",par3_input,0.8,1);
+    RooRealVar h0("h0","h0",par_input[2],0.8,1);
     RooRealVar h0a("h0a","h0a",0);
     RooFormulaVar h0r("h0r","h0*cos(h0a)",RooArgSet(h0,h0a));
     RooFormulaVar h0i("h0i","h0*sin(h0a)",RooArgSet(h0,h0a));
     RooFormulaVar hm("hm","sqrt(1-hp*hp-h0*h0)",RooArgSet(hp,h0));
-    RooRealVar hma("hma","hma",par4_input,0,2*PI);
+    RooRealVar hma("hma","hma",par_input[3],0,2*PI);
     RooFormulaVar hmr("hmr","hm*cos(hma)",RooArgSet(hm,hma));
     RooFormulaVar hmi("hmi","hm*sin(hma)",RooArgSet(hm,hma));
+
+//    hp.setConstant();
+//    hpa.setConstant();
+//    h0.setConstant();
+//    hma.setConstant();
 
     RooFormulaVar hptr("hptr","hp*hm*cos(hpa-hma)",RooArgSet(hp,hpa,hm,hma));
     RooFormulaVar hpti("hpti","hp*hm*sin(hpa-hma)",RooArgSet(hp,hpa,hm,hma));
@@ -164,17 +156,15 @@ int FitHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar& ch
     RooFormulaVar hst("hst","sqrt(hstr*hstr + hsti*hsti)",RooArgSet(hstr,hsti));
     RooFormulaVar hsta("hsta","atan2(hsti,hstr)",RooArgSet(hsti,hstr));
 
-    RooArgSet varSet(tha,thb,hp,hpa,hpr,hpi,h0,h0a,h0r);
-    varSet.add(h0i);
-    varSet.add(hm);
-    varSet.add(hma);
-    varSet.add(hmr);
-    varSet.add(hmi);
+    RooArgSet varSet(tha,thb,chi,hp,hpa,h0,h0a,hm,hma);
     varSet.add(hat);
     varSet.add(hata);
     varSet.add(hst);
     varSet.add(hsta);
-    varSet.add(chi);
+
+    /// numFitParameters holds # of NON-constant fit parameters
+    RooArgSet fitParameters(hp,hpa,h0,hma);
+    Int_t numFitParameters = (fitParameters.selectByAttrib("Constant",kFALSE))->getSize();
 
     const char* pdfFormula =   "(hp*hp+hm*hm)*sin(tha)*sin(tha)*sin(tha)*sin(thb)*sin(thb)*sin(thb)+\
                                 4*h0*h0*cos(tha)*cos(tha)*sin(tha)*cos(thb)*cos(thb)*sin(thb)+\
@@ -186,58 +176,55 @@ int FitHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar& ch
     RooFitResult* result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true));//,RooFit::NumCPU(2));
     result->Print();
 
-    chi.setBins(chi_bins);
-	tha.setBins(tha_bins);
-	thb.setBins(thb_bins);
+	tha.setBins(var1_bins);
+	thb.setBins(var2_bins);
+    chi.setBins(var3_bins);
 
     RooRandom::randomGenerator()->SetSeed(0);
 
-	RooDataHist* dataSet_binned = new RooDataHist("dataSet_binned","dataSet_binned",RooArgSet(chi,tha,thb),*dataSet);
+    /// Create a binned dataSet which is needed for chi2 calculation
+	RooDataHist* dataSet_binned = new RooDataHist("dataSet_binned","dataSet_binned",RooArgSet(tha,thb,chi),*dataSet);
     //RooDataHist* dataSet_binned = pdf->generateBinned(RooArgSet(tha,thb,chi),dataSet->numEntries(),kFALSE);
-    //RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(tha,thb,chi),dataSet->numEntries(),kTRUE);
 
 	RooChi2Var chi2Var("chi2Var","chi2Var",*pdf,*dataSet_binned);
 
-	RooRealVar* _chi2     = new RooRealVar("chi2","chi^2",0) ;
-	RooRealVar* _ndof     = new RooRealVar("ndof","number of degrees of freedom",0) ;
-	RooRealVar* _chi2red  = new RooRealVar("chi2red","reduced chi^2",0) ;
-	RooRealVar* _prob     = new RooRealVar("prob","prob(chi2,ndof)",0) ;
+	RooRealVar* chi2     = new RooRealVar("chi2","chi^2",0) ;
+	RooRealVar* ndof     = new RooRealVar("ndof","number of degrees of freedom",0) ;
+	RooRealVar* chi2red  = new RooRealVar("chi2red","reduced chi^2",0) ;
+	RooRealVar* prob     = new RooRealVar("prob","prob(chi2,ndof)",0) ;
 
-	_chi2->setVal(chi2Var.getVal());
-	//RooArgSet* floatPars = (RooArgSet*) fitParams()->selectByAttrib("Constant",kFALSE);
-	// Should use the above line instead of 5
-	_ndof->setVal(dataSet_binned->numEntries()-5) ;
-	_chi2red->setVal(_chi2->getVal()/_ndof->getVal()) ;
-	_prob->setVal(TMath::Prob(_chi2->getVal(),static_cast<int>(_ndof->getVal())));
+	chi2->setVal(chi2Var.getVal());
+	ndof->setVal(dataSet_binned->numEntries()-numFitParameters);
+	chi2red->setVal(chi2->getVal()/ndof->getVal()) ;
+	prob->setVal(TMath::Prob(chi2->getVal(),static_cast<int>(ndof->getVal())));
 
-	printf("chi2 = %f\nndof = %f\nchi2red = %f\nprob = %f\n",_chi2->getVal(),_ndof->getVal(),_chi2red->getVal(),_prob->getVal());
+	printf("chi2 = %f\nndof = %f\nchi2red = %f\nprob = %f\n",chi2->getVal(),ndof->getVal(),chi2red->getVal(),prob->getVal());
 
-//    Int_t numParameters = 13;
-//	Double_t recoveredParameters[13] = {_chi2red->getVal(),hp.getVal(),hp.getError(),hpa.getVal(),hpa.getError(),
-//                                                   h0.getVal(),h0.getError(),h0a.getVal(),h0a.getError(),hm.getVal(),
-//                                                   hm.getPropagatedError(*result),hma.getVal(),hma.getError()};
-//
-//    WriteToFile(numParameters, recoveredParameters);
+    Int_t numParameters = 17;
+	Double_t recoveredParameters[17] = {chi2red->getVal(),hp.getVal(),hp.getError(),hpa.getVal(),hpa.getError(),
+                                                   h0.getVal(),h0.getError(),h0a.getVal(),h0a.getError(),hm.getVal(),
+                                                   hm.getPropagatedError(*result),hma.getVal(),hma.getError(),
+                                                   par_input[0],par_input[1],par_input[2],par_input[3]};
+    WriteToFile(numParameters, recoveredParameters);
 
-    SavePlots(dataSet,pdf,tht,thb,phit);
-
-//    GetChi2(dataSet_binned,pdf_binned);
+//    SavePlots(dataSet,pdf,tha,thb,chi);
+//    SaveChi2Maps(dataSet_binned,dataSet->numEntries(),pdf,tha,thb,chi);
 
     return 0;
 }
 
-int FitTrans(RooDataSet* dataSet, RooRealVar& tht, RooRealVar& thb, RooRealVar& phit)
+int FitTrans(RooDataSet* dataSet, RooRealVar& tht, RooRealVar& thb, RooRealVar& phit, Double_t* par_input)
 {
-    RooRealVar ap("ap","ap",par1_input,0.1,0.4);
-    RooRealVar apa("apa","apa",par2_input,0,2*PI);
+    RooRealVar ap("ap","ap",par_input[0],0.1,0.4);
+    RooRealVar apa("apa","apa",par_input[1],0,2*PI);
     RooFormulaVar apr("apr","ap*cos(apa)",RooArgSet(ap,apa));
     RooFormulaVar api("api","ap*sin(apa)",RooArgSet(ap,apa));
-    RooRealVar a0("a0","a0",par3_input,0.8,1);
+    RooRealVar a0("a0","a0",par_input[2],0.8,1);
     RooRealVar a0a("a0a","a0a",0);
     RooFormulaVar a0r("a0r","a0*cos(a0a)",RooArgSet(a0,a0a));
     RooFormulaVar a0i("a0i","a0*sin(a0a)",RooArgSet(a0,a0a));
     RooFormulaVar at("at","sqrt(1-ap*ap-a0*a0)",RooArgSet(ap,a0));
-    RooRealVar ata("ata","ata",par4_input,0,2*PI);
+    RooRealVar ata("ata","ata",par_input[3],0,2*PI);
     RooFormulaVar atr("atr","at*cos(ata)",RooArgSet(at,ata));
     RooFormulaVar ati("ati","at*sin(ata)",RooArgSet(at,ata));
 
@@ -255,6 +242,10 @@ int FitTrans(RooDataSet* dataSet, RooRealVar& tht, RooRealVar& thb, RooRealVar& 
     varSet.add(a0ti);
     varSet.add(apti);
 
+    /// numFitParameters holds # of NON-constant fit parameters
+    RooArgSet fitParameters(ap,apa,a0,ata);
+    Int_t numFitParameters = (fitParameters.selectByAttrib("Constant",kFALSE))->getSize();
+
     const char* pdfFormula =   "ap*ap*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
                                 at*at*2*cos(tht)*cos(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)+\
                                 a0*a0*4*sin(tht)*sin(tht)*sin(tht)*cos(thb)*cos(thb)*sin(thb)*cos(phit)*cos(phit)+\
@@ -267,147 +258,193 @@ int FitTrans(RooDataSet* dataSet, RooRealVar& tht, RooRealVar& thb, RooRealVar& 
     RooFitResult* result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true));//,RooFit::NumCPU(2));
     result->Print();
 
-    tht.setBins(tht_bins);
-    thb.setBins(thb_bins);
-    phit.setBins(phit_bins);
+    tht.setBins(var1_bins);
+    thb.setBins(var2_bins);
+    phit.setBins(var3_bins);
 
     RooRandom::randomGenerator()->SetSeed(0);
 
-	RooDataHist* dataSet_binned = new RooDataHist("dataSet_binned","dataSet_binned",RooArgSet(tht,thb,phit),*dataSet);
-    //RooDataHist* dataSet_binned = pdf->generateBinned(RooArgSet(tht,thb,phit),dataSet->numEntries(),kFALSE);
-    //RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(tht,thb,phit),dataSet->numEntries(),kTRUE);
+    /// Create a binned dataSet which is needed for chi2 calculation
+    RooDataHist* dataSet_binned = new RooDataHist("dataSet_binned","dataSet_binned",RooArgSet(tht,thb,phit),*dataSet);
+    //RooDataHist* dataSet_binned = pdf->generateBinned(RooArgSet(var1,var2,var3),dataSet->numEntries(),kFALSE);
 
 	RooChi2Var chi2Var("chi2Var","chi2Var",*pdf,*dataSet_binned);
 
-	RooRealVar* _chi2     = new RooRealVar("chi2","chi^2",0) ;
-	RooRealVar* _ndof     = new RooRealVar("ndof","number of degrees of freedom",0) ;
-	RooRealVar* _chi2red  = new RooRealVar("chi2red","reduced chi^2",0) ;
-	RooRealVar* _prob     = new RooRealVar("prob","prob(chi2,ndof)",0) ;
+	RooRealVar* chi2     = new RooRealVar("chi2","chi^2",0);
+	RooRealVar* ndof     = new RooRealVar("ndof","number of degrees of freedom",0);
+	RooRealVar* chi2red  = new RooRealVar("chi2red","reduced chi^2",0);
+	RooRealVar* prob     = new RooRealVar("prob","prob(chi2,ndof)",0);
 
-	_chi2->setVal(chi2Var.getVal());
-	//RooArgSet* floatPars = (RooArgSet*) fitParams()->selectByAttrib("Constant",kFALSE);
-	// Should use the above line instead of 5
-	_ndof->setVal(dataSet_binned->numEntries()-5) ;
-	_chi2red->setVal(_chi2->getVal()/_ndof->getVal()) ;
-	_prob->setVal(TMath::Prob(_chi2->getVal(),static_cast<int>(_ndof->getVal())));
+	chi2->setVal(chi2Var.getVal());
+	ndof->setVal(dataSet_binned->numEntries()-numFitParameters);
+	chi2red->setVal(chi2->getVal()/ndof->getVal()) ;
+	prob->setVal(TMath::Prob(chi2->getVal(),static_cast<int>(ndof->getVal())));
 
-	printf("chi2 = %f\nndof = %f\nchi2red = %f\nprob = %f\n",_chi2->getVal(),_ndof->getVal(),_chi2red->getVal(),_prob->getVal());
+	printf("chi2 = %f\nndof = %f\nchi2red = %f\nprob = %f\n",chi2->getVal(),ndof->getVal(),chi2red->getVal(),prob->getVal());
 
-//	Int_t numParameters = 13;
-//	Double_t recoveredParameters[13] = {_chi2red->getVal(),ap.getVal(),ap.getError(),apa.getVal(),apa.getError(),
-//                                                   a0.getVal(),a0.getError(),a0a.getVal(),a0a.getError(),at.getVal(),
-//                                                   at.getPropagatedError(*result),ata.getVal(),ata.getError()};
-//
-//    WriteToFile(numParameters, recoveredParameters);
+	Int_t numParameters = 17;
+	Double_t recoveredParameters[17] = {chi2red->getVal(),ap.getVal(),ap.getError(),apa.getVal(),apa.getError(),
+                                                   a0.getVal(),a0.getError(),a0a.getVal(),a0a.getError(),at.getVal(),
+                                                   at.getPropagatedError(*result),ata.getVal(),ata.getError(),
+                                                   par_input[0],par_input[1],par_input[2],par_input[3]};
+    WriteToFile(numParameters, recoveredParameters);
 
-    SavePlots(dataSet,pdf,tht,thb,phit);
-
-//    GetChi2Trans(dataSet_binned,pdf_binned);
+//    SavePlots(dataSet,pdf,tht,thb,phit);
+//    SaveChi2Maps(dataSet_binned,dataSet->numEntries(),pdf,tht,thb,phit);
 
     return 0;
 }
 
-Double_t GetChi2(RooDataHist* data, RooDataHist* pdf)
+Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* pdf, RooRealVar var1, RooRealVar var2, RooRealVar var3)
 {
+    /// Create a histogram from the pdf with the expected number of events with no statistical fluctuation
+    RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(var1,var2,var3),numEvents,kTRUE);
+
     Double_t mychi2 = 0;
+    Double_t dchi2 = 0;
     Double_t n = 0;
     Double_t v = 0;
 
-    TH1F* hdchi = new TH1F("hdchi","hdchi",100,0,40);
-    TH2F* hdchi2 = new TH2F("hdchi2","hdchi2",tha_bins,tha.getMin(),tha.getMax(),chi_bins,chi.getMin(),chi.getMax());
+    TH1F* h1_chi2 = new TH1F("h1_chi2","h1_chi2",100,0,50);
+    TH2F* h2_chi2_1 = new TH2F("h2_chi2_1","h2_chi2_1",var1_bins,var1.getMin(),var1.getMax(),var2_bins,var2.getMin(),var2.getMax());
+    TH2F* h2_chi2_2 = new TH2F("h2_chi2_2","h2_chi2_2",var1_bins,var1.getMin(),var1.getMax(),var3_bins,var3.getMin(),var3.getMax());
+    TH2F* h2_chi2_3 = new TH2F("h2_chi2_3","h2_chi2_3",var2_bins,var2.getMin(),var2.getMax(),var3_bins,var3.getMin(),var3.getMax());
 
+    /// Cycle through the centers of all bins
     /// I'm getting width of the first bin, because all bins are of equal width
-    for(tha = tha.getBinWidth(0)/2; tha.getVal() < tha.getMax(); tha.setVal(tha.getVal()+tha.getBinWidth(0)))
+    for(var1 = var1.getMin()+var1.getBinWidth(0)/2; var1.getVal() < var1.getMax(); var1.setVal(var1.getVal()+var1.getBinWidth(0)))
     {
-        for(thb = thb.getBinWidth(0)/2; thb.getVal() < thb.getMax(); thb.setVal(thb.getVal()+thb.getBinWidth(0)))
+        for(var2 = var2.getMin()+var2.getBinWidth(0)/2; var2.getVal() < var2.getMax(); var2.setVal(var2.getVal()+var2.getBinWidth(0)))
         {
-            for(chi = chi.getBinWidth(0)/2; chi.getVal() < chi.getMax(); chi.setVal(chi.getVal()+chi.getBinWidth(0)))
+            for(var3 = var3.getMin()+var3.getBinWidth(0)/2; var3.getVal() < var3.getMax(); var3.setVal(var3.getVal()+var3.getBinWidth(0)))
             {
-                n = data->weight(RooArgSet(tha,thb,chi),0);
-                v = pdf->weight(RooArgSet(tha,thb,chi),0);
-                hdchi->Fill((n-v)*(n-v)/v);
-                hdchi2->Fill(tha.getVal(),chi.getVal(),(n-v)*(n-v)/v);
-                mychi2 += (n-v)*(n-v)/v;
-                //printf("pdf = %0.3f\tdata = %0.3f\n",pdf->weight(),data->weight());
+                /// Weight is actually the bin content
+                n = data_binned->weight(RooArgSet(var1,var2,var3),0);
+                v = pdf_binned->weight(RooArgSet(var1,var2,var3),0);
+                dchi2 = (n-v)*(n-v)/v;
+                h1_chi2->Fill(dchi2);
+                h2_chi2_1->Fill(var1.getVal(),var2.getVal(),dchi2);
+                h2_chi2_2->Fill(var1.getVal(),var3.getVal(),dchi2);
+                h2_chi2_3->Fill(var2.getVal(),var3.getVal(),dchi2);
+                mychi2 += dchi2;
             }
         }
     }
 
-    TCanvas* c2 = new TCanvas("c2","c2");
-    c2->Divide(2);
-    c2->cd(1);
-    hdchi->Draw();
-    c2->cd(2);
-    hdchi2->SetOption("colz");
+    TFile* file = new TFile("plots/chi2maps.root","RECREATE");
+    TCanvas* c2 = new TCanvas("c2","c2",600,600);
+    TString path;
+
+    c2->SetLogy(kTRUE);
+    h1_chi2->GetXaxis()->SetTitle("dchi");
+    h1_chi2->GetYaxis()->SetTitle("num bins");
+    h1_chi2->Draw();
+    h1_chi2->Write();
+    c2->SaveAs("plots/chi2_delta.png");
+
+    c2->SetLogy(kFALSE);
+
+    h2_chi2_1->SetOption("colz");
     //hdchi2->SetMinimum(0);
     //hdchi2->SetMaximum(100);
-    hdchi2->SetStats(kFALSE);
-//    hdchi2->SaveAs(outputFile);
-    hdchi2->Draw();
-    c2->SaveAs("plots/dchi.root");
-    c2->SaveAs("plots/dchi.png");
-    printf("my chi2 = %f\n",mychi2);
-    return 3; //mychi2;
+    h2_chi2_1->SetStats(kFALSE);
+    h2_chi2_1->GetXaxis()->SetTitle(var1.GetName());
+    h2_chi2_1->GetYaxis()->SetTitle(var2.GetName());
+    h2_chi2_1->Draw();
+    h2_chi2_1->Write();
+    path = "plots/chi2map_";
+    path += var1.GetName();
+    path += "_";
+    path += var2.GetName();
+    path += ".png";
+    c2->SaveAs(path);
+
+    h2_chi2_2->SetOption("colz");
+    //hdchi2->SetMinimum(0);
+    //hdchi2->SetMaximum(100);
+    h2_chi2_2->SetStats(kFALSE);
+    h2_chi2_2->GetXaxis()->SetTitle(var1.GetName());
+    h2_chi2_2->GetYaxis()->SetTitle(var3.GetName());
+    h2_chi2_2->Draw();
+    h2_chi2_2->Write();
+    path = "plots/chi2map_";
+    path += var1.GetName();
+    path += "_";
+    path += var3.GetName();
+    path += ".png";
+    c2->SaveAs(path);
+
+    h2_chi2_3->SetOption("colz");
+    //hdchi2->SetMinimum(0);
+    //hdchi2->SetMaximum(100);
+    h2_chi2_3->SetStats(kFALSE);
+    h2_chi2_3->GetXaxis()->SetTitle(var2.GetName());
+    h2_chi2_3->GetYaxis()->SetTitle(var3.GetName());
+    h2_chi2_3->Draw();
+    h2_chi2_3->Write();
+    path = "plots/chi2map_";
+    path += var2.GetName();
+    path += "_";
+    path += var3.GetName();
+    path += ".png";
+    c2->SaveAs(path);
+
+    file->Close();
+
+    delete h1_chi2;
+    delete h2_chi2_1;
+    delete h2_chi2_2;
+    delete h2_chi2_3;
+    delete c2;
+
+    return mychi2;
 }
 
-Double_t GetChi2Trans(RooDataHist* data, RooDataHist* pdf)
+Double_t GetChi2(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* pdf, RooRealVar var1, RooRealVar var2, RooRealVar var3)
 {
+    /// Create a histogram from the pdf with the expected number of events with no statistical fluctuation
+    RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(var1,var2,var3),numEvents,kTRUE);
+
     Double_t mychi2 = 0;
     Double_t n = 0;
     Double_t v = 0;
 
-    TH1F* hdchi = new TH1F("hdchi","hdchi",100,0,40);
-    TH2F* hdchi2 = new TH2F("hdchi2","hdchi2",tht_bins,tht.getMin(),tht.getMax(),phit_bins,phit.getMin(),phit.getMax());
-
+    /// Cycle through the centers of all bins
     /// I'm getting width of the first bin, because all bins are of equal width
-    for(tht = tht.getBinWidth(0)/2; tht.getVal() < tht.getMax(); tht.setVal(tht.getVal()+tht.getBinWidth(0)))
+    for(var1 = var1.getMin()+var1.getBinWidth(0)/2; var1.getVal() < var1.getMax(); var1.setVal(var1.getVal()+var1.getBinWidth(0)))
     {
-        for(thb = thb.getBinWidth(0)/2; thb.getVal() < thb.getMax(); thb.setVal(thb.getVal()+thb.getBinWidth(0)))
+        for(var2 = var2.getMin()+var2.getBinWidth(0)/2; var2.getVal() < var2.getMax(); var2.setVal(var2.getVal()+var2.getBinWidth(0)))
         {
-            for(phit = phit.getMin()+phit.getBinWidth(0)/2; phit.getVal() < phit.getMax(); phit.setVal(phit.getVal()+phit.getBinWidth(0)))
+            for(var3 = var3.getMin()+var3.getBinWidth(0)/2; var3.getVal() < var3.getMax(); var3.setVal(var3.getVal()+var3.getBinWidth(0)))
             {
-                n = data->weight(RooArgSet(tht,thb,phit),0);
-                v = pdf->weight(RooArgSet(tht,thb,phit),0);
-                hdchi->Fill((n-v)*(n-v)/v);
-                hdchi2->Fill(tht.getVal(),phit.getVal(),(n-v)*(n-v)/v);
+                /// Weight is actually the bin content
+                n = data_binned->weight(RooArgSet(var1,var2,var3),0);
+                v = pdf_binned->weight(RooArgSet(var1,var2,var3),0);
                 mychi2 += (n-v)*(n-v)/v;
-                //printf("pdf = %0.3f\tdata = %0.3f\n",pdf->weight(),data->weight());
             }
         }
     }
 
-    TCanvas* c2 = new TCanvas("c2","c2",1000,600);
-    c2->Divide(2);
-    c2->cd(1);
-    hdchi->Draw();
-    c2->cd(2);
-    hdchi2->SetOption("colz");
-    //hdchi2->SetMinimum(0);
-    //hdchi2->SetMaximum(1000);
-    hdchi2->SetStats(kFALSE);
-    //hdchi2->SaveAs(outputFile);
-    hdchi2->Draw();
-    c2->SaveAs("plots/dchi.root");
-    c2->SaveAs("plots/dchi.png");
-    printf("my chi2 = %f\n",mychi2);
-    return 3; //mychi2;
+    return mychi2;
 }
+
 
 void WriteToFile(Int_t numEntries, Double_t* vars)
 {
     FILE* pFile;
     pFile = fopen (outputFile,"w");
-    if (pFile!=NULL)
+    if (pFile == NULL)
     {
-        for(Int_t i = 0; i < numEntries; i++, vars++)
-        {
-            fprintf(pFile,"%f ",*vars);
-        }
-        //fprintf(pFile,"\n");
-        fclose (pFile);
-    }
-    else
         printf("ERROR: couldn't open file %s for writing!\n",outputFile);
+        return;
+    }
+
+    for(Int_t i = 0; i < numEntries; i++, vars++)
+    {
+        fprintf(pFile,"%f ",*vars);
+    }
+    //fprintf(pFile,"\n");
+    fclose (pFile);
 
     return;
 }
@@ -417,7 +454,9 @@ void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, 
     TFile* file = new TFile("plots/projections.root","RECREATE");
     TCanvas* c1 = new TCanvas("c1","c1",800,600);
     TString path;
-    RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(tht,thb,phit),dataSet->numEntries(),kTRUE);
+    /// Create a binned pdf with the same number of events as the data, so that the 2d plots of pdf
+    /// and data are the same scale
+    RooDataHist* pdf_binned;// = pdf->generateBinned(RooArgSet(var1,var2,var3),dataSet->numEntries(),kTRUE);
 
     RooPlot* frame1 = var1.frame();
     dataSet->plotOn(frame1,RooFit::Name("data"));
