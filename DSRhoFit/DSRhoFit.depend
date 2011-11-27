@@ -176,9 +176,10 @@
 1321682099 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/ASSERT.h
 	<iostream>
 
-1321775351 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/DSRhoFit.cpp
+1322392180 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/DSRhoFit.cpp
 	<stdio.h>
 	<stdlib.h>
+	<math.h>
 	"TROOT.h"
 	"TStyle.h"
 	"TApplication.h"
@@ -931,7 +932,7 @@
 	"RooHashTable.h"
 	"RooLinkedList.h"
 
-1321770785 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/DSRhoFit.h
+1322392090 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/DSRhoFit.h
 
 1321682085 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/Constants.h
 
