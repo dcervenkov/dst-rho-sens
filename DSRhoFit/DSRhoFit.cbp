@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/org_many/dataset_org_1 results/output 0.15 0.10 0.85 2.75" />
+				<Option parameters="data/org_many/dataset_trans_org_1 results/output 0.275 0.57 0.936 2.84 0 1" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -77,7 +77,6 @@
 			<Add library="/usr/local/lib/root/libmultimapDict.so" />
 			<Add library="/usr/local/lib/root/libmultisetDict.so" />
 			<Add library="/usr/local/lib/root/libNet.so" />
-			<Add library="/usr/local/lib/root/libNetx.so" />
 			<Add library="/usr/local/lib/root/libNew.so" />
 			<Add library="/usr/local/lib/root/libpcre.a" />
 			<Add library="/usr/local/lib/root/libPhysics.so" />
@@ -86,7 +85,6 @@
 			<Add library="/usr/local/lib/root/libProofBench.so" />
 			<Add library="/usr/local/lib/root/libProofDraw.so" />
 			<Add library="/usr/local/lib/root/libProofPlayer.so" />
-			<Add library="/usr/local/lib/root/libProofx.so" />
 			<Add library="/usr/local/lib/root/libQuadp.so" />
 			<Add library="/usr/local/lib/root/libRecorder.so" />
 			<Add library="/usr/local/lib/root/libReflex.so" />

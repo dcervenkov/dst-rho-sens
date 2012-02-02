@@ -47,6 +47,7 @@
 const Int_t var1_bins = 20;
 const Int_t var2_bins = 20;
 const Int_t var3_bins = 40;
+const Int_t dt_bins = 40;
 
 char* inputFile = 0;
 char* outputFile = 0;
@@ -107,18 +108,19 @@ int main(int argc, char* argv[])
     RooRealVar chi("chi","chi",0,2*PI);
     RooRealVar tht("tht","tht",0,PI);
     RooRealVar phit("phit","phit",-PI,PI);
+    RooRealVar dt("dt","dt",-5,5);
 
     #ifdef HELICITY
-    RooDataSet* dataSet = new RooDataSet("data","data",RooArgList(tha,thb,chi));
-    dataSet = RooDataSet::read(inputFile,RooArgList(tha,thb,chi));
+    RooDataSet* dataSet = new RooDataSet("data","data",RooArgList(tha,thb,chi,dt));
+    dataSet = RooDataSet::read(inputFile,RooArgList(tha,thb,chi,dt));
     ConvertTransToHel(par_input);
-    ProcessHel(dataSet,tha,thb,chi,par_input,doFit,doPlot);
+    ProcessHel(dataSet,tha,thb,chi,dt,par_input,doFit,doPlot);
     #endif
 
     #ifdef TRANSVERSITY
-    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit));
-    dataSet = RooDataSet::read(inputFile,RooArgList(tht,thb,phit));
-    ProcessTrans(dataSet,tht,thb,phit,par_input,doFit,doPlot);
+    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit,dt));
+    dataSet = RooDataSet::read(inputFile,RooArgList(tht,thb,phit,dt));
+    ProcessTrans(dataSet,tht,thb,phit,dt,par_input,doFit,doPlot);
     #endif
 
     timer.Stop();
@@ -131,7 +133,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-int ProcessHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar& chi, Double_t* par_input, Bool_t doFit, Bool_t doPlot)
+int ProcessHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar& chi, RooRealVar& dt, Double_t* par_input, Bool_t doFit, Bool_t doPlot)
 {
     RooRealVar hp("hp","hp",par_input[0],0,0.4);
     RooRealVar hpa("hpa","hpa",par_input[1],0,2*PI);
@@ -195,9 +197,11 @@ int ProcessHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar
         result->Print();
     }
 
+    /// This probably needs to be way over here for the fit few lines up to be unbinned
 	tha.setBins(var1_bins);
 	thb.setBins(var2_bins);
     chi.setBins(var3_bins);
+    dt.setBins(dt_bins);
 
     RooRandom::randomGenerator()->SetSeed(0);
 
@@ -231,14 +235,14 @@ int ProcessHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar
 
     if(doPlot == kTRUE)
     {
-        SavePlots(dataSet,pdf,tha,thb,chi);
+        SavePlots(dataSet,pdf,tha,thb,chi,dt);
         SaveChi2Maps(dataSet_binned,dataSet->numEntries(),pdf,tha,thb,chi);
     }
 
     return 0;
 }
 
-int ProcessTrans(RooDataSet* dataSet, RooRealVar& tht, RooRealVar& thb, RooRealVar& phit, Double_t* par_input, Bool_t doFit, Bool_t doPlot)
+int ProcessTrans(RooDataSet* dataSet, RooRealVar& tht, RooRealVar& thb, RooRealVar& phit, RooRealVar& dt, Double_t* par_input, Bool_t doFit, Bool_t doPlot)
 {
     RooRealVar ap("ap","ap",par_input[0],0.1,0.4);
     RooRealVar apa("apa","apa",par_input[1],0,2*PI);
@@ -294,6 +298,7 @@ int ProcessTrans(RooDataSet* dataSet, RooRealVar& tht, RooRealVar& thb, RooRealV
     tht.setBins(var1_bins);
     thb.setBins(var2_bins);
     phit.setBins(var3_bins);
+    dt.setBins(dt_bins);
 
     RooRandom::randomGenerator()->SetSeed(0);
 
@@ -327,7 +332,7 @@ int ProcessTrans(RooDataSet* dataSet, RooRealVar& tht, RooRealVar& thb, RooRealV
 
     if(doPlot == kTRUE)
     {
-        SavePlots(dataSet,pdf,tht,thb,phit);
+        SavePlots(dataSet,pdf,tht,thb,phit,dt);
         SaveChi2Maps(dataSet_binned,dataSet->numEntries(),pdf,tht,thb,phit);
     }
 
@@ -488,7 +493,7 @@ void WriteToFile(Int_t numEntries, Double_t* vars)
     return;
 }
 
-void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3)
+void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3, const RooRealVar& dt)
 {
 
     TFile* file = new TFile("plots/projections.root","RECREATE");
@@ -525,6 +530,15 @@ void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, 
     frame3->Write();
     path = "plots/proj_";
     path += var3.GetName();
+    path += ".png";
+    c1->SaveAs(path);
+
+    RooPlot* frame4 = dt.frame();
+    dataSet->plotOn(frame4,RooFit::Name("data"));
+    frame4->Draw();
+    frame4->Write();
+    path = "plots/proj_";
+    path += dt.GetName();
     path += ".png";
     c1->SaveAs(path);
 

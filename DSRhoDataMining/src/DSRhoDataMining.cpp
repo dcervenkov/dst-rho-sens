@@ -73,18 +73,20 @@ int main(int argc, char* argv[])
     TStopwatch timer;
     timer.Start();
 
+    RooRealVar dt("dt","dt",-10,10);
+
     #ifdef HELICITY
     RooRealVar tha("tha","tha",0,PI);
     RooRealVar thb("thb","thb",0,PI);
     RooRealVar chi("chi","chi",0,2*PI);
-    RooDataSet* dataSet = new RooDataSet("data","data",RooArgList(tha,thb,chi));
+    RooDataSet* dataSet = new RooDataSet("data","data",RooArgList(tha,thb,chi,dt));
     #endif
 
     #ifdef TRANSVERSITY
     RooRealVar tht("tht","tht",0,PI);
     RooRealVar thb("thb","thb",0,PI);
     RooRealVar phit("phit","phit",-PI,PI);
-    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit));
+    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit,dt));
     #endif
 
     /// The argv[0] is path and name of the program itself, argv[1] is the output filename
@@ -133,13 +135,18 @@ void Analyze(RooDataSet* dataSet)
         double theta_b = 0;
         #endif
 
+        double delta_t = 0;
+
         /// I want pointers to the particles returned, therefore I have to
         /// pass the function a pointer address, so the function can write in it
-        if(GetRelevantParticles(i,&B0, &DS, &DSD0, &DSPi, &Rho, &RhoPi0, &RhoPi))
+        if(GetRelevantParticles(i,&B0, &DS, &DSD0, &DSPi, &Rho, &RhoPi0, &RhoPi, delta_t))
         {
             #ifdef VERBOSE
             printf("All relevant particles found\n");
             #endif
+
+            RooRealVar dt("dt","dt",-10,10);
+            dt = delta_t;
 
             #ifdef HELICITY
             TransformHel(B0,DS,DSD0,DSPi,Rho,RhoPi0,RhoPi);
@@ -155,7 +162,7 @@ void Analyze(RooDataSet* dataSet)
             tha = theta_a;
             thb = theta_b;
             chi = dChi;
-            dataSet->add(RooArgSet(tha,thb,chi));
+            dataSet->add(RooArgSet(tha,thb,chi,dt));
             //printf("chi: %0.4f\tth_a: %0.4f\tth_b: %0.4f\n",chi,theta_a,theta_b);
             #endif
 
@@ -172,7 +179,7 @@ void Analyze(RooDataSet* dataSet)
             tht = theta_t;
             thb = theta_b;
             phit = phi_t;
-            dataSet->add(RooArgSet(tht,thb,phit));
+            dataSet->add(RooArgSet(tht,thb,phit,dt));
             //printf("th_t: %0.4f\tphi_t: %0.4f\tth_b: %0.4f\n",theta_t,phi_t,theta_b);
             #endif
 
@@ -334,8 +341,14 @@ void PrintRelevantParticles(const Particle* DS,const Particle* DSD0,const Partic
 /// following function takes pointer to a pointer to a particle (Particle**)
 /// as argument(s).
 bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** DSD0, Particle** DSPi, \
-                          Particle** Rho, Particle** RhoPi0, Particle** RhoPi)
+                          Particle** Rho, Particle** RhoPi0, Particle** RhoPi, double& delta_t)
 {
+    int found_sig = 0;
+    int found_tag = 0;
+
+    double t_tag = 0;
+    double t_sig = 0;
+
     /// This cycles through all particles in an event
     for(int i = 0; i < (*events)[eventNo].size(); i++)
     {
@@ -352,6 +365,8 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
         *RhoPi0 = 0;
         *RhoPi = 0;
 
+        bool found_sig_this_iter = 0;
+
         if(abs((*events)[eventNo][i].GetIdhep()) == B0_IDHEP)
         {
             #ifdef VERBOSE
@@ -361,12 +376,30 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
             if(GetDSRhoFromB0(*B0,DS,Rho))
             {
                 if(GetD0PiFromDS(*DS,DSD0,DSPi) && GetPi0PiFromRho(*Rho,RhoPi0,RhoPi))
-                    return 1;
+                {
+                    t_sig = (*DS)->GetV(3);
+                    found_sig += 1;
+                    found_sig_this_iter = 1;
+                }
             }
-            #ifdef VERBOSE
-            printf("This branch doesn't match\n");
-            #endif
+
+            if(!found_sig_this_iter)
+            {
+                t_tag = (*B0)->GetDaughter(0)->GetV(3);
+                found_tag += 1;
+
+                #ifdef VERBOSE
+                printf("This branch doesn't match\n");
+                #endif
+            }
         } // If block searching for B0
+
+        /// What should happen if 2 signal events are found?
+        if((found_sig == 1) && (found_tag == 1))
+        {
+            delta_t = t_sig - t_tag;
+            return 1;
+        }
     } // For cycle going through all particles in an event
 
     return 0;
