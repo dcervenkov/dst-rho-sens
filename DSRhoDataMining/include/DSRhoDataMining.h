@@ -9,7 +9,7 @@ void PrintEventOrig(int evtNo,int numParticles,int* id,int* idhep,int* mother,in
 void PrintRelevantParticles(const Particle* DS,const Particle* DSD0,const Particle* DSPi, \
                             const Particle* Rho,const Particle* RhoPi0,const Particle* RhoPi);
 bool GetRelevantParticles(int eventNo, Particle** B, Particle** DS, Particle** DSD0, Particle** DSPi, \
-                          Particle** Rho, Particle** RhoPi0, Particle** RhoPi, double& dt);
+                          Particle** Rho, Particle** RhoPi0, Particle** RhoPi, double& dt, int& dec_type);
 bool GetDSRhoFromB0(const Particle* const B0, Particle** DS, Particle** Rho);
 bool GetD0PiFromDS(const Particle* const DS, Particle** D0, Particle** Pi);
 bool GetPi0PiFromRho(const Particle* const Rho, Particle** Pi0, Particle** Pi);

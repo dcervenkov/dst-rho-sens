@@ -22,6 +22,7 @@
 
 #include "RooFit.h"
 #include "RooRealVar.h"
+#include "RooCategory.h"
 #include "RooPlot.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"
@@ -74,19 +75,20 @@ int main(int argc, char* argv[])
     timer.Start();
 
     RooRealVar dt("dt","dt",-10,10);
+    RooCategory decType("decType","decType");
 
     #ifdef HELICITY
     RooRealVar tha("tha","tha",0,PI);
     RooRealVar thb("thb","thb",0,PI);
     RooRealVar chi("chi","chi",0,2*PI);
-    RooDataSet* dataSet = new RooDataSet("data","data",RooArgList(tha,thb,chi,dt));
+    RooDataSet* dataSet = new RooDataSet("data","data",RooArgList(tha,thb,chi,dt,decType));
     #endif
 
     #ifdef TRANSVERSITY
     RooRealVar tht("tht","tht",0,PI);
     RooRealVar thb("thb","thb",0,PI);
     RooRealVar phit("phit","phit",-PI,PI);
-    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit,dt));
+    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit,dt,decType));
     #endif
 
     /// The argv[0] is path and name of the program itself, argv[1] is the output filename
@@ -110,8 +112,10 @@ void Analyze(RooDataSet* dataSet)
 {
     printf("# Events = %i\n",events->size());
 
+    int not_found = 0;
+
     for(int i = 0; i < events->size(); i++)
-    //for(int i = 0; i < 3; i++)
+    //for(int i = 4; i < 6; i++)
     {
         //printf("\n\nEvent %i # particles = %i\n",i+1,(*events)[i].size());
         //PrintEvent(i);
@@ -136,10 +140,11 @@ void Analyze(RooDataSet* dataSet)
         #endif
 
         double delta_t = 0;
+        int dec_type = 0;
 
         /// I want pointers to the particles returned, therefore I have to
         /// pass the function a pointer address, so the function can write in it
-        if(GetRelevantParticles(i,&B0, &DS, &DSD0, &DSPi, &Rho, &RhoPi0, &RhoPi, delta_t))
+        if(GetRelevantParticles(i,&B0, &DS, &DSD0, &DSPi, &Rho, &RhoPi0, &RhoPi, delta_t, dec_type))
         {
             #ifdef VERBOSE
             printf("All relevant particles found\n");
@@ -147,6 +152,13 @@ void Analyze(RooDataSet* dataSet)
 
             RooRealVar dt("dt","dt",-10,10);
             dt = delta_t;
+
+            RooCategory decType("decType","decType");
+            decType.defineType("a",1);
+            decType.defineType("ab",2);
+            decType.defineType("b",3);
+            decType.defineType("bb",4);
+            decType.setIndex(dec_type);
 
             #ifdef HELICITY
             TransformHel(B0,DS,DSD0,DSPi,Rho,RhoPi0,RhoPi);
@@ -162,7 +174,7 @@ void Analyze(RooDataSet* dataSet)
             tha = theta_a;
             thb = theta_b;
             chi = dChi;
-            dataSet->add(RooArgSet(tha,thb,chi,dt));
+            dataSet->add(RooArgSet(tha,thb,chi,dt,decType));
             //printf("chi: %0.4f\tth_a: %0.4f\tth_b: %0.4f\n",chi,theta_a,theta_b);
             #endif
 
@@ -179,14 +191,18 @@ void Analyze(RooDataSet* dataSet)
             tht = theta_t;
             thb = theta_b;
             phit = phi_t;
-            dataSet->add(RooArgSet(tht,thb,phit,dt));
+            dataSet->add(RooArgSet(tht,thb,phit,dt,decType));
             //printf("th_t: %0.4f\tphi_t: %0.4f\tth_b: %0.4f\n",theta_t,phi_t,theta_b);
             #endif
 
         }
         else
-            printf("WARNING: Could not find all relevant particles in event #%i\n",i+1);
+        {
+            //printf("WARNING: Could not find all relevant particles in event #%i\n",i+1);
+            not_found++;
+        }
     }
+    printf("WARNING: Could not find all relevant particles in %i events.\n",not_found);
 }
 
 int ReadEvents(char fileName[])
@@ -341,10 +357,12 @@ void PrintRelevantParticles(const Particle* DS,const Particle* DSD0,const Partic
 /// following function takes pointer to a pointer to a particle (Particle**)
 /// as argument(s).
 bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** DSD0, Particle** DSPi, \
-                          Particle** Rho, Particle** RhoPi0, Particle** RhoPi, double& delta_t)
+                          Particle** Rho, Particle** RhoPi0, Particle** RhoPi, double& delta_t, int& dec_type)
 {
     int found_sig = 0;
     int found_tag = 0;
+    int B0s = 0;
+    int B0Bars = 0;
 
     double t_tag = 0;
     double t_sig = 0;
@@ -372,7 +390,14 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
             #ifdef VERBOSE
             printf("Found a B0\n");
             #endif
+
             *B0 = &(*events)[eventNo][i];
+
+            if((*B0)->GetIdhep() > 0)
+                B0s++;
+            else
+                B0Bars++;
+
             if(GetDSRhoFromB0(*B0,DS,Rho))
             {
                 if(GetD0PiFromDS(*DS,DSD0,DSPi) && GetPi0PiFromRho(*Rho,RhoPi0,RhoPi))
@@ -394,9 +419,30 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
             }
         } // If block searching for B0
 
-        /// What should happen if 2 signal events are found?
+
+
+        /// What should happen if 2 signal events are found? Now they are discarded
         if((found_sig == 1) && (found_tag == 1))
         {
+            if((B0s == 1) && (B0Bars == 1))
+            {
+                if((*DS)->GetIdhep() > 0)
+                    dec_type = 2;
+                else
+                    dec_type = 1;
+            }
+            /// EvtGen simulates mixing by decaying Ups(4S) into two
+            /// mesons of the same kind with the correct time distribution.
+            else if((B0s == 2) && (B0Bars == 0))
+                dec_type = 4;
+            else if((B0s == 0) && (B0Bars == 2))
+                dec_type = 3;
+
+            /// dec_type:   1:  B0      -> D*- + rho+   (a  - favored)
+            ///             2:  B0Bar   -> D*+ + rho-   (ab - favored)
+            ///             3:  B0      -> D*+ + rho-   (b  - suppressed)
+            ///             4:  B0Bar   -> D*- + rho+   (bb - suppressed)
+
             delta_t = t_sig - t_tag;
             return 1;
         }
