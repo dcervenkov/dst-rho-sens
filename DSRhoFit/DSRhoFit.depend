@@ -177,7 +177,7 @@
 1328001667 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/ASSERT.h
 	<iostream>
 
-1328119212 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/DSRhoFit.cpp
+1328890773 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/DSRhoFit.cpp
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
@@ -197,6 +197,7 @@
 	"RooFit.h"
 	"RooGlobalFunc.h"
 	"RooRealVar.h"
+	"RooCategory.h"
 	"RooPlot.h"
 	"RooDataSet.h"
 	"RooDataHist.h"
@@ -214,6 +215,7 @@
 	"DSRhoFit.h"
 	"Constants.h"
 	"ASSERT.h"
+	"FitterTrans.h"
 
 1328031616 /usr/local/include/root/TROOT.h
 	"TDirectory.h"
@@ -946,11 +948,48 @@
 	"RooHashTable.h"
 	"RooLinkedList.h"
 
-1328119187 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/DSRhoFit.h
+1328876493 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/DSRhoFit.h
 
 1328001667 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/Constants.h
 
 1328031618 /usr/local/include/root/RooRandom.h
 	"Rtypes.h"
 	"TRandom.h"
+
+1328891259 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/FitterTrans.cpp
+	"RooRealVar.h"
+	"RooFormulaVar.h"
+	"RooGenericPdf.h"
+	"Constants.h"
+	"RooDataSet.h"
+	"RooRandom.h"
+	"RooChi2Var.h"
+	"RooSimultaneous.h"
+	"TMath.h"
+	"FitterTrans.h"
+
+1328891277 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/FitterTrans.h
+
+1328031618 /usr/local/include/root/RooCategory.h
+	"Riosfwd.h"
+	"RooAbsCategoryLValue.h"
+	"RooSharedPropertiesList.h"
+	"RooCategorySharedProperties.h"
+
+1328031618 /usr/local/include/root/RooCategorySharedProperties.h
+	"RooSharedProperties.h"
+	"RooLinkedList.h"
+
+1328031619 /usr/local/include/root/RooSimultaneous.h
+	"TList.h"
+	"RooAbsPdf.h"
+	"RooCategoryProxy.h"
+	"RooRealProxy.h"
+	"RooSetProxy.h"
+	"RooAICRegistry.h"
+	"RooObjCacheManager.h"
+	"RooAbsCacheElement.h"
+	"RooArgList.h"
+	<map>
+	<string>
 

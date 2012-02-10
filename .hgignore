@@ -4,6 +4,7 @@ DSRho*/data
 DSRho*/bin
 DSRho*/obj
 DSRho*/plots
+DSRho*/results
 *.save
 *.layout
 *.tgz
