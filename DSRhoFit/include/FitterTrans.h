@@ -16,11 +16,12 @@ class FitterTrans
         RooGenericPdf* GetPdf(){return pdf;};
         RooDataHist* GetBinnedDataSet();
         void FixAllParameters();
+        void FixParameter(const char* par);
+
 
     protected:
     private:
         void CreateBinnedDataSet();
-        void WriteResults(Int_t numEntries, Double_t* vars, char* outputFile);
 
         RooDataSet* dataSet;
         RooDataHist* dataSet_binned;
@@ -28,7 +29,7 @@ class FitterTrans
         Bool_t doFit;
         RooChi2Var* chi2Var;
         RooFitResult* result;
-
+        RooSimultaneous* simPdf;
 
         Int_t tht_bins;
         Int_t thb_bins;
@@ -39,6 +40,8 @@ class FitterTrans
         RooRealVar* thb;
         RooRealVar* phit;
         RooRealVar* dt;
+        RooCategory* decType;
+        RooRealVar* gamma;
 
         RooRealVar* ap;
         RooRealVar* apa;

@@ -177,7 +177,7 @@
 1328001667 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/ASSERT.h
 	<iostream>
 
-1328890773 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/DSRhoFit.cpp
+1329405504 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/DSRhoFit.cpp
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
@@ -212,6 +212,7 @@
 	"RooPolynomial.h"
 	"RooAddPdf.h"
 	"RooRandom.h"
+	"RooBreitWigner.h"
 	"DSRhoFit.h"
 	"Constants.h"
 	"ASSERT.h"
@@ -948,7 +949,7 @@
 	"RooHashTable.h"
 	"RooLinkedList.h"
 
-1328876493 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/DSRhoFit.h
+1329233643 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/DSRhoFit.h
 
 1328001667 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/Constants.h
 
@@ -956,19 +957,22 @@
 	"Rtypes.h"
 	"TRandom.h"
 
-1328891259 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/FitterTrans.cpp
+1329322196 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/FitterTrans.cpp
 	"RooRealVar.h"
 	"RooFormulaVar.h"
+	"RooCategory.h"
 	"RooGenericPdf.h"
 	"Constants.h"
 	"RooDataSet.h"
 	"RooRandom.h"
 	"RooChi2Var.h"
 	"RooSimultaneous.h"
+	"Minuit2/Minuit2Minimizer.h"
+	"TPluginManager.h"
 	"TMath.h"
 	"FitterTrans.h"
 
-1328891277 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/FitterTrans.h
+1328952565 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/FitterTrans.h
 
 1328031618 /usr/local/include/root/RooCategory.h
 	"Riosfwd.h"
@@ -992,4 +996,211 @@
 	"RooArgList.h"
 	<map>
 	<string>
+
+1328031619 /usr/local/include/root/RooBreitWigner.h
+	"RooAbsPdf.h"
+	"RooRealProxy.h"
+
+1328031616 /usr/local/include/root/TVirtualFitter.h
+	"TNamed.h"
+	"TMethodCall.h"
+	"Foption.h"
+
+1328031616 /usr/local/include/root/TMethodCall.h
+	"TDictionary.h"
+
+1328031619 /usr/local/include/root/RooMinimizer.h
+	"TObject.h"
+	"TStopwatch.h"
+	<fstream>
+	"TMatrixDSymfwd.h"
+	"Fit/Fitter.h"
+	"RooMinimizerFcn.h"
+
+1328031616 /usr/local/include/root/Fit/Fitter.h
+	"Fit/DataVectorfwd.h"
+	"Fit/FitConfig.h"
+	"Fit/FitResult.h"
+	"Math/IParamFunctionfwd.h"
+	<memory>
+	"Math/WrappedFunction.h"
+
+1328031616 /usr/local/include/root/Fit/DataVectorfwd.h
+
+1328031616 /usr/local/include/root/Fit/FitConfig.h
+	"Fit/ParameterSettings.h"
+	"Math/MinimizerOptions.h"
+	"Math/IParamFunctionfwd.h"
+	<vector>
+
+1328031616 /usr/local/include/root/Fit/ParameterSettings.h
+	<string>
+
+1328031616 /usr/local/include/root/Math/MinimizerOptions.h
+	<string>
+	<iostream>
+
+1328031616 /usr/local/include/root/Math/IParamFunctionfwd.h
+	"Math/IFunctionfwd.h"
+
+1328031616 /usr/local/include/root/Math/IFunctionfwd.h
+
+1328031616 /usr/local/include/root/Fit/FitResult.h
+	"Math/IFunctionfwd.h"
+	"Math/IParamFunctionfwd.h"
+	<vector>
+	<map>
+	<string>
+	<cmath>
+	<cassert>
+
+1328031616 /usr/local/include/root/Math/WrappedFunction.h
+	"IFunction.h"
+
+1328031616 /usr/local/include/root/Math/IFunction.h
+	"Math/IFunctionfwd.h"
+
+1328031619 /usr/local/include/root/RooMinimizerFcn.h
+	"Math/IFunction.h"
+	"Fit/ParameterSettings.h"
+	"Fit/FitResult.h"
+	"TMatrixDSym.h"
+	"RooAbsReal.h"
+	"RooArgList.h"
+	<iostream>
+	<fstream>
+
+1328031617 /usr/local/include/root/TMinuit.h
+	"TNamed.h"
+	"TMethodCall.h"
+
+1328031617 /usr/local/include/root/TMinuitMinimizer.h
+	"Math/Minimizer.h"
+	"Rtypes.h"
+
+1328031616 /usr/local/include/root/Math/Minimizer.h
+	"Math/IFunction.h"
+	"Math/MinimizerOptions.h"
+	<vector>
+	<string>
+	<limits>
+	<cmath>
+
+1328031618 /usr/local/include/root/Minuit2/Minuit2Minimizer.h
+	"Math/Minimizer.h"
+	"Minuit2/MnUserParameterState.h"
+	"Math/IFunctionfwd.h"
+	"Math/IParamFunctionfwd.h"
+
+1328031618 /usr/local/include/root/Minuit2/MnUserParameterState.h
+	"Minuit2/MnUserParameters.h"
+	"Minuit2/MnUserCovariance.h"
+	"Minuit2/MnGlobalCorrelationCoeff.h"
+
+1328031618 /usr/local/include/root/Minuit2/MnUserParameters.h
+	"Minuit2/MnUserTransformation.h"
+	<vector>
+
+1328031618 /usr/local/include/root/Minuit2/MnUserTransformation.h
+	"Minuit2/MnConfig.h"
+	"Minuit2/MnMatrix.h"
+	"Minuit2/MinuitParameter.h"
+	"Minuit2/MnMachinePrecision.h"
+	"Minuit2/SinParameterTransformation.h"
+	"Minuit2/SqrtLowParameterTransformation.h"
+	"Minuit2/SqrtUpParameterTransformation.h"
+	<vector>
+	<cassert>
+
+1328031618 /usr/local/include/root/Minuit2/MnConfig.h
+	<standards.h>
+	<stdlib.h>
+
+1328031618 /usr/local/include/root/Minuit2/MnMatrix.h
+	"Minuit2/MnConfig.h"
+	<vector>
+	"Minuit2/LASymMatrix.h"
+	"Minuit2/LAVector.h"
+	"Minuit2/LaInverse.h"
+	"Minuit2/LaOuterProduct.h"
+
+1328031618 /usr/local/include/root/Minuit2/LASymMatrix.h
+	"Minuit2/MnConfig.h"
+	"Minuit2/ABSum.h"
+	"Minuit2/VectorOuterProduct.h"
+	"Minuit2/MatrixInverse.h"
+	<cassert>
+	<memory>
+	"Minuit2/StackAllocator.h"
+	<string.h>
+
+1328031618 /usr/local/include/root/Minuit2/ABSum.h
+	"Minuit2/ABObj.h"
+
+1328031618 /usr/local/include/root/Minuit2/ABObj.h
+	"Minuit2/ABTypes.h"
+
+1328031618 /usr/local/include/root/Minuit2/ABTypes.h
+
+1328031618 /usr/local/include/root/Minuit2/VectorOuterProduct.h
+	"Minuit2/ABTypes.h"
+	"Minuit2/ABObj.h"
+
+1328031618 /usr/local/include/root/Minuit2/MatrixInverse.h
+	"Minuit2/ABTypes.h"
+	"Minuit2/ABObj.h"
+
+1328031618 /usr/local/include/root/Minuit2/StackAllocator.h
+	"Minuit2/MnConfig.h"
+	<cstdlib>
+
+1328031618 /usr/local/include/root/Minuit2/LAVector.h
+	"Minuit2/ABSum.h"
+	"Minuit2/ABProd.h"
+	"Minuit2/LASymMatrix.h"
+	<cassert>
+	<memory>
+	"Minuit2/StackAllocator.h"
+
+1328031618 /usr/local/include/root/Minuit2/ABProd.h
+	"Minuit2/ABObj.h"
+
+1328031618 /usr/local/include/root/Minuit2/LaInverse.h
+	"Minuit2/MatrixInverse.h"
+	"Minuit2/LASymMatrix.h"
+
+1328031618 /usr/local/include/root/Minuit2/LaOuterProduct.h
+	"Minuit2/VectorOuterProduct.h"
+	"Minuit2/ABSum.h"
+	"Minuit2/LAVector.h"
+	"Minuit2/LASymMatrix.h"
+
+1328031618 /usr/local/include/root/Minuit2/MinuitParameter.h
+	<algorithm>
+	<memory>
+	<cassert>
+	<string>
+
+1328031618 /usr/local/include/root/Minuit2/MnMachinePrecision.h
+	<math.h>
+
+1328031618 /usr/local/include/root/Minuit2/SinParameterTransformation.h
+
+1328031618 /usr/local/include/root/Minuit2/SqrtLowParameterTransformation.h
+
+1328031618 /usr/local/include/root/Minuit2/SqrtUpParameterTransformation.h
+
+1328031618 /usr/local/include/root/Minuit2/MnUserCovariance.h
+	"Minuit2/MnConfig.h"
+	<vector>
+	<cassert>
+
+1328031618 /usr/local/include/root/Minuit2/MnGlobalCorrelationCoeff.h
+	"Minuit2/MnConfig.h"
+	"Minuit2/MnMatrix.h"
+	<vector>
+
+1328031616 /usr/local/include/root/TPluginManager.h
+	"TObject.h"
+	"TString.h"
 

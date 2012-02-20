@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/test results/output 0.275 0.57 0.936 2.84 1 1" />
+				<Option parameters="data/test results/output 0.275 0.57 0.936 2.84 0 1" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -113,6 +113,7 @@
 			<Add library="/usr/local/lib/root/libRooFit.so" />
 			<Add library="/usr/local/lib/root/libRooFitCore.so" />
 			<Add library="/usr/local/lib/root/libRooStats.so" />
+			<Add library="/usr/local/lib/root/libMinuit2.so" />
 		</Linker>
 		<Unit filename="include/ASSERT.h" />
 		<Unit filename="include/Constants.h" />
