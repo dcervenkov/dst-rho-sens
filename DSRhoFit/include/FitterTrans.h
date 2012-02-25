@@ -17,19 +17,23 @@ class FitterTrans
         RooDataHist* GetBinnedDataSet();
         void FixAllParameters();
         void FixParameter(const char* par);
+        void FreeParameter(const char* par);
 
 
     protected:
     private:
+        TPluginManager* gPluginMgr;
+
         void CreateBinnedDataSet();
 
         RooDataSet* dataSet;
         RooDataHist* dataSet_binned;
-        Double_t par_input[4];
+        Double_t par_input[11];
         Bool_t doFit;
         RooChi2Var* chi2Var;
         RooFitResult* result;
         RooSimultaneous* simPdf;
+        RooArgSet* parameters;
 
         Int_t tht_bins;
         Int_t thb_bins;

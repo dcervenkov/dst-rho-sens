@@ -34,6 +34,7 @@
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooRandom.h"
+#include "RooExponential.h"
 
 #include "DSRhoFit.h"
 #include "Constants.h"
@@ -73,14 +74,14 @@ int main(int argc, char* argv[])
     }
     #endif
 
-    if(argc != 7 && argc != 9)
+    if(argc != 16)
     {
         printf("ERROR: Wrong number of arguments.\n");
         #ifdef HELICITY
         printf("Usage: DSRhoFit inputFile outputFile hp hpa h0 hma [doFit] [doPlot]\n");
         #endif
         #ifdef TRANSVERSITY
-        printf("Usage: DSRhoFit inputFile outputFile ap apa a0 ata [doFit] [doPlot]\n");
+        printf("Usage: DSRhoFit inputFile outputFile ap apa a0 ata phiw rp r0 rt sp s0 st doFit doPlot\n");
         #endif
         return 1;
     }
@@ -88,22 +89,17 @@ int main(int argc, char* argv[])
     TStopwatch timer;
     timer.Start();
 
-    /// This is so I have to change only the next block if I change the number,
+    /// This is so I have to change only the next block if I change the
     /// ordering, etc. of arguments
     inputFile = argv[1];
     outputFile = argv[2];
-    Double_t par_input[4];
-    for(Int_t i = 0; i < 4; i++)
+    Int_t numPars = argc - 5;
+    Double_t par_input[numPars];
+    for(Int_t i = 0; i < numPars; i++)
         par_input[i] = atof(argv[i+3]);
 
-    Bool_t doFit = 1;
-    Bool_t doPlot = 0;
-
-    if(argc == 9)
-    {
-        doFit = atoi(argv[7]);
-        doPlot = atoi(argv[8]);
-    }
+    Bool_t doFit = atoi(argv[argc-2]);
+    Bool_t doPlot = atoi(argv[argc-1]);
 
     RooRealVar tha("tha","tha",0,PI);
     RooRealVar thb("thb","thb",0,PI);
@@ -255,16 +251,17 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
 
     if(doFit)
     {
-        //fitter->FixAllParameters();
+        fitter->FixAllParameters();
+        fitter->FreeParameter("s0");
         fitter->Fit();
         fitter->ComputeChi2();
 
         Int_t numParameters = 0;
         Double_t* recoveredParameters = 0;
 
-        fitter->GetRecoveredParameters(numParameters,&recoveredParameters);
+        //fitter->GetRecoveredParameters(numParameters,&recoveredParameters);
 
-        WriteToFile(numParameters,recoveredParameters,outputFile);
+        //WriteToFile(numParameters,recoveredParameters,outputFile);
     }
     else
         fitter->ComputeChi2();
@@ -305,6 +302,8 @@ Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* 
                 n = data_binned->weight(RooArgSet(var1,var2,var3),0);
                 v = pdf_binned->weight(RooArgSet(var1,var2,var3),0);
                 dchi2 = (n-v)*(n-v)/v;
+                if(dchi2 > h1_chi2->GetXaxis()->GetXmax()-1)
+                    dchi2 = h1_chi2->GetXaxis()->GetXmax()-1;
                 h1_chi2->Fill(dchi2);
                 h2_chi2_1->Fill(var1.getVal(),var2.getVal(),dchi2);
                 h2_chi2_2->Fill(var1.getVal(),var3.getVal(),dchi2);
@@ -475,6 +474,10 @@ void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, 
     const RooCategory* cat = (RooCategory*)args->find("decType");
     RooDataSet* datacut;
 
+    RooFormulaVar absdt("absdt","abs(dt)",RooArgSet(dt));
+    RooRealVar gamma("gamma","gamma",-10,10);
+    RooExponential myexp("myexp","myexp",absdt,gamma);
+
     /// Saving dt plots for all 4 decay types
     for(int i = 1; i <= 4; i++)
     {
@@ -484,6 +487,11 @@ void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, 
         name = "proj_" + (dt.GetName() + ("_" + type));
         datacut = (RooDataSet*)dataSet->reduce(dt,cut);
         datacut->plotOn(frame,RooFit::Name("data"));
+        if(i == 1)
+        {
+            myexp.fitTo(*datacut,RooFit::Range(-2,2,kTRUE),RooFit::Minimizer("Minuit2"));
+            myexp.plotOn(frame);
+        }
         frame->SetName(name);
         frame->Draw();
         frame->Write();

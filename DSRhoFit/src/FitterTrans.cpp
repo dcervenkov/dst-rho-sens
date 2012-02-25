@@ -10,13 +10,17 @@
 #include "Minuit2/Minuit2Minimizer.h"
 #include "TPluginManager.h"
 #include "TMath.h"
+#include "TIterator.h"
 
 #include "FitterTrans.h"
 
 FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
 {
+    gPluginMgr = new TPluginManager;
+    gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
+
     dataSet = outer_dataSet;
-    for(int i = 0; i < 4; i++)
+    for(int i = 0; i < 11; i++)
         par_input[i] = outer_par_input[i];
 
     chi2Var = 0;
@@ -36,7 +40,7 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     decType->defineType("ab",2);
     decType->defineType("b",3);
     decType->defineType("bb",4);
-    gamma = new RooRealVar("gamma","gamma",0.654); // 1/(1.530 *10^-12) = 0.654 *10^12
+    gamma = new RooRealVar("gamma","gamma",2.83);
 
     ap = new RooRealVar("ap","ap",par_input[0],0.1,0.4);
     apa = new RooRealVar("apa","apa",par_input[1],0,2*PI);
@@ -58,16 +62,16 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     /// Time-dep additional vars
 
     dm = new RooRealVar("dm","dm",0.507e12);
-    phiw = new RooRealVar("phiw","phiw",0,2*PI);
+    phiw = new RooRealVar("phiw","phiw",par_input[4],0,2*PI);
+
+    rp = new RooRealVar("rp","rp",par_input[5],0,0.1);
+    r0 = new RooRealVar("r0","r0",par_input[6],0,0.1);
+    rt = new RooRealVar("rt","rt",par_input[7],0,0.1); /// eq. (100) in BN419 approximates this
 
     /// s is strong phase; delta_polarization in BN419
-    st = new RooRealVar("st","st",0,2*PI);
-    sp = new RooRealVar("sp","sp",0,2*PI);
-    s0 = new RooRealVar("s0","s0",0,2*PI);
-
-    rt = new RooRealVar("rt","rt",0,0.1); /// eq. (100) in BN419 approximates this
-    rp = new RooRealVar("rp","rp",0,0.1);
-    r0 = new RooRealVar("r0","r0",0,0.1);
+    sp = new RooRealVar("sp","sp",par_input[8],0,2*PI);
+    s0 = new RooRealVar("s0","s0",par_input[9],0,2*PI);
+    st = new RooRealVar("st","st",par_input[10],0,2*PI);
 
     ap0i = new RooFormulaVar("ap0i","ap*a0*sin(-apa+a0a)",RooArgSet(*ap,*apa,*a0,*a0a));
     a0tr = new RooFormulaVar("a0tr","a0*at*cos(-a0a+ata)",RooArgSet(*a0,*a0a,*at,*ata));
@@ -177,14 +181,14 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
                         2*Apti_b*sin(2*tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit))";
 
 
-    //formula_bb="exp(-gamma*abs(dt))*(Ap2_bb*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
+    formula_bb="exp(-gamma*abs(dt))*(Ap2_bb*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
                         At2_bb*2*cos(tht)*cos(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)+\
                         A02_bb*4*sin(tht)*sin(tht)*sin(tht)*cos(thb)*cos(thb)*sin(thb)*cos(phit)*cos(phit)+\
                         sqrt(2)*Ap0r_bb*sin(tht)*sin(tht)*sin(tht)*sin(2*thb)*sin(thb)*sin(2*phit)-\
                         sqrt(2)*A0ti_bb*sin(2*tht)*sin(tht)*sin(2*thb)*sin(thb)*cos(phit)-\
                         2*Apti_bb*sin(2*tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit))";
 
-    formula_bb="3*dt";
+    //formula_bb="3*dt";
 
     varSet_a = new RooArgSet(*Ap2_a,*At2_a,*A02_a,*Ap0r_a,*A0ti_a,*Apti_a,*tht,*thb,*phit);
     varSet_a->add(*dt);
@@ -209,6 +213,11 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     simPdf->addPdf(*pdf_ab,"ab");
     simPdf->addPdf(*pdf_b,"b");
     simPdf->addPdf(*pdf_bb,"bb");
+
+    parameters = new RooArgSet(*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt);
+    parameters->add(*sp);
+    parameters->add(*s0);
+    parameters->add(*st);
 
     varSet = new RooArgSet(*tht,*thb,*phit,*ap,*a0,*at,*ap0r,*a0ti,*apti);
 
@@ -235,8 +244,8 @@ Int_t FitterTrans::Fit()
 {
     TPluginManager* gPluginMgr = new TPluginManager;
     gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
-    result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
-    //result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true));//,RooFit::NumCPU(2));
+    //result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
+    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
 }
 
 void FitterTrans::CreateBinnedDataSet()
@@ -300,7 +309,6 @@ void FitterTrans::GetRecoveredParameters(Int_t& numParameters, Double_t** recove
     *recoveredParameters = parameters;
 }
 
-
 RooDataHist* FitterTrans::GetBinnedDataSet()
 {
     if(dataSet_binned == NULL)
@@ -311,24 +319,26 @@ RooDataHist* FitterTrans::GetBinnedDataSet()
 
 void FitterTrans::FixAllParameters()
 {
-    ap->setConstant();
-    apa->setConstant();
-    a0->setConstant();
-    ata->setConstant();
+    RooRealVar* rooPar = 0;
+    TIterator* parIter = parameters->createIterator();
+    while(rooPar = (RooRealVar*)parIter->Next())
+        rooPar->setConstant();
+
 }
 
 void FitterTrans::FixParameter(const char* par)
 {
-    if(ap->GetName() == par)
-        ap->setConstant();
-    else if(apa->GetName() == par)
-        apa->setConstant();
-    else if(a0->GetName() == par)
-        a0->setConstant();
-    else if(ata->GetName() == par)
-        ata->setConstant();
-
+    RooRealVar* rooPar = 0;
+    rooPar = (RooRealVar*)parameters->find(par);
+    if(rooPar != 0)
+        rooPar->setConstant();
 }
 
-
+void FitterTrans::FreeParameter(const char* par)
+{
+    RooRealVar* rooPar = 0;
+    rooPar = (RooRealVar*)parameters->find(par);
+    if(rooPar != 0)
+        rooPar->setConstant(kFALSE);
+}
 
