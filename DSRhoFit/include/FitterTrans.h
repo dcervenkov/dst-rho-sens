@@ -1,6 +1,8 @@
 #ifndef FITTERTRANS_H
 #define FITTERTRANS_H
 
+#include "DSRhoPDF.h"
+
 class FitterTrans
 {
     public:
@@ -13,7 +15,7 @@ class FitterTrans
         RooRealVar* GetThb(){return thb;};
         RooRealVar* GetPhit(){return phit;};
         RooRealVar* GetDt(){return dt;};
-        RooGenericPdf* GetPdf(){return pdf;};
+        DSRhoPDF* GetPdf(){return myPdf_a;};
         RooDataHist* GetBinnedDataSet();
         void FixAllParameters();
         void FixParameter(const char* par);
@@ -139,6 +141,9 @@ class FitterTrans
         char* pdfFormula;
 
         RooGenericPdf* pdf;
+
+        DSRhoPDF* myPdf_a;
+        DSRhoPDF* myPdf_b;
 };
 
 #endif // FITTERTRANS_H

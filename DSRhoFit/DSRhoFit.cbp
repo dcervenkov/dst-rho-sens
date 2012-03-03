@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/test results/output 0.275 0.57 0.936 2.84 1.7937 0.01 0.01 0.01 2 2 2 1 0" />
+				<Option parameters="data/test results/output 0.275 0.57 0.936 2.84 1.7937 0.01 0.01 0.01 0 0 0 0 1" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -118,8 +118,10 @@
 		<Unit filename="include/ASSERT.h" />
 		<Unit filename="include/Constants.h" />
 		<Unit filename="include/DSRhoFit.h" />
+		<Unit filename="include/DSRhoPDF.h" />
 		<Unit filename="include/FitterTrans.h" />
 		<Unit filename="src/DSRhoFit.cpp" />
+		<Unit filename="src/DSRhoPDF.cpp" />
 		<Unit filename="src/FitterTrans.cpp" />
 		<Extensions>
 			<code_completion />

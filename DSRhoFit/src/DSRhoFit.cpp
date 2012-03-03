@@ -238,8 +238,8 @@ int ProcessHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar
 
     if(doPlot == kTRUE)
     {
-        SavePlots(dataSet,pdf,tha,thb,chi,dt);
-        SaveChi2Maps(dataSet_binned,dataSet->numEntries(),pdf,tha,thb,chi);
+        //SavePlots(dataSet,pdf,tha,thb,chi,dt);
+        //SaveChi2Maps(dataSet_binned,dataSet->numEntries(),pdf,tha,thb,chi);
     }
 
     return 0;
@@ -263,13 +263,13 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
 
         //WriteToFile(numParameters,recoveredParameters,outputFile);
     }
-    else
-        fitter->ComputeChi2();
+    //else
+        //fitter->ComputeChi2();
 
     if(doPlot == kTRUE)
     {
         SavePlots(dataSet,fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
-        SaveChi2Maps(fitter->GetBinnedDataSet(),dataSet->numEntries(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
+        //SaveChi2Maps(fitter->GetBinnedDataSet(),dataSet->numEntries(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
     }
 
     return 0;
@@ -431,7 +431,7 @@ void WriteToFile(Int_t numEntries, Double_t* vars, char* file)
     return;
 }
 
-void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3, RooRealVar& dt)
+void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3, RooRealVar& dt)
 {
     /// Directory and format of the saved plots
     const TString dir = "plots/";
@@ -447,7 +447,9 @@ void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, 
 
     /// Create a binned pdf with the same number of events as the data, so that the 2d plots of pdf
     /// and data are the same scale
-    RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(var1,var2,var3),dataSet->numEntries(),kTRUE);
+    printf("Generation of binned dataset starting...\n");
+    //RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(var1,var2,var3,dt),dataSet->numEntries(),kTRUE);
+    printf("Generation of binned dataset finished\n");
 
     /// This is a quick and dirty solution to be able to loop through all variables (except dt, which is treated separetely)
     const int numVars = 3;
@@ -460,7 +462,8 @@ void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, 
         name += vars[i].GetName();
         frame = vars[i].frame();
         dataSet->plotOn(frame,RooFit::Name("data"));
-        //pdf->plotOn(frame);
+        //if(i == 1)
+            pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3,dt)),RooFit::Precision(0.1));
         frame->SetName(name);
         frame->Draw();
         frame->Write();
@@ -489,8 +492,9 @@ void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, 
         datacut->plotOn(frame,RooFit::Name("data"));
         if(i == 1)
         {
-            myexp.fitTo(*datacut,RooFit::Range(-2,2,kTRUE),RooFit::Minimizer("Minuit2"));
-            myexp.plotOn(frame);
+            //myexp.fitTo(*datacut,RooFit::Range(-2,2,kTRUE),RooFit::Minimizer("Minuit2"));
+            //myexp.plotOn(frame);
+            pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)),RooFit::Precision(0.1));
         }
         frame->SetName(name);
         frame->Draw();
@@ -504,35 +508,35 @@ void SavePlots(RooDataSet* dataSet, RooGenericPdf* pdf, const RooRealVar& var1, 
     TH2* h2_data = 0;
 
     /// Saving projections of both data and pdf on 2 dimensions
-    for(int i = 0; i < numVars; i++)
-    {
-        for(int j = i+1; j < numVars; j++)
-        {
-            name = "proj_";
-            name += vars[i].GetName();
-            name += "_";
-            name += vars[j].GetName();
-            h2_pdf = dynamic_cast<TH2*>(pdf_binned->createHistogram(name + "_pdf",vars[i],RooFit::YVar(vars[j])));
-            h2_pdf->SetOption("colz");
-            h2_pdf->SetStats(kFALSE);
-            h2_pdf->SetMinimum(0);
-            h2_data = dynamic_cast<TH2*>(dataSet->createHistogram(name + "_data",vars[i],RooFit::YVar(vars[j])));
-            h2_data->SetOption("colz");
-            h2_data->SetStats(kFALSE);
-            h2_data->SetMinimum(0);
-            h2_data->SetMaximum(h2_pdf->GetMaximum());
-            h2_pdf->Draw();
-            h2_pdf->Write();
-            path = dir + name + "_pdf" + format;
-            c1->SaveAs(path);
-            h2_data->Draw();
-            h2_data->Write();
-            path = dir + name + "_data" + format;
-            c1->SaveAs(path);
-            delete h2_pdf;
-            delete h2_data;
-        }
-    }
+//    for(int i = 0; i < numVars; i++)
+//    {
+//        for(int j = i+1; j < numVars; j++)
+//        {
+//            name = "proj_";
+//            name += vars[i].GetName();
+//            name += "_";
+//            name += vars[j].GetName();
+//            h2_pdf = dynamic_cast<TH2*>(pdf_binned->createHistogram(name + "_pdf",vars[i],RooFit::YVar(vars[j])));
+//            h2_pdf->SetOption("colz");
+//            h2_pdf->SetStats(kFALSE);
+//            h2_pdf->SetMinimum(0);
+//            h2_data = dynamic_cast<TH2*>(dataSet->createHistogram(name + "_data",vars[i],RooFit::YVar(vars[j])));
+//            h2_data->SetOption("colz");
+//            h2_data->SetStats(kFALSE);
+//            h2_data->SetMinimum(0);
+//            h2_data->SetMaximum(h2_pdf->GetMaximum());
+//            h2_pdf->Draw();
+//            h2_pdf->Write();
+//            path = dir + name + "_pdf" + format;
+//            c1->SaveAs(path);
+//            h2_data->Draw();
+//            h2_data->Write();
+//            path = dir + name + "_data" + format;
+//            c1->SaveAs(path);
+//            delete h2_pdf;
+//            delete h2_data;
+//        }
+//    }
 
     file->Close();
 }

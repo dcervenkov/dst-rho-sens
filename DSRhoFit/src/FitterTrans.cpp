@@ -12,6 +12,7 @@
 #include "TMath.h"
 #include "TIterator.h"
 
+#include "DSRhoPDF.h"
 #include "FitterTrans.h"
 
 FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
@@ -233,6 +234,9 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
                                 2*apti*sin(2*tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)";
 
     pdf = new RooGenericPdf("pdf","Generic PDF",pdfFormula,*varSet);
+
+    myPdf_a = new DSRhoPDF("myPdf","myPdf","a",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+    myPdf_b = new DSRhoPDF("myPdf","myPdf","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
 }
 
 FitterTrans::~FitterTrans()
