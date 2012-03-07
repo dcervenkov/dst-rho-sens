@@ -35,7 +35,7 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     thb = new RooRealVar("thb","thb",0,PI);
     tht = new RooRealVar("tht","tht",0,PI);
     phit = new RooRealVar("phit","phit",-PI,PI);
-    dt = new RooRealVar("dt","dt",-10,10);
+    dt = new RooRealVar("dt","dt",-6,6);
     decType = new RooCategory("decType","decType");
     decType->defineType("a",1);
     decType->defineType("ab",2);
@@ -235,7 +235,7 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
 
     pdf = new RooGenericPdf("pdf","Generic PDF",pdfFormula,*varSet);
 
-    myPdf_a = new DSRhoPDF("myPdf","myPdf","a",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+    myPdf_a = new DSRhoPDF("myPdf","myPdf","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
     myPdf_b = new DSRhoPDF("myPdf","myPdf","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
 }
 

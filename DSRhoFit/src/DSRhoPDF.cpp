@@ -59,6 +59,8 @@ DSRhoPDF::DSRhoPDF(const char *name, const char *title, const char *_type,
         type = 3;
     else if(strcmp(_type,"bb") == 0)
         type = 4;
+    else
+        printf("ERROR: unknown _type: %s\n",_type);
 
 }
 
@@ -88,7 +90,7 @@ DSRhoPDF::DSRhoPDF(const DSRhoPDF& other, const char* name) :
 
 Double_t DSRhoPDF::evaluate() const
 {
-    Double_t dm = 0.507e12;
+    Double_t dm = 0.507;//e12;
     Double_t gamma = 2.83;
 
     Int_t phiw_sign = 1;
@@ -103,56 +105,68 @@ Double_t DSRhoPDF::evaluate() const
     Double_t aptr = ap*at*cos(-apa+ata);
     Double_t apti = ap*at*sin(-apa+ata);
 
-    switch(type)
+    Double_t At2 = 0;
+    Double_t Ap2 = 0;
+    Double_t A02 = 0;
+    Double_t Ap0r = 0;
+    Double_t A0ti = 0;
+    Double_t Apti = 0;
+
+    if(type < 1 || type > 4)
     {
-    case 1:
-        break;
-
-    case 2:
-        phiw_sign = -1;
-        break;
-
-    case 3:
-        dm = dm + 2*PI/dt;
-        break;
-
-    case 4:
-        dm = dm + 2*PI/dt;
-        phiw_sign = -1;
-        break;
-
-    default:
-        printf("ERROR: Invalid type: %i\n",type);
+        printf("ERROR: undefined type: %i",type);
         return 0;
-        break;
     }
 
+    if(type == 2 || type == 4)
+        phiw_sign = -1;
 
-    Double_t At2 = at*at*((1+rt*rt)+(1-rt*rt)*cos(dm*dt)+2*rt*sin(phiw_sign*phiw-st)*sin(dm*dt));
-    Double_t Ap2 = ap*ap*((1+rp*rp)+(1-rp*rp)*cos(dm*dt)-2*rp*sin(phiw_sign*phiw-sp)*sin(dm*dt));
-    Double_t A02 = a0*a0*((1+r0*r0)+(1-r0*r0)*cos(dm*dt)-2*r0*sin(phiw_sign*phiw-s0)*sin(dm*dt));
 
-    Double_t Ap0r =    ap0r*(1+rp*r0*cos(sp-s0))+ap0i*rp*r0*sin(sp-s0)+\
-                      (ap0r*(1-rp*r0*cos(sp-s0))-ap0i*rp*r0*sin(sp-s0))*cos(dm*dt)-\
-                      (ap0r*(rp*sin(phiw_sign*phiw-sp)+r0*sin(phiw_sign*phiw-s0))+\
-                       ap0i*(rp*cos(phiw_sign*phiw-sp)-r0*cos(phiw_sign*phiw-s0)))*sin(dm*dt);
+    if(type == 1 || type == 2)
+    {
+        At2 = at*at*((1+rt*rt)+(1-rt*rt)*cos(dm*dt)+2*rt*sin(phiw_sign*phiw-st)*sin(dm*dt));
+        Ap2 = ap*ap*((1+rp*rp)+(1-rp*rp)*cos(dm*dt)-2*rp*sin(phiw_sign*phiw-sp)*sin(dm*dt));
+        A02 = a0*a0*((1+r0*r0)+(1-r0*r0)*cos(dm*dt)-2*r0*sin(phiw_sign*phiw-s0)*sin(dm*dt));
 
-    Double_t A0ti =    a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st)+\
+        Ap0r =    ap0r*(1+rp*r0*cos(sp-s0))+ap0i*rp*r0*sin(sp-s0)+\
+                          (ap0r*(1-rp*r0*cos(sp-s0))-ap0i*rp*r0*sin(sp-s0))*cos(dm*dt)-\
+                          (ap0r*(rp*sin(phiw_sign*phiw-sp)+r0*sin(phiw_sign*phiw-s0))+\
+                           ap0i*(rp*cos(phiw_sign*phiw-sp)-r0*cos(phiw_sign*phiw-s0)))*sin(dm*dt);
+
+        A0ti =    a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st)+\
                       (a0ti*(1+r0*rt*cos(s0-st))-a0tr*r0*rt*sin(s0-st))*cos(dm*dt)-\
                       (a0ti*(r0*sin(phiw_sign*phiw-s0)-rt*sin(phiw_sign*phiw-st))-\
                        a0tr*(r0*cos(phiw_sign*phiw-s0)+rt*cos(phiw_sign*phiw-st)))*sin(dm*dt);
 
-    Double_t Apti =    apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
-                      (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*cos(dm*dt)-\
-                      (apti*(rp*sin(phiw_sign*phiw-sp)-rt*sin(phiw_sign*phiw-st))-\
-                       aptr*(rp*cos(phiw_sign*phiw-sp)+rt*cos(phiw_sign*phiw-st)))*sin(dm*dt);
+        Apti =    apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
+                          (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*cos(dm*dt)-\
+                          (apti*(rp*sin(phiw_sign*phiw-sp)-rt*sin(phiw_sign*phiw-st))-\
+                           aptr*(rp*cos(phiw_sign*phiw-sp)+rt*cos(phiw_sign*phiw-st)))*sin(dm*dt);
+    }
 
-    //Double_t value =    ap*ap*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
-                        at*at*2*cos(tht)*cos(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)+\
-                        a0*a0*4*sin(tht)*sin(tht)*sin(tht)*cos(thb)*cos(thb)*sin(thb)*cos(phit)*cos(phit)+\
-                        sqrt(2)*ap0r*sin(tht)*sin(tht)*sin(tht)*sin(2*thb)*sin(thb)*sin(2*phit)-\
-                        sqrt(2)*a0ti*sin(2*tht)*sin(tht)*sin(2*thb)*sin(thb)*cos(phit)-\
-                        2*apti*sin(2*tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit);
+    /// Writing this again explicitly with the changed sign of sin(dm*dt) and cos(dm*dt) is safer than changing
+    /// dm or dt to exploit sin(dm*dt + PI) = -sin(dm*dt) because of numerical problems that can cause.
+    if(type == 3 || type == 4)
+    {
+        At2 = at*at*((1+rt*rt)+(1-rt*rt)*(-1)*cos(dm*dt)+2*rt*sin(phiw_sign*phiw-st)*(-1)*sin(dm*dt));
+        Ap2 = ap*ap*((1+rp*rp)+(1-rp*rp)*(-1)*cos(dm*dt)-2*rp*sin(phiw_sign*phiw-sp)*(-1)*sin(dm*dt));
+        A02 = a0*a0*((1+r0*r0)+(1-r0*r0)*(-1)*cos(dm*dt)-2*r0*sin(phiw_sign*phiw-s0)*(-1)*sin(dm*dt));
+
+        Ap0r =    ap0r*(1+rp*r0*cos(sp-s0))+ap0i*rp*r0*sin(sp-s0)+\
+                          (ap0r*(1-rp*r0*cos(sp-s0))-ap0i*rp*r0*sin(sp-s0))*(-1)*cos(dm*dt)-\
+                          (ap0r*(rp*sin(phiw_sign*phiw-sp)+r0*sin(phiw_sign*phiw-s0))+\
+                           ap0i*(rp*cos(phiw_sign*phiw-sp)-r0*cos(phiw_sign*phiw-s0)))*(-1)*sin(dm*dt);
+
+        A0ti =    a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st)+\
+                      (a0ti*(1+r0*rt*cos(s0-st))-a0tr*r0*rt*sin(s0-st))*(-1)*cos(dm*dt)-\
+                      (a0ti*(r0*sin(phiw_sign*phiw-s0)-rt*sin(phiw_sign*phiw-st))-\
+                       a0tr*(r0*cos(phiw_sign*phiw-s0)+rt*cos(phiw_sign*phiw-st)))*(-1)*sin(dm*dt);
+
+        Apti =    apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
+                          (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*(-1)*cos(dm*dt)-\
+                          (apti*(rp*sin(phiw_sign*phiw-sp)-rt*sin(phiw_sign*phiw-st))-\
+                           aptr*(rp*cos(phiw_sign*phiw-sp)+rt*cos(phiw_sign*phiw-st)))*(-1)*sin(dm*dt);
+    }
 
 
 
@@ -215,49 +229,57 @@ Double_t DSRhoPDF::analyticalIntegral(Int_t code, const char* rangeName) const
     Double_t aptr = ap*at*cos(-apa+ata);
     Double_t apti = ap*at*sin(-apa+ata);
 
-    switch(type)
+    Double_t At2 = 0;
+    Double_t Ap2 = 0;
+    Double_t A02 = 0;
+    Double_t Ap0r = 0;
+    Double_t Apti = 0;
+
+    if(type < 1 || type > 4)
     {
-    case 1:
-        break;
-
-    case 2:
-        phiw_sign = -1;
-        break;
-
-    case 3:
-        dm = dm + 2*PI/dt;
-        break;
-
-    case 4:
-        dm = dm + 2*PI/dt;
-        phiw_sign = -1;
-        break;
-
-    default:
-        printf("ERROR: Invalid type: %i\n",type);
+        printf("ERROR: undefined type: %i",type);
         return 0;
-        break;
     }
 
+    if(type == 2 || type == 4)
+        phiw_sign = -1;
 
-    Double_t At2 = at*at*((1+rt*rt)+(1-rt*rt)*cos(dm*dt)+2*rt*sin(phiw_sign*phiw-st)*sin(dm*dt));
-    Double_t Ap2 = ap*ap*((1+rp*rp)+(1-rp*rp)*cos(dm*dt)-2*rp*sin(phiw_sign*phiw-sp)*sin(dm*dt));
-    Double_t A02 = a0*a0*((1+r0*r0)+(1-r0*r0)*cos(dm*dt)-2*r0*sin(phiw_sign*phiw-s0)*sin(dm*dt));
+    if(type == 1 || type == 2)
+    {
+        At2 = at*at*((1+rt*rt)+(1-rt*rt)*cos(dm*dt)+2*rt*sin(phiw_sign*phiw-st)*sin(dm*dt));
+        Ap2 = ap*ap*((1+rp*rp)+(1-rp*rp)*cos(dm*dt)-2*rp*sin(phiw_sign*phiw-sp)*sin(dm*dt));
+        A02 = a0*a0*((1+r0*r0)+(1-r0*r0)*cos(dm*dt)-2*r0*sin(phiw_sign*phiw-s0)*sin(dm*dt));
 
-    Double_t Ap0r =    ap0r*(1+rp*r0*cos(sp-s0))+ap0i*rp*r0*sin(sp-s0)+\
-                      (ap0r*(1-rp*r0*cos(sp-s0))-ap0i*rp*r0*sin(sp-s0))*cos(dm*dt)-\
-                      (ap0r*(rp*sin(phiw_sign*phiw-sp)+r0*sin(phiw_sign*phiw-s0))+\
-                       ap0i*(rp*cos(phiw_sign*phiw-sp)-r0*cos(phiw_sign*phiw-s0)))*sin(dm*dt);
+        Ap0r =    ap0r*(1+rp*r0*cos(sp-s0))+ap0i*rp*r0*sin(sp-s0)+\
+                          (ap0r*(1-rp*r0*cos(sp-s0))-ap0i*rp*r0*sin(sp-s0))*cos(dm*dt)-\
+                          (ap0r*(rp*sin(phiw_sign*phiw-sp)+r0*sin(phiw_sign*phiw-s0))+\
+                           ap0i*(rp*cos(phiw_sign*phiw-sp)-r0*cos(phiw_sign*phiw-s0)))*sin(dm*dt);
 
-    //Double_t A0ti =    a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st)+\
-                      (a0ti*(1+r0*rt*cos(s0-st))-a0tr*r0*rt*sin(s0-st))*cos(dm*dt)-\
-                      (a0ti*(r0*sin(phiw_sign*phiw-s0)-rt*sin(phiw_sign*phiw-st))-\
-                       a0tr*(r0*cos(phiw_sign*phiw-s0)+rt*cos(phiw_sign*phiw-st)))*sin(dm*dt);
+        Apti =    apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
+                          (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*cos(dm*dt)-\
+                          (apti*(rp*sin(phiw_sign*phiw-sp)-rt*sin(phiw_sign*phiw-st))-\
+                           aptr*(rp*cos(phiw_sign*phiw-sp)+rt*cos(phiw_sign*phiw-st)))*sin(dm*dt);
+    }
 
-    Double_t Apti =    apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
-                      (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*cos(dm*dt)-\
-                      (apti*(rp*sin(phiw_sign*phiw-sp)-rt*sin(phiw_sign*phiw-st))-\
-                       aptr*(rp*cos(phiw_sign*phiw-sp)+rt*cos(phiw_sign*phiw-st)))*sin(dm*dt);
+    /// Writing this again explicitly with the changed sign of sin(dm*dt) and cos(dm*dt) is safer than changing
+    /// dm or dt to exploit sin(dm*dt + PI) = -sin(dm*dt) because of numerical problems that can cause.
+    if(type == 3 || type == 4)
+    {
+        At2 = at*at*((1+rt*rt)+(1-rt*rt)*(-1)*cos(dm*dt)+2*rt*sin(phiw_sign*phiw-st)*(-1)*sin(dm*dt));
+        Ap2 = ap*ap*((1+rp*rp)+(1-rp*rp)*(-1)*cos(dm*dt)-2*rp*sin(phiw_sign*phiw-sp)*(-1)*sin(dm*dt));
+        A02 = a0*a0*((1+r0*r0)+(1-r0*r0)*(-1)*cos(dm*dt)-2*r0*sin(phiw_sign*phiw-s0)*(-1)*sin(dm*dt));
+
+        Ap0r =    ap0r*(1+rp*r0*cos(sp-s0))+ap0i*rp*r0*sin(sp-s0)+\
+                          (ap0r*(1-rp*r0*cos(sp-s0))-ap0i*rp*r0*sin(sp-s0))*(-1)*cos(dm*dt)-\
+                          (ap0r*(rp*sin(phiw_sign*phiw-sp)+r0*sin(phiw_sign*phiw-s0))+\
+                           ap0i*(rp*cos(phiw_sign*phiw-sp)-r0*cos(phiw_sign*phiw-s0)))*(-1)*sin(dm*dt);
+
+        Apti =    apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
+                          (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*(-1)*cos(dm*dt)-\
+                          (apti*(rp*sin(phiw_sign*phiw-sp)-rt*sin(phiw_sign*phiw-st))-\
+                           aptr*(rp*cos(phiw_sign*phiw-sp)+rt*cos(phiw_sign*phiw-st)))*(-1)*sin(dm*dt);
+    }
+
 
     switch(code)
     {

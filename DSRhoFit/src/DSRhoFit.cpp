@@ -447,9 +447,9 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
 
     /// Create a binned pdf with the same number of events as the data, so that the 2d plots of pdf
     /// and data are the same scale
-    printf("Generation of binned dataset starting...\n");
+    //printf("Generation of binned dataset starting...\n");
     //RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(var1,var2,var3,dt),dataSet->numEntries(),kTRUE);
-    printf("Generation of binned dataset finished\n");
+    //printf("Generation of binned dataset finished\n");
 
     /// This is a quick and dirty solution to be able to loop through all variables (except dt, which is treated separetely)
     const int numVars = 3;
@@ -463,7 +463,7 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
         frame = vars[i].frame();
         dataSet->plotOn(frame,RooFit::Name("data"));
         //if(i == 1)
-            pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3,dt)),RooFit::Precision(0.1));
+            pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3,dt)));
         frame->SetName(name);
         frame->Draw();
         frame->Write();
@@ -490,11 +490,11 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
         name = "proj_" + (dt.GetName() + ("_" + type));
         datacut = (RooDataSet*)dataSet->reduce(dt,cut);
         datacut->plotOn(frame,RooFit::Name("data"));
-        if(i == 1)
+        if(i == 3)
         {
             //myexp.fitTo(*datacut,RooFit::Range(-2,2,kTRUE),RooFit::Minimizer("Minuit2"));
             //myexp.plotOn(frame);
-            pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)),RooFit::Precision(0.1));
+            pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)));
         }
         frame->SetName(name);
         frame->Draw();

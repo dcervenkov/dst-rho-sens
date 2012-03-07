@@ -117,7 +117,7 @@ void Analyze(RooDataSet* dataSet)
     for(int i = 0; i < events->size(); i++)
     //for(int i = 4; i < 6; i++)
     {
-        //printf("\n\nEvent %i # particles = %i\n",i+1,(*events)[i].size());
+        //printf("\n\nEvent %i # particles = %i\n",i,(*events)[i].size());
         //PrintEvent(i);
         Particle* B0 = 0;
         Particle* DS = 0;
@@ -359,6 +359,27 @@ void PrintRelevantParticles(const Particle* DS,const Particle* DSD0,const Partic
 bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** DSD0, Particle** DSPi, \
                           Particle** Rho, Particle** RhoPi0, Particle** RhoPi, double& delta_t, int& dec_type)
 {
+    /// You don't want to have e.g. DSD0 = 0, because that would set
+    /// the POINTER TO A POINTER that points to a particle to null.
+    /// What you want to do is set the POINTER TO A PARTICLE to null,
+    /// because you don't yet know which particle it should point to.
+    /// Therefore you must use one dereference.
+    *B0 = 0;
+    *DS = 0;
+    *Rho = 0;
+    *DSD0 = 0;
+    *DSPi = 0;
+    *RhoPi0 = 0;
+    *RhoPi = 0;
+
+    Particle* tmpB0 = 0;
+    Particle* tmpDS = 0;
+    Particle* tmpRho = 0;
+    Particle* tmpDSD0 = 0;
+    Particle* tmpDSPi = 0;
+    Particle* tmpRhoPi0 = 0;
+    Particle* tmpRhoPi = 0;
+
     int found_sig = 0;
     int found_tag = 0;
     int B0s = 0;
@@ -370,19 +391,6 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
     /// This cycles through all particles in an event
     for(int i = 0; i < (*events)[eventNo].size(); i++)
     {
-        /// You don't want to have e.g. DSD0 = 0, because that would set
-        /// the POINTER TO A POINTER that points to a particle to null.
-        /// What you want to do is set the POINTER TO A PARTICLE to null,
-        /// because you don't yet know which particle it should point to.
-        /// Therefore you must use one dereference.
-        *B0 = 0;
-        *DS = 0;
-        *Rho = 0;
-        *DSD0 = 0;
-        *DSPi = 0;
-        *RhoPi0 = 0;
-        *RhoPi = 0;
-
         bool found_sig_this_iter = 0;
 
         if(abs((*events)[eventNo][i].GetIdhep()) == B0_IDHEP)
@@ -391,26 +399,40 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
             printf("Found a B0\n");
             #endif
 
-            *B0 = &(*events)[eventNo][i];
+            tmpB0 = &(*events)[eventNo][i];
 
-            if((*B0)->GetIdhep() > 0)
+            if(tmpB0->GetIdhep() > 0)
                 B0s++;
             else
                 B0Bars++;
 
-            if(GetDSRhoFromB0(*B0,DS,Rho))
+            if(GetDSRhoFromB0(tmpB0,&tmpDS,&tmpRho))
             {
-                if(GetD0PiFromDS(*DS,DSD0,DSPi) && GetPi0PiFromRho(*Rho,RhoPi0,RhoPi))
+                if(GetD0PiFromDS(tmpDS,&tmpDSD0,&tmpDSPi) && GetPi0PiFromRho(tmpRho,&tmpRhoPi0,&tmpRhoPi))
                 {
-                    t_sig = (*DS)->GetV(3);
+                    t_sig = tmpDS->GetV(3);
                     found_sig += 1;
                     found_sig_this_iter = 1;
+
+                    *B0 = tmpB0;
+                    *DS = tmpDS;
+                    *Rho = tmpRho;
+                    *DSD0 = tmpDSD0;
+                    *DSPi = tmpDSPi;
+                    *RhoPi0 = tmpRhoPi0;
+                    *RhoPi = tmpRhoPi;
+
                 }
             }
 
             if(!found_sig_this_iter)
             {
-                t_tag = (*B0)->GetDaughter(0)->GetV(3);
+                /// This is a safeguard against decays, where B0tag doesn't decay for
+                /// some reason
+                if(tmpB0->GetNumDaughters() == 0)
+                    return 0;
+
+                t_tag = tmpB0->GetDaughter(0)->GetV(3);
                 found_tag += 1;
 
                 #ifdef VERBOSE
@@ -424,6 +446,9 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
         /// What should happen if 2 signal events are found? Now they are discarded
         if((found_sig == 1) && (found_tag == 1))
         {
+            //printf("Now printing in foundsig && foundtag\n");
+            //PrintRelevantParticles(*DS, *DSD0, *DSPi, *Rho, *RhoPi0, *RhoPi);
+
             if((B0s == 1) && (B0Bars == 1))
             {
                 if((*DS)->GetIdhep() > 0)
