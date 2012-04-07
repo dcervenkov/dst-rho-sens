@@ -477,10 +477,6 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
     const RooCategory* cat = (RooCategory*)args->find("decType");
     RooDataSet* datacut;
 
-    RooFormulaVar absdt("absdt","abs(dt)",RooArgSet(dt));
-    RooRealVar gamma("gamma","gamma",-10,10);
-    RooExponential myexp("myexp","myexp",absdt,gamma);
-
     /// Saving dt plots for all 4 decay types
     for(int i = 1; i <= 4; i++)
     {
@@ -490,12 +486,18 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
         name = "proj_" + (dt.GetName() + ("_" + type));
         datacut = (RooDataSet*)dataSet->reduce(dt,cut);
         datacut->plotOn(frame,RooFit::Name("data"));
-        if(i == 3)
-        {
-            //myexp.fitTo(*datacut,RooFit::Range(-2,2,kTRUE),RooFit::Minimizer("Minuit2"));
-            //myexp.plotOn(frame);
-            pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)));
-        }
+
+        pdf->setType(i);
+//        if(i == 3)
+//            pdf->setType(4);
+//        else if(i == 4)
+//            pdf->setType(3);
+//        else if(i == 1)
+//            pdf->setType(2);
+//        else if(i == 2)
+//            pdf->setType(1);
+
+        pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)));
         frame->SetName(name);
         frame->Draw();
         frame->Write();

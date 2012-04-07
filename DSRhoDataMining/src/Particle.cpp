@@ -119,3 +119,8 @@ double Particle::GetTheta()
 {
     return m_p.Theta();
 }
+
+double Particle::GetGamma() const
+{
+    return m_p.Gamma();
+}

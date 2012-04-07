@@ -115,7 +115,7 @@ void Analyze(RooDataSet* dataSet)
     int not_found = 0;
 
     for(int i = 0; i < events->size(); i++)
-    //for(int i = 4; i < 6; i++)
+    //for(int i = 0; i < 40; i++)
     {
         //printf("\n\nEvent %i # particles = %i\n",i,(*events)[i].size());
         //PrintEvent(i);
@@ -148,6 +148,7 @@ void Analyze(RooDataSet* dataSet)
         {
             #ifdef VERBOSE
             printf("All relevant particles found\n");
+            printf("Decay type is %i\n",dec_type);
             #endif
 
             RooRealVar dt("dt","dt",-10,10);
@@ -263,8 +264,8 @@ int ReadEvents(char fileName[])
 
         tree->GetEntry(eventNo);
 
-        //if(eventNo == 2044)
-        //    PrintEventOrig(eventNo,numParticles,id,idhep,mother,da1,da2,p,v);
+        //if(eventNo < 40)
+            //PrintEventOrig(eventNo,numParticles,id,idhep,mother,da1,da2,p,v);
 
         /// Resize the vector to its final size, so it doesn't need to
         /// resize itself many times (explained in std::vector documentation)
@@ -310,11 +311,11 @@ int ReadEvents(char fileName[])
 void PrintEvent(int evtNo)
 {
     std::vector<Particle> particles = (*events)[evtNo];
-    printf("Event %i\n",evtNo);
-    printf("ID\tIDHEP\tP1\tP2\tP3\tE\tM\n");
+    printf("\nEvent %i\n",evtNo);
+    printf("ID\tIDHEP\t P1\t P2\t P3\tE\tM\n");
     for(int i = 0; i < particles.size(); i++)
     {
-        printf("%i\t%i\t%.2f\t%.2f\t%.2f\t%.2f\t%.3f\n",i+1,particles[i].GetIdhep(),\
+        printf("%i\t%6i\t%5.2f\t%5.2f\t%5.2f\t%4.2f\t%5.3f\n",i+1,particles[i].GetIdhep(),\
                particles[i].GetP(0),particles[i].GetP(1),particles[i].GetP(2),particles[i].GetP(3),particles[i].GetM());
     }
     printf("\n");
@@ -410,7 +411,7 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
             {
                 if(GetD0PiFromDS(tmpDS,&tmpDSD0,&tmpDSPi) && GetPi0PiFromRho(tmpRho,&tmpRhoPi0,&tmpRhoPi))
                 {
-                    t_sig = tmpDS->GetV(3);
+                    t_sig = tmpDS->GetV(3)/tmpB0->GetGamma();
                     found_sig += 1;
                     found_sig_this_iter = 1;
 
@@ -430,9 +431,14 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
                 /// This is a safeguard against decays, where B0tag doesn't decay for
                 /// some reason
                 if(tmpB0->GetNumDaughters() == 0)
+                {
+                    #ifdef VERBOSE
+                    printf("This B0 has no children\n");
+                    #endif
                     return 0;
+                }
 
-                t_tag = tmpB0->GetDaughter(0)->GetV(3);
+                t_tag = tmpB0->GetDaughter(0)->GetV(3)/tmpB0->GetGamma();
                 found_tag += 1;
 
                 #ifdef VERBOSE
@@ -449,24 +455,40 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
             //printf("Now printing in foundsig && foundtag\n");
             //PrintRelevantParticles(*DS, *DSD0, *DSPi, *Rho, *RhoPi0, *RhoPi);
 
+//            if((B0s == 1) && (B0Bars == 1))
+//            {
+//                if((*DS)->GetIdhep() > 0)
+//                    dec_type = 2;
+//                else
+//                    dec_type = 1;
+//            }
+//            /// EvtGen simulates mixing by decaying Ups(4S) into two
+//            /// mesons of the same kind with the correct time distribution.
+//            else if((B0s == 2) && (B0Bars == 0))
+//                dec_type = 4;
+//            else if((B0s == 0) && (B0Bars == 2))
+//                dec_type = 3;
+//
+//            /// dec_type:   1:  B0      -> D*- + rho+   (a  - favored)
+//            ///             2:  B0Bar   -> D*+ + rho-   (ab - favored)
+//            ///             3:  B0      -> D*+ + rho-   (b  - suppressed)
+//            ///             4:  B0Bar   -> D*- + rho+   (bb - suppressed)
+
             if((B0s == 1) && (B0Bars == 1))
+            {
+                if((*DS)->GetIdhep() > 0)
+                    dec_type = 3;
+                else
+                    dec_type = 1;
+            }
+
+            if((B0s == 2) && (B0Bars == 0))
             {
                 if((*DS)->GetIdhep() > 0)
                     dec_type = 2;
                 else
-                    dec_type = 1;
+                    dec_type = 4;
             }
-            /// EvtGen simulates mixing by decaying Ups(4S) into two
-            /// mesons of the same kind with the correct time distribution.
-            else if((B0s == 2) && (B0Bars == 0))
-                dec_type = 4;
-            else if((B0s == 0) && (B0Bars == 2))
-                dec_type = 3;
-
-            /// dec_type:   1:  B0      -> D*- + rho+   (a  - favored)
-            ///             2:  B0Bar   -> D*+ + rho-   (ab - favored)
-            ///             3:  B0      -> D*+ + rho-   (b  - suppressed)
-            ///             4:  B0Bar   -> D*- + rho+   (bb - suppressed)
 
             delta_t = t_sig - t_tag;
             return 1;

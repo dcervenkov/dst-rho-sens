@@ -1,6 +1,7 @@
 syntax: glob
 
 data/
+old/
 DSRho*/data
 DSRho*/bin
 DSRho*/obj

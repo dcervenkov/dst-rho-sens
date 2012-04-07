@@ -42,6 +42,8 @@ public:
 
     Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
     Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+    void setType(Int_t new_type) {type = new_type;} ;
+    Int_t getType() const {return type;};
 
 protected:
 

@@ -25,6 +25,7 @@ class Particle
         TVector3 GetBoost();
         double GetPhi();
         double GetTheta();
+        double GetGamma() const;
 
     private:
         int m_idhep;
