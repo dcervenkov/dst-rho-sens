@@ -190,13 +190,14 @@ Int_t DSRhoPDF::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, c
 
     // if (matchArgs(allVars,analVars,x)) return 1 ;
 
-    if(matchArgs(allVars,analVars,tht,thb,phit)) return 1;
-    if(matchArgs(allVars,analVars,tht,thb)) return 2;
-    if(matchArgs(allVars,analVars,tht,phit)) return 3;
-    if(matchArgs(allVars,analVars,thb,phit)) return 4;
-    if(matchArgs(allVars,analVars,tht)) return 5;
-    if(matchArgs(allVars,analVars,thb)) return 6;
-    if(matchArgs(allVars,analVars,phit)) return 7;
+    if(matchArgs(allVars,analVars,tht,thb,phit,dt)) return 1;
+    if(matchArgs(allVars,analVars,tht,thb,phit)) return 2;
+    if(matchArgs(allVars,analVars,tht,thb)) return 3;
+    if(matchArgs(allVars,analVars,tht,phit)) return 4;
+    if(matchArgs(allVars,analVars,thb,phit)) return 5;
+    if(matchArgs(allVars,analVars,tht)) return 6;
+    if(matchArgs(allVars,analVars,thb)) return 7;
+    if(matchArgs(allVars,analVars,phit)) return 8;
 
     return 0 ;
 }
@@ -278,27 +279,33 @@ Double_t DSRhoPDF::analyticalIntegral(Int_t code, const char* rangeName) const
 
     switch(code)
     {
-    case 1: // Int[g,{tht,thb,phit}]
+    case 1: // Int[g,{tht,thb,phit,dt}]
+        if(type == 1 || type == 2)
+            return 128.*PI/9.*(1/Bgamma+Bgamma/(Bfreq*Bfreq+Bgamma*Bgamma)+(ap*ap*rp*rp+a0*a0*r0*r0+at*at*rt*rt)*(1/Bgamma-Bgamma/(Bfreq*Bfreq+Bgamma*Bgamma)));
+        else
+            return 128.*PI/9.*(1/Bgamma-Bgamma/(Bfreq*Bfreq+Bgamma*Bgamma)+(ap*ap*rp*rp+a0*a0*r0*r0+at*at*rt*rt)*(1/Bgamma+Bgamma/(Bfreq*Bfreq+Bgamma*Bgamma)));
+
+    case 2: // Int[g,{tht,thb,phit}]
         return 64.*PI/9.*exp(-Bgamma*TMath::Abs(dt))*(Ap2+At2+A02);
 
-    case 2: // Int[g,{tht,thb}]
+    case 3: // Int[g,{tht,thb}]
         return 32./9.*exp(-Bgamma*TMath::Abs(dt))*(At2 + 2*A02*cos(phit)*cos(phit) + 2*Ap2*sin(phit)*sin(phit));
 
-    case 3: // Int[g,{tht,phit}]
+    case 4: // Int[g,{tht,phit}]
         return 16.*PI/3.*exp(-Bgamma*TMath::Abs(dt))*(2*A02*cos(thb)*cos(thb) + (Ap2 + At2)*sin(thb)*sin(thb))*sin(thb);
 
-    case 4: // Int[g,{thb,phit}]
+    case 5: // Int[g,{thb,phit}]
         return 16.*PI/3.*exp(-Bgamma*TMath::Abs(dt))*(2*At2*cos(tht)*cos(tht) + (A02 + Ap2)*sin(tht)*sin(tht))*sin(tht);
 
-    case 5: // Int[g,{tht}]
+    case 6: // Int[g,{tht}]
         return 8./3.*exp(-Bgamma*TMath::Abs(dt))*(4*A02*cos(phit)*cos(phit)*cos(thb)*cos(thb) + \
        (At2 + 2*Ap2*sin(phit)*sin(phit))*sin(thb)*sin(thb) + sqrt(2)*Ap0r*sin(2*phit)*sin(2*thb))*sin(thb);
 
-    case 6: // Int[g,{thb}]
+    case 7: // Int[g,{thb}]
         return 16./3.*exp(-Bgamma*TMath::Abs(dt))*(At2*cos(tht)*cos(tht) + A02*cos(phit)*cos(phit)*sin(tht)*sin(tht) + \
        sin(phit)*(Ap2*sin(phit)*sin(tht)*sin(tht) - Apti*sin(2*tht)))*sin(tht);
 
-    case 7: // Int[g,{phit}]
+    case 8: // Int[g,{phit}]
         return 4*PI*exp(-Bgamma*TMath::Abs(dt))*(2*At2*cos(tht)*cos(tht)*sin(thb)*sin(thb) +
        (2*A02*cos(thb)*cos(thb) + Ap2*sin(thb)*sin(thb))*sin(tht)*sin(tht))*(sin(tht)*sin(thb));
 

@@ -15,7 +15,7 @@ class FitterTrans
         RooRealVar* GetThb(){return thb;};
         RooRealVar* GetPhit(){return phit;};
         RooRealVar* GetDt(){return dt;};
-        DSRhoPDF* GetPdf(){return myPdf_a;};
+        DSRhoPDF* GetPdf(){return pdf_a;};
         RooDataHist* GetBinnedDataSet();
         void FixAllParameters();
         void FixParameter(const char* par);
@@ -127,10 +127,10 @@ class FitterTrans
         RooArgSet* varSet_ab;
         RooArgSet* varSet_bb;
 
-        RooGenericPdf* pdf_a;
-        RooGenericPdf* pdf_b;
-        RooGenericPdf* pdf_ab;
-        RooGenericPdf* pdf_bb;
+        DSRhoPDF* pdf_a;
+        DSRhoPDF* pdf_b;
+        DSRhoPDF* pdf_ab;
+        DSRhoPDF* pdf_bb;
 
         RooArgSet* varSet;
 

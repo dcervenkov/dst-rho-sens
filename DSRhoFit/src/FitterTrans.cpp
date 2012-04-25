@@ -204,10 +204,10 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     varSet_bb->add(*dt);
     varSet_bb->add(*gamma);
 
-    pdf_a = new RooGenericPdf("pdf_a","pdf_a",formula_a,*varSet_a);
-    pdf_b = new RooGenericPdf("pdf_b","pdf_b",formula_b,*varSet_b);
-    pdf_ab = new RooGenericPdf("pdf_ab","pdf_ab",formula_ab,*varSet_ab);
-    pdf_bb = new RooGenericPdf("pdf_bb","pdf_bb",formula_bb,*varSet_bb);
+    pdf_a = new DSRhoPDF("pdf_a","pdf_a","a",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+    pdf_b = new DSRhoPDF("pdf_b","pdf_b","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+    pdf_ab = new DSRhoPDF("pdf_ab","pdf_ab","ab",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+    pdf_bb = new DSRhoPDF("pdf_bb","pdf_bb","bb",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
 
     simPdf = new RooSimultaneous("simPdf","simPdf",*decType);
     simPdf->addPdf(*pdf_a,"a");

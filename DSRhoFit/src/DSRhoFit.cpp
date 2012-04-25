@@ -252,9 +252,19 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
     if(doFit)
     {
         fitter->FixAllParameters();
-        fitter->FreeParameter("s0");
+        fitter->FreeParameter("ap");
+        fitter->FreeParameter("apa");
+        fitter->FreeParameter("a0");
+        fitter->FreeParameter("ata");
+//        fitter->FreeParameter("phiw");
+        fitter->FreeParameter("rp");
+        fitter->FreeParameter("r0");
+        fitter->FreeParameter("rt");
+//        fitter->FreeParameter("sp");
+//        fitter->FreeParameter("s0");
+//        fitter->FreeParameter("st");
         fitter->Fit();
-        fitter->ComputeChi2();
+//        fitter->ComputeChi2();
 
         Int_t numParameters = 0;
         Double_t* recoveredParameters = 0;
