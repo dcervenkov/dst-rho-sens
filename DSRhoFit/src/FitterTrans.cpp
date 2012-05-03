@@ -241,13 +241,80 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
 
 FitterTrans::~FitterTrans()
 {
-    //dtor
+    delete gPluginMgr;
+    delete thb;
+    delete tht;
+    delete phit;
+    delete dt;
+    delete decType;
+    delete gamma;
+    delete ap;
+    delete apa;
+    delete apr;
+    delete api;
+    delete a0;
+    delete a0a;
+    delete a0r;
+    delete a0i;
+    delete at;
+    delete ata;
+    delete atr;
+    delete ati;
+    delete ap0r;
+    delete a0ti;
+    delete apti;
+    delete dm;
+    delete phiw;
+    delete rp;
+    delete r0;
+    delete rt;
+    delete sp;
+    delete s0;
+    delete st;
+    delete ap0i;
+    delete a0tr;
+    delete aptr;
+    delete At2_a;
+    delete Ap2_a;
+    delete A02_a;
+    delete Ap0r_a;
+    delete A0ti_a;
+    delete Apti_a;
+    delete At2_ab;
+    delete Ap2_ab;
+    delete A02_ab;
+    delete Ap0r_ab;
+    delete A0ti_ab;
+    delete Apti_ab;
+    delete At2_b;
+    delete Ap2_b;
+    delete A02_b;
+    delete Ap0r_b;
+    delete A0ti_b;
+    delete Apti_b;
+    delete At2_bb;
+    delete Ap2_bb;
+    delete A02_bb;
+    delete Ap0r_bb;
+    delete A0ti_bb;
+    delete Apti_bb;
+    delete varSet_a;
+    delete varSet_b;
+    delete varSet_ab;
+    delete varSet_bb;
+    delete pdf_a;
+    delete pdf_b;
+    delete pdf_ab;
+    delete pdf_bb;
+    delete simPdf;
+    delete parameters;
+    delete fitParameters;
 }
 
 Int_t FitterTrans::Fit()
 {
-    TPluginManager* gPluginMgr = new TPluginManager;
-    gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
+    //TPluginManager* gPluginMgr = new TPluginManager;
+    //gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
     //result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
     result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
 }
@@ -282,6 +349,7 @@ Int_t FitterTrans::ComputeChi2()
 	prob->setVal(TMath::Prob(chi2Var->getVal(),static_cast<int>(ndof->getVal())));
 
 	printf("chi2 = %f\nndof = %f\nchi2red = %f\nprob = %f\n",chi2Var->getVal(),ndof->getVal(),chi2red->getVal(),prob->getVal());
+
 }
 
 void FitterTrans::GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters)

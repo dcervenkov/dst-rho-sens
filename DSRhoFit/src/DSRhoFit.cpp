@@ -41,6 +41,8 @@
 #include "ASSERT.h"
 #include "FitterTrans.h"
 
+//#include <unistd.h>
+
 #define DEBUG
 //#define VERBOSE
 //#define GRAPHIC
@@ -122,7 +124,10 @@ int main(int argc, char* argv[])
 
     #ifdef TRANSVERSITY
     RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit,dt,decType));
+    //printf("READING DATA\n");
     dataSet = RooDataSet::read(inputFile,RooArgList(tht,thb,phit,dt,decType));
+    //printf("DATA READING COMPLETE, SLEEPING\n");
+    //sleep(10);
     ProcessTrans(dataSet,par_input,doFit,doPlot);
     #endif
 
@@ -247,6 +252,7 @@ int ProcessHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar
 
 int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t doPlot)
 {
+
     FitterTrans* fitter = new FitterTrans(dataSet,par_input);
 
     if(doFit)
