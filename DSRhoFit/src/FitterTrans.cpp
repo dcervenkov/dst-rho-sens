@@ -27,10 +27,10 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     chi2Var = 0;
     result = 0;
 
-    tht_bins = 20;
-    thb_bins = 20;
-    phit_bins = 40;
-    dt_bins = 80;
+    tht_bins = 30;
+    thb_bins = 30;
+    phit_bins = 30;
+    dt_bins = 50;
 
     thb = new RooRealVar("thb","thb",0,PI);
     tht = new RooRealVar("tht","tht",0,PI);
@@ -44,7 +44,7 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     gamma = new RooRealVar("gamma","gamma",2.83);
 
     ap = new RooRealVar("ap","ap",par_input[0],0.1,0.4);
-    apa = new RooRealVar("apa","apa",par_input[1],0,2*PI);
+    apa = new RooRealVar("apa","apa",par_input[1],0.3,0.7);
     apr = new RooFormulaVar("apr","ap*cos(apa)",RooArgSet(*ap,*apa));
     api = new RooFormulaVar("api","ap*sin(apa)",RooArgSet(*ap,*apa));
     a0 = new RooRealVar("a0","a0",par_input[2],0.8,1);
@@ -52,7 +52,7 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     a0r = new RooFormulaVar("a0r","a0*cos(a0a)",RooArgSet(*a0,*a0a));
     a0i = new RooFormulaVar("a0i","a0*sin(a0a)",RooArgSet(*a0,*a0a));
     at = new RooFormulaVar("at","sqrt(1-ap*ap-a0*a0)",RooArgSet(*ap,*a0));
-    ata = new RooRealVar("ata","ata",par_input[3],0,2*PI);
+    ata = new RooRealVar("ata","ata",par_input[3],2.7,3);
     atr = new RooFormulaVar("atr","at*cos(ata)",RooArgSet(*at,*ata));
     ati = new RooFormulaVar("ati","at*sin(ata)",RooArgSet(*at,*ata));
 
@@ -63,7 +63,7 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     /// Time-dep additional vars
 
     dm = new RooRealVar("dm","dm",0.507e12);
-    phiw = new RooRealVar("phiw","phiw",par_input[4],0,2*PI);
+    phiw = new RooRealVar("phiw","phiw",par_input[4],1.7,1.9);
 
     rp = new RooRealVar("rp","rp",par_input[5],0,0.1);
     r0 = new RooRealVar("r0","r0",par_input[6],0,0.1);
@@ -224,19 +224,19 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
 
     /// numFitParameters holds # of NON-constant fit parameters
     fitParameters = new RooArgSet(*ap,*apa,*a0,*ata);
-    numFitParameters = (fitParameters->selectByAttrib("Constant",kFALSE))->getSize();
+    numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
 
-    pdfFormula =   "ap*ap*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
-                                at*at*2*cos(tht)*cos(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)+\
-                                a0*a0*4*sin(tht)*sin(tht)*sin(tht)*cos(thb)*cos(thb)*sin(thb)*cos(phit)*cos(phit)+\
-                                sqrt(2)*ap0r*sin(tht)*sin(tht)*sin(tht)*sin(2*thb)*sin(thb)*sin(2*phit)-\
-                                sqrt(2)*a0ti*sin(2*tht)*sin(tht)*sin(2*thb)*sin(thb)*cos(phit)-\
-                                2*apti*sin(2*tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)";
-
-    pdf = new RooGenericPdf("pdf","Generic PDF",pdfFormula,*varSet);
-
-    myPdf_a = new DSRhoPDF("myPdf","myPdf","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
-    myPdf_b = new DSRhoPDF("myPdf","myPdf","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+//    pdfFormula =   "ap*ap*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
+//                                at*at*2*cos(tht)*cos(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)+\
+//                                a0*a0*4*sin(tht)*sin(tht)*sin(tht)*cos(thb)*cos(thb)*sin(thb)*cos(phit)*cos(phit)+\
+//                                sqrt(2)*ap0r*sin(tht)*sin(tht)*sin(tht)*sin(2*thb)*sin(thb)*sin(2*phit)-\
+//                                sqrt(2)*a0ti*sin(2*tht)*sin(tht)*sin(2*thb)*sin(thb)*cos(phit)-\
+//                                2*apti*sin(2*tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)";
+//
+//    pdf = new RooGenericPdf("pdf","Generic PDF",pdfFormula,*varSet);
+//
+//    myPdf_a = new DSRhoPDF("myPdf","myPdf","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+//    myPdf_b = new DSRhoPDF("myPdf","myPdf","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
 }
 
 FitterTrans::~FitterTrans()
@@ -319,26 +319,40 @@ Int_t FitterTrans::Fit()
     result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
 }
 
-void FitterTrans::CreateBinnedDataSet()
+void FitterTrans::CreateBinnedDataSet(const char* type)
 {
     tht->setBins(tht_bins);
     thb->setBins(thb_bins);
     phit->setBins(phit_bins);
     dt->setBins(dt_bins);
 
+    TString cut = "decType==decType::";
+    cut += type;
+
     RooRandom::randomGenerator()->SetSeed(0);
+    RooDataSet* dataSet_reduced = (RooDataSet*)dataSet->reduce(cut);
+    binnedNumEntries = dataSet_reduced->numEntries();
 
     /// Create a binned dataSet which is needed for chi2 calculation
-    dataSet_binned = new RooDataHist("dataSet_binned","dataSet_binned",RooArgSet(*tht,*thb,*phit),*dataSet);
+    dataSet_binned = new RooDataHist("dataSet_binned","dataSet_binned",RooArgSet(*tht,*thb,*phit,*dt),*dataSet_reduced);
+
+    //dataSet_binned = new RooDataHist("dataSet_binned","dataSet_binned",RooArgSet(*tht,*thb,*phit,*dt),*pdf_a);
     //RooDataHist* dataSet_binned = pdf->generateBinned(RooArgSet(var1,var2,var3),dataSet->numEntries(),kFALSE);
 }
 
-Int_t FitterTrans::ComputeChi2()
+Int_t FitterTrans::ComputeChi2(const char* type)
 {
-    if(dataSet_binned == NULL)
-        CreateBinnedDataSet();
+    //if(dataSet_binned == NULL)
+        CreateBinnedDataSet(type);
 
-	chi2Var = new RooChi2Var("chi2Var","chi2Var",*pdf,*dataSet_binned);
+    numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
+
+    if      (strcmp(type,"a") == 0)   chi2Var = new RooChi2Var("chi2Var","chi2Var",*pdf_a,*dataSet_binned);
+    else if (strcmp(type,"b") == 0)   chi2Var = new RooChi2Var("chi2Var","chi2Var",*pdf_b,*dataSet_binned);
+    else if (strcmp(type,"ab") == 0)  chi2Var = new RooChi2Var("chi2Var","chi2Var",*pdf_ab,*dataSet_binned);
+    else if (strcmp(type,"bb") == 0)  chi2Var = new RooChi2Var("chi2Var","chi2Var",*pdf_bb,*dataSet_binned);
+
+	//chi2Var = new RooChi2Var("chi2Var","chi2Var",*simPdf,*dataSet_binned);
 
 	RooRealVar* ndof     = new RooRealVar("ndof","number of degrees of freedom",0);
 	RooRealVar* chi2red  = new RooRealVar("chi2red","reduced chi^2",0);
@@ -348,8 +362,62 @@ Int_t FitterTrans::ComputeChi2()
 	chi2red->setVal(chi2Var->getVal()/ndof->getVal()) ;
 	prob->setVal(TMath::Prob(chi2Var->getVal(),static_cast<int>(ndof->getVal())));
 
-	printf("chi2 = %f\nndof = %f\nchi2red = %f\nprob = %f\n",chi2Var->getVal(),ndof->getVal(),chi2red->getVal(),prob->getVal());
+	delete dataSet_binned;
 
+	printf("%s:\tchi2 = %f\n%s:\tndof = %f\n%s:\tchi2red = %f\n%s:\tprob = %f\n",type,chi2Var->getVal(),type,ndof->getVal(),type,chi2red->getVal(),type,prob->getVal());
+
+}
+
+Double_t FitterTrans::GetChi2(const char* type)
+{
+    Double_t mychi2 = 0;
+    Double_t n = 0;
+    Double_t v = 0;
+
+
+    //if(dataSet_binned == NULL)
+        CreateBinnedDataSet(type);
+
+    DSRhoPDF* pdf = 0;
+
+    if(strcmp(type,"a") == 0)       pdf = pdf_a;
+    else if(strcmp(type,"b") == 0)  pdf = pdf_b;
+    else if(strcmp(type,"ab") == 0) pdf = pdf_ab;
+    else if(strcmp(type,"bb") == 0) pdf = pdf_bb;
+
+    Double_t binVolume = tht->getBinWidth(0)*thb->getBinWidth(0)*phit->getBinWidth(0)*dt->getBinWidth(0);
+    Int_t numBins = dataSet_binned->numEntries();
+
+    /// Cycle through the centers of all bins
+    /// I'm getting width of the first bin, because all bins are of equal width
+    for(*tht = tht->getMin()+tht->getBinWidth(0)/2; tht->getVal() < tht->getMax(); tht->setVal(tht->getVal()+tht->getBinWidth(0)))
+    {
+        for(*thb = thb->getMin()+thb->getBinWidth(0)/2; thb->getVal() < thb->getMax(); thb->setVal(thb->getVal()+thb->getBinWidth(0)))
+        {
+            for(*phit = phit->getMin()+phit->getBinWidth(0)/2; phit->getVal() < phit->getMax(); phit->setVal(phit->getVal()+phit->getBinWidth(0)))
+            {
+                for(*dt = dt->getMin()+dt->getBinWidth(0)/2; dt->getVal() < dt->getMax(); dt->setVal(dt->getVal()+dt->getBinWidth(0)))
+                {
+                    /// Weight is actually the bin content
+                    n = dataSet_binned->weight(RooArgSet(*tht,*thb,*phit,*dt),0);
+                    //if(n == 0) continue;
+
+                    v = pdf->getVal(RooArgSet(*tht,*thb,*phit,*dt))*binVolume*binnedNumEntries;
+                    mychi2 += (n-v)*(n-v)/v;
+                }
+            }
+        }
+    }
+
+    delete dataSet_binned;
+
+    //printf("binVolume = %f\n",binVolume);
+    printf("%s: numEntries = %i\n",type,binnedNumEntries);
+    printf("%s: numBins = %i\n",type,numBins);
+    printf("%s: mychi2 = %f\n",type,mychi2);
+    printf("%s: mychi2red = %f\n",type,mychi2/numBins);
+    printf("%s: prob = %.10f\n\n",type,TMath::Prob(mychi2,numBins));
+    return mychi2;
 }
 
 void FitterTrans::GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters)
@@ -384,7 +452,7 @@ void FitterTrans::GetRecoveredParameters(Int_t& numParameters, Double_t** recove
 RooDataHist* FitterTrans::GetBinnedDataSet()
 {
     if(dataSet_binned == NULL)
-        CreateBinnedDataSet();
+        CreateBinnedDataSet("a");
 
     return dataSet_binned;
 }

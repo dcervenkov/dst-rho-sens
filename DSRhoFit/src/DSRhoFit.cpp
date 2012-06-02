@@ -41,7 +41,7 @@
 #include "ASSERT.h"
 #include "FitterTrans.h"
 
-//#include <unistd.h>
+#include <unistd.h>
 
 #define DEBUG
 //#define VERBOSE
@@ -49,10 +49,10 @@
 //#define HELICITY
 #define TRANSVERSITY
 
-const Int_t var1_bins = 20;
-const Int_t var2_bins = 20;
-const Int_t var3_bins = 40;
-const Int_t dt_bins = 40;
+const Int_t var1_bins = 30;
+const Int_t var2_bins = 30;
+const Int_t var3_bins = 30;
+const Int_t dt_bins = 50;
 
 char* inputFile = 0;
 char* outputFile = 0;
@@ -123,11 +123,32 @@ int main(int argc, char* argv[])
     #endif
 
     #ifdef TRANSVERSITY
+//    RooDataSet dataSet("data","data.root","dataset",tht);
+//    dataSet.Print();
+
+//    TFile f("data.root");
+//    printf("READING DATA\n");
+//    RooDataSet* dataSet = (RooDataSet*)f.Get("dataset");
+//    printf("DATA READING COMPLETE, SLEEPING\n");
+//    sleep(10);
+//    dataSet->Print();
+//    sleep(10);
+
     RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit,dt,decType));
-    //printf("READING DATA\n");
     dataSet = RooDataSet::read(inputFile,RooArgList(tht,thb,phit,dt,decType));
-    //printf("DATA READING COMPLETE, SLEEPING\n");
-    //sleep(10);
+
+//    TFile f("data.root","RECREATE");
+//    dataSet->Write();
+//    f.ls();
+//    f.Close();
+
+//    sleep(10);
+//    RooDataSet* newDataSet = (RooDataSet*)dataSet->Clone("newdata");
+//    printf("DATA CLONED, SLEEPING\n");
+//    sleep(10);
+//    delete dataSet;
+//    printf("ORIGINAL DATA DELETED, SLEEPING\n");
+//    sleep(10);
     ProcessTrans(dataSet,par_input,doFit,doPlot);
     #endif
 
@@ -258,19 +279,26 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
     if(doFit)
     {
         fitter->FixAllParameters();
-        fitter->FreeParameter("ap");
-        fitter->FreeParameter("apa");
-        fitter->FreeParameter("a0");
-        fitter->FreeParameter("ata");
+//        fitter->FreeParameter("ap");
+//        fitter->FreeParameter("apa");
+//        fitter->FreeParameter("a0");
+//        fitter->FreeParameter("ata");
 //        fitter->FreeParameter("phiw");
-        fitter->FreeParameter("rp");
-        fitter->FreeParameter("r0");
-        fitter->FreeParameter("rt");
+//        fitter->FreeParameter("rp");
+//        fitter->FreeParameter("r0");
+//        fitter->FreeParameter("rt");
 //        fitter->FreeParameter("sp");
 //        fitter->FreeParameter("s0");
 //        fitter->FreeParameter("st");
-        fitter->Fit();
-//        fitter->ComputeChi2();
+//        fitter->Fit();
+        fitter->ComputeChi2("a");
+        fitter->GetChi2("a");
+        fitter->ComputeChi2("b");
+        fitter->GetChi2("b");
+        fitter->ComputeChi2("ab");
+        fitter->GetChi2("ab");
+        fitter->ComputeChi2("bb");
+        fitter->GetChi2("bb");
 
         Int_t numParameters = 0;
         Double_t* recoveredParameters = 0;
@@ -394,34 +422,6 @@ Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* 
     delete h2_chi2_2;
     delete h2_chi2_3;
     delete c2;
-
-    return mychi2;
-}
-
-Double_t GetChi2(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* pdf, RooRealVar var1, RooRealVar var2, RooRealVar var3)
-{
-    /// Create a histogram from the pdf with the expected number of events with no statistical fluctuation
-    RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(var1,var2,var3),numEvents,kTRUE);
-
-    Double_t mychi2 = 0;
-    Double_t n = 0;
-    Double_t v = 0;
-
-    /// Cycle through the centers of all bins
-    /// I'm getting width of the first bin, because all bins are of equal width
-    for(var1 = var1.getMin()+var1.getBinWidth(0)/2; var1.getVal() < var1.getMax(); var1.setVal(var1.getVal()+var1.getBinWidth(0)))
-    {
-        for(var2 = var2.getMin()+var2.getBinWidth(0)/2; var2.getVal() < var2.getMax(); var2.setVal(var2.getVal()+var2.getBinWidth(0)))
-        {
-            for(var3 = var3.getMin()+var3.getBinWidth(0)/2; var3.getVal() < var3.getMax(); var3.setVal(var3.getVal()+var3.getBinWidth(0)))
-            {
-                /// Weight is actually the bin content
-                n = data_binned->weight(RooArgSet(var1,var2,var3),0);
-                v = pdf_binned->weight(RooArgSet(var1,var2,var3),0);
-                mychi2 += (n-v)*(n-v)/v;
-            }
-        }
-    }
 
     return mychi2;
 }

@@ -9,7 +9,8 @@ class FitterTrans
         FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input);
         ~FitterTrans();
         Int_t Fit();
-        Int_t ComputeChi2();
+        Int_t ComputeChi2(const char* type);
+        Double_t GetChi2(const char* type);
         void GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters);
         RooRealVar* GetTht(){return tht;};
         RooRealVar* GetThb(){return thb;};
@@ -26,10 +27,11 @@ class FitterTrans
     private:
         TPluginManager* gPluginMgr;
 
-        void CreateBinnedDataSet();
+        void CreateBinnedDataSet(const char* type);
 
         RooDataSet* dataSet;
         RooDataHist* dataSet_binned;
+        Int_t binnedNumEntries;
         Double_t par_input[11];
         Bool_t doFit;
         RooChi2Var* chi2Var;
@@ -138,12 +140,12 @@ class FitterTrans
         RooArgSet* fitParameters;
         Int_t numFitParameters;
 
-        char* pdfFormula;
+//        char* pdfFormula;
 
-        RooGenericPdf* pdf;
+        //RooGenericPdf* pdf;
 
-        DSRhoPDF* myPdf_a;
-        DSRhoPDF* myPdf_b;
+//        DSRhoPDF* myPdf_a;
+//        DSRhoPDF* myPdf_b;
 };
 
 #endif // FITTERTRANS_H
