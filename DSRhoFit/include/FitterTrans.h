@@ -11,6 +11,7 @@ class FitterTrans
         Int_t Fit();
         Int_t ComputeChi2(const char* type);
         Double_t GetChi2(const char* type);
+        Double_t SaveChi2Maps(const char* type);
         void GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters);
         RooRealVar* GetTht(){return tht;};
         RooRealVar* GetThb(){return thb;};
@@ -28,6 +29,7 @@ class FitterTrans
         TPluginManager* gPluginMgr;
 
         void CreateBinnedDataSet(const char* type);
+        Double_t GetVPrecise(DSRhoPDF* pdf);
 
         RooDataSet* dataSet;
         RooDataHist* dataSet_binned;

@@ -123,32 +123,8 @@ int main(int argc, char* argv[])
     #endif
 
     #ifdef TRANSVERSITY
-//    RooDataSet dataSet("data","data.root","dataset",tht);
-//    dataSet.Print();
-
-//    TFile f("data.root");
-//    printf("READING DATA\n");
-//    RooDataSet* dataSet = (RooDataSet*)f.Get("dataset");
-//    printf("DATA READING COMPLETE, SLEEPING\n");
-//    sleep(10);
-//    dataSet->Print();
-//    sleep(10);
-
     RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit,dt,decType));
     dataSet = RooDataSet::read(inputFile,RooArgList(tht,thb,phit,dt,decType));
-
-//    TFile f("data.root","RECREATE");
-//    dataSet->Write();
-//    f.ls();
-//    f.Close();
-
-//    sleep(10);
-//    RooDataSet* newDataSet = (RooDataSet*)dataSet->Clone("newdata");
-//    printf("DATA CLONED, SLEEPING\n");
-//    sleep(10);
-//    delete dataSet;
-//    printf("ORIGINAL DATA DELETED, SLEEPING\n");
-//    sleep(10);
     ProcessTrans(dataSet,par_input,doFit,doPlot);
     #endif
 
@@ -283,7 +259,7 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
 //        fitter->FreeParameter("apa");
 //        fitter->FreeParameter("a0");
 //        fitter->FreeParameter("ata");
-//        fitter->FreeParameter("phiw");
+        fitter->FreeParameter("phiw");
 //        fitter->FreeParameter("rp");
 //        fitter->FreeParameter("r0");
 //        fitter->FreeParameter("rt");
@@ -291,14 +267,18 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
 //        fitter->FreeParameter("s0");
 //        fitter->FreeParameter("st");
 //        fitter->Fit();
-        fitter->ComputeChi2("a");
-        fitter->GetChi2("a");
-        fitter->ComputeChi2("b");
-        fitter->GetChi2("b");
-        fitter->ComputeChi2("ab");
-        fitter->GetChi2("ab");
-        fitter->ComputeChi2("bb");
-        fitter->GetChi2("bb");
+
+//        Double_t mychi2 = fitter->SaveChi2Maps("a");
+//        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
+
+////        fitter->ComputeChi2("a");
+//        fitter->GetChi2("a");
+////        fitter->ComputeChi2("b");
+//        fitter->GetChi2("b");
+////        fitter->ComputeChi2("ab");
+//        fitter->GetChi2("ab");
+////        fitter->ComputeChi2("bb");
+//        fitter->GetChi2("bb");
 
         Int_t numParameters = 0;
         Double_t* recoveredParameters = 0;
@@ -312,8 +292,10 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
 
     if(doPlot == kTRUE)
     {
-        SavePlots(dataSet,fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
         //SaveChi2Maps(fitter->GetBinnedDataSet(),dataSet->numEntries(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
+        Double_t mychi2 = fitter->SaveChi2Maps("a");
+        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
+        SavePlots(dataSet,fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
     }
 
     return 0;
