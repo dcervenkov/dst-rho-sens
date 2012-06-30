@@ -11,6 +11,7 @@
 #include "TPluginManager.h"
 #include "TMath.h"
 #include "TIterator.h"
+#include "TLine.h"
 
 #include "DSRhoPDF.h"
 #include "FitterTrans.h"
@@ -32,15 +33,26 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     chi2Var = 0;
     result = 0;
 
-    tht_bins = 30;
-    thb_bins = 30;
-    phit_bins = 30;
-    dt_bins = 40;
+    tht_bins = 60;
+    thb_bins = 60;
+    phit_bins = 60;
+    dt_bins = 80;
+
+    vars_bins[0] = tht_bins;
+    vars_bins[1] = thb_bins;
+    vars_bins[2] = phit_bins;
+    vars_bins[3] = dt_bins;
 
     thb = new RooRealVar("thb","thb",0,PI);
     tht = new RooRealVar("tht","tht",0,PI);
     phit = new RooRealVar("phit","phit",-PI,PI);
-    dt = new RooRealVar("dt","dt",-6,6);
+    dt = new RooRealVar("dt","dt",-3,3);
+
+    vars[0] = tht;
+    vars[1] = thb;
+    vars[2] = phit;
+    vars[3] = dt;
+
     decType = new RooCategory("decType","decType");
     decType->defineType("a",1);
     decType->defineType("ab",2);
@@ -68,7 +80,7 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     /// Time-dep additional vars
 
     dm = new RooRealVar("dm","dm",0.507e12);
-    phiw = new RooRealVar("phiw","phiw",par_input[4],1.7,1.9);
+    phiw = new RooRealVar("phiw","phiw",par_input[4],0,2*PI);
 
     rp = new RooRealVar("rp","rp",par_input[5],0,0.1);
     r0 = new RooRealVar("r0","r0",par_input[6],0,0.1);
@@ -321,7 +333,8 @@ Int_t FitterTrans::Fit()
     //TPluginManager* gPluginMgr = new TPluginManager;
     //gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
     //result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
-    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
+    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit"),RooFit::Minos(),RooFit::Hesse(),RooFit::Strategy(2));//,RooFit::NumCPU(2));
+    //result->Print();
 }
 
 void FitterTrans::CreateBinnedDataSet(const char* type)
@@ -335,7 +348,7 @@ void FitterTrans::CreateBinnedDataSet(const char* type)
     cut += type;
 
     RooRandom::randomGenerator()->SetSeed(0);
-    RooDataSet* dataSet_reduced = (RooDataSet*)dataSet->reduce(cut);
+    dataSet_reduced = (RooDataSet*)dataSet->reduce(cut);
     binnedNumEntries = dataSet_reduced->numEntries();
 
     /// Create a binned dataSet which is needed for chi2 calculation
@@ -343,6 +356,14 @@ void FitterTrans::CreateBinnedDataSet(const char* type)
 
     //dataSet_binned = new RooDataHist("dataSet_binned","dataSet_binned",RooArgSet(*tht,*thb,*phit,*dt),*pdf_a);
     //RooDataHist* dataSet_binned = pdf->generateBinned(RooArgSet(var1,var2,var3),dataSet->numEntries(),kFALSE);
+}
+
+void FitterTrans::CreateReducedDataset(const char* type)
+{
+    TString cut = "decType==decType::";
+    cut += type;
+    RooRandom::randomGenerator()->SetSeed(0);
+    dataSet_reduced = (RooDataSet*)dataSet->reduce(cut);
 }
 
 Int_t FitterTrans::ComputeChi2(const char* type)
@@ -410,7 +431,7 @@ Double_t FitterTrans::GetChi2(const char* type)
                 {
                     /// Weight is actually the bin content
                     n = dataSet_binned->weight(RooArgSet(*tht,*thb,*phit,*dt),0);
-                    if(n < 5)
+                    if(n < 1)
                     {
                         numBins--;
                         continue;
@@ -418,7 +439,7 @@ Double_t FitterTrans::GetChi2(const char* type)
 
                     v = pdf->getVal(RooArgSet(*tht,*thb,*phit,*dt))*binVolume*binnedNumEntries;
 
-                    if(((n-v)*(n-v)/v) > 10)
+                    if(((n-v)*(n-v)/v) > 1)
                     {
                         v = GetVPrecise(pdf);
                         numVPrecise++;
@@ -502,6 +523,56 @@ Double_t FitterTrans::GetVPrecise(DSRhoPDF* pdf)
     return v;
 }
 
+Double_t FitterTrans::GetVPrecise1D(const int i,DSRhoPDF* pdf)
+{
+    const Double_t num_subbins = 10;
+
+    RooArgSet intSet;
+    for(int j = 0; j < 4; j++) if(j != i) intSet.add(*vars[j]);
+
+    Double_t original_var = vars[i]->getVal();
+    Double_t bin_min = original_var - vars[i]->getBinWidth(0)/2;
+    Double_t bin_max = original_var + vars[i]->getBinWidth(0)/2;
+    Double_t v = 0;
+    RooAbsReal* vr;
+
+    for(*vars[i] = bin_min+tht->getBinWidth(0)/(2*num_subbins); vars[i]->getVal() < bin_max-0.001; vars[i]->setVal(vars[i]->getVal()+vars[i]->getBinWidth(0)/num_subbins))
+    {
+        vr = pdf->createIntegral(intSet,RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3]));
+        v += vr->getVal();
+    }
+
+    vars[i]->setVal(original_var);
+    v *= vars[i]->getBinWidth(0)*binnedNumEntries/num_subbins;
+
+    return v;
+}
+
+Double_t FitterTrans::GetVPrecise1D(const int i,RooSimultaneous* spdf)
+{
+    const Double_t num_subbins = 10;
+
+    RooArgSet intSet;
+    for(int j = 0; j < 4; j++) if(j != i) intSet.add(*vars[j]);
+
+    Double_t original_var = vars[i]->getVal();
+    Double_t bin_min = original_var - vars[i]->getBinWidth(0)/2;
+    Double_t bin_max = original_var + vars[i]->getBinWidth(0)/2;
+    Double_t v = 0;
+    RooAbsReal* vr;
+
+    for(*vars[i] = bin_min+tht->getBinWidth(0)/(2*num_subbins); vars[i]->getVal() < bin_max-0.001; vars[i]->setVal(vars[i]->getVal()+vars[i]->getBinWidth(0)/num_subbins))
+    {
+        vr = spdf->createIntegral(intSet,RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3]));
+        v += vr->getVal();
+    }
+
+    vars[i]->setVal(original_var);
+    v *= vars[i]->getBinWidth(0)*binnedNumEntries/num_subbins;
+
+    return v;
+}
+
 Double_t FitterTrans::SaveChi2Maps(const char* type)
 {
     /// Create a histogram from the pdf with the expected number of events with no statistical fluctuation
@@ -523,6 +594,10 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 
     DSRhoPDF* pdf = 0;
 
+    TFile* file = new TFile("plots/chi2maps.root","RECREATE");
+    TCanvas* c2 = new TCanvas("c2","c2",600,600);
+    TString path;
+
     if(strcmp(type,"a") == 0)       pdf = pdf_a;
     else if(strcmp(type,"b") == 0)  pdf = pdf_b;
     else if(strcmp(type,"ab") == 0) pdf = pdf_ab;
@@ -533,16 +608,13 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 
     Double_t binVolume = tht->getBinWidth(0)*thb->getBinWidth(0)*phit->getBinWidth(0)*dt->getBinWidth(0);
 
-    TH1F* h1_chi2 = new TH1F("h1_chi2","h1_chi2",100,var1->getMin(),var1->getMax());
+    TH1F* h1_chi2 = new TH1F("h1_chi2","h1_chi2",100,0,10);
     TH2F* h2_chi2_1 = new TH2F("h2_chi2_1","h2_chi2_1",var1_bins,var1->getMin(),var1->getMax(),var2_bins,var2->getMin(),var2->getMax());
     TH2F* h2_chi2_2 = new TH2F("h2_chi2_2","h2_chi2_2",var1_bins,var1->getMin(),var1->getMax(),var3_bins,var3->getMin(),var3->getMax());
     TH2F* h2_chi2_3 = new TH2F("h2_chi2_3","h2_chi2_3",var1_bins,var1->getMin(),var1->getMax(),var4_bins,var4->getMin(),var4->getMax());
     TH2F* h2_chi2_4 = new TH2F("h2_chi2_4","h2_chi2_4",var2_bins,var2->getMin(),var2->getMax(),var3_bins,var3->getMin(),var3->getMax());
     TH2F* h2_chi2_5 = new TH2F("h2_chi2_5","h2_chi2_5",var2_bins,var2->getMin(),var2->getMax(),var4_bins,var4->getMin(),var4->getMax());
     TH2F* h2_chi2_6 = new TH2F("h2_chi2_6","h2_chi2_6",var3_bins,var3->getMin(),var3->getMax(),var4_bins,var4->getMin(),var4->getMax());
-
-    Int_t vars_bins[4] = {tht_bins,thb_bins,phit_bins,dt_bins};
-    RooRealVar* vars[4] = {tht,thb,phit,dt};
 
     TString name;
     TH1F* h1_resid[4];
@@ -555,74 +627,243 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
     }
 
 
-    TH1F* h1_resid_temp = new TH1F("resid_test","resid_test",vars_bins[0],vars[0]->getMin(),vars[0]->getMax());
 
-    TString cut = "decType==decType::";
-    cut += type;
+    TH2F* h2_pull[7];
+    TH1F* h1_pull_bar[7];
+    Double_t chi2[7] = {0,0,0,0,0,0,0};
+    Int_t ndof[7] = {0,0,0,0,0,0,0};
 
-    RooRandom::randomGenerator()->SetSeed(0);
-    RooDataSet* dataSet_reduced = (RooDataSet*)dataSet->reduce(cut);
-    Int_t temp_binnedNumEntries = dataSet_reduced->numEntries();
-
-    /// Create a binned dataSet which is needed for chi2 calculation
-    RooDataHist* temp_dataSet_binned = new RooDataHist("temp_dataSet_binned","temp_dataSet_binned",RooArgSet(*tht),*dataSet_reduced);
-
-    for(*var1 = var1->getMin()+var1->getBinWidth(0)/2; var1->getVal() < var1->getMax(); var1->setVal(var1->getVal()+var1->getBinWidth(0)))
+    for(int i = 0; i < 3; i++)
     {
-        n = temp_dataSet_binned->weight(RooArgSet(*var1),0);
-        v = pdf->getVal(RooArgSet(*var1,*var2,*var3,*var4))*binVolume*binnedNumEntries;
-    }
+        name = "h2_pull_";
+        name += i+1;
+        h2_pull[i] = new TH2F(name,name,vars_bins[i],vars[i]->getMin(),vars[i]->getMax(),50,-5,5);
+        name = "h2_pull_bar_";
+        name += i+1;
+        h1_pull_bar[i] = new TH1F(name,name,vars_bins[i],vars[i]->getMin(),vars[i]->getMax());
+        RooDataHist* temp_dataSet_binned = new RooDataHist("temp_dataSet_binned","temp_dataSet_binned",RooArgSet(*vars[i]),*dataSet_reduced);
+        RooAbsReal* vr;
 
-
-
-    /// Cycle through the centers of all bins
-    /// I'm getting width of the first bin, because all bins are of equal width
-    for(*var1 = var1->getMin()+var1->getBinWidth(0)/2; var1->getVal() < var1->getMax(); var1->setVal(var1->getVal()+var1->getBinWidth(0)))
-    {
-        for(*var2 = var2->getMin()+var2->getBinWidth(0)/2; var2->getVal() < var2->getMax(); var2->setVal(var2->getVal()+var2->getBinWidth(0)))
+        for(*vars[i] = vars[i]->getMin()+vars[i]->getBinWidth(0)/2; vars[i]->getVal() < vars[i]->getMax(); vars[i]->setVal(vars[i]->getVal()+vars[i]->getBinWidth(0)))
         {
-            for(*var3 = var3->getMin()+var3->getBinWidth(0)/2; var3->getVal() < var3->getMax(); var3->setVal(var3->getVal()+var3->getBinWidth(0)))
-            {
-                for(*var4 = var4->getMin()+var4->getBinWidth(0)/2; var4->getVal() < var4->getMax(); var4->setVal(var4->getVal()+var4->getBinWidth(0)))
-                {
-
-                    /// Weight is actually the bin content
-                    n = dataSet_binned->weight(RooArgSet(*var1,*var2,*var3,*var4),0);
-                    //if(n == 0) continue;
-                    v = pdf->getVal(RooArgSet(*var1,*var2,*var3,*var4))*binVolume*binnedNumEntries;
-
-                    if(((n-v)*(n-v)/v) > 10)
-                    {
-                        v = GetVPrecise(pdf);
-                    }
-
-                    dchi2 = (n-v)*(n-v)/v;
-
-                    h1_chi2->Fill(dchi2);
-                    h2_chi2_1->Fill(var1->getVal(),var2->getVal(),dchi2);
-                    h2_chi2_2->Fill(var1->getVal(),var3->getVal(),dchi2);
-                    h2_chi2_3->Fill(var1->getVal(),var4->getVal(),dchi2);
-                    h2_chi2_4->Fill(var2->getVal(),var3->getVal(),dchi2);
-                    h2_chi2_5->Fill(var2->getVal(),var4->getVal(),dchi2);
-                    h2_chi2_6->Fill(var3->getVal(),var4->getVal(),dchi2);
-                    mychi2 += dchi2;
-
-                    for(int i = 0; i < 4; i++)
-                        h1_resid[i]->Fill(vars[i]->getVal(),(n-v)/v);
-                }
-            }
+            n = temp_dataSet_binned->weight(RooArgSet(*vars[i]),0);
+            if(n <= 1) continue;
+            v = GetVPrecise1D(i,pdf);
+//            RooArgSet intSet;
+//            for(int j = 0; j < 4; j++) if(j != i) intSet.add(*vars[j]);
+//            vr = pdf->createIntegral(intSet,RooArgSet(*var1,*var2,*var3,*var4));
+//            v = vr->getVal()*vars[i]->getBinWidth(0)*binnedNumEntries;
+//            printf("n: %f\nv: %f\ndchi2: %f\n\n",n,v,((n-v)*(n-v))/v);
+            h2_pull[i]->Fill(vars[i]->getVal(),(n-v)/sqrt(n));
+            h1_pull_bar[i]->Fill(vars[i]->getVal(),(n-v)/sqrt(n));
+            chi2[i] += ((n-v)*(n-v))/v;
+            ndof[i]++;
+            if(i==0) h1_chi2->Fill(((n-v)*(n-v))/v);
         }
+
+        delete temp_dataSet_binned;
+
+        h2_pull[i]->GetXaxis()->SetTitle(vars[i]->GetName());
+        h2_pull[i]->SetMarkerStyle(7);
+        TLine baseline(vars[i]->getMin(),0,vars[i]->getMax(),0);
+        TLine three_sigma_up(vars[i]->getMin(),3,vars[i]->getMax(),3);
+        TLine three_sigma_down(vars[i]->getMin(),-3,vars[i]->getMax(),-3);
+        three_sigma_up.SetLineColor(2);
+        three_sigma_down.SetLineColor(2);
+        c2->SetGrid();
+        h2_pull[i]->Draw();
+        baseline.Draw();
+        three_sigma_up.Draw();
+        three_sigma_down.Draw();
+        h2_pull[i]->Write();
+        path = "plots/pull_";
+        path += vars[i]->GetName();
+        path += ".png";
+        c2->SaveAs(path);
+        c2->SetGrid(0,0);
+
+        h1_pull_bar[i]->GetXaxis()->SetTitle(vars[i]->GetName());
+        c2->SetGrid();
+        h1_pull_bar[i]->Draw();
+        h1_pull_bar[i]->Write();
+        path = "plots/pull_bar_";
+        path += vars[i]->GetName();
+        path += ".png";
+        c2->SaveAs(path);
+        c2->SetGrid(0,0);
     }
 
     delete dataSet_binned;
+    delete dataSet_reduced;
 
-    TFile* file = new TFile("plots/chi2maps.root","RECREATE");
-    TCanvas* c2 = new TCanvas("c2","c2",600,600);
-    TString path;
+    for(int i = 3; i < 7; i++)
+    {
+        name = "h2_pull_";
+        name += i+1;
+        h2_pull[i] = new TH2F(name,name,dt_bins,dt->getMin(),dt->getMax(),50,-5,5);
+        name = "h2_pull_bar_";
+        name += i+1;
+        h1_pull_bar[i] = new TH1F(name,name,dt_bins,dt->getMin(),dt->getMax());
+
+        if(i == 3)
+        {
+            CreateBinnedDataSet("a");
+            pdf = pdf_a;
+        }
+        else if(i == 4)
+        {
+            CreateBinnedDataSet("ab");
+            pdf = pdf_ab;
+        }
+        else if(i == 5)
+        {
+            CreateBinnedDataSet("b");
+            pdf = pdf_b;
+        }
+        else if(i == 6)
+        {
+            CreateBinnedDataSet("bb");
+            pdf = pdf_bb;
+        }
+
+        delete dataSet_binned;
+        RooDataHist* temp_dataSet_binned = new RooDataHist("temp_dataSet_binned","temp_dataSet_binned",RooArgSet(*dt),*dataSet_reduced);
+        delete dataSet_reduced;
+
+        for(*dt = dt->getMin()+dt->getBinWidth(0)/2; dt->getVal() < dt->getMax(); dt->setVal(dt->getVal()+dt->getBinWidth(0)))
+        {
+            if(dt->getVal() < dt->getMin()+dt->getBinWidth(0)) continue;
+            else if(dt->getVal() > dt->getMax()-dt->getBinWidth(0)) continue;
+            Double_t mydt = dt->getVal();
+            n = temp_dataSet_binned->weight(RooArgSet(*dt),0);
+            if(n <= 10) continue;
+            v = GetVPrecise1D(3,pdf);
+    //            RooArgSet intSet;
+    //            for(int j = 0; j < 4; j++) if(j != i) intSet.add(*vars[j]);
+    //            vr = pdf->createIntegral(intSet,RooArgSet(*var1,*var2,*var3,*var4));
+    //            v = vr->getVal()*vars[i]->getBinWidth(0)*binnedNumEntries;
+    //            printf("n: %f\nv: %f\ndchi2: %f\n\n",n,v,((n-v)*(n-v))/v);
+            h2_pull[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
+            h1_pull_bar[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
+            chi2[i] += ((n-v)*(n-v))/v;
+            ndof[i]++;
+        }
+
+        delete temp_dataSet_binned;
+
+        h2_pull[i]->GetXaxis()->SetTitle(dt->GetName());
+        h2_pull[i]->SetMarkerStyle(7);
+        TLine baseline(dt->getMin(),0,dt->getMax(),0);
+        TLine three_sigma_up(dt->getMin(),3,dt->getMax(),3);
+        TLine three_sigma_down(dt->getMin(),-3,dt->getMax(),-3);
+        three_sigma_up.SetLineColor(2);
+        three_sigma_down.SetLineColor(2);
+        c2->SetGrid();
+        h2_pull[i]->Draw();
+        baseline.Draw();
+        three_sigma_up.Draw();
+        three_sigma_down.Draw();
+        h2_pull[i]->Write();
+        path = "plots/pull_";
+        path += dt->GetName();
+        path += "_";
+
+        if(i == 3) path += "a";
+        else if(i == 4) path += "ab";
+        else if(i == 5) path += "b";
+        else if(i == 6) path += "bb";
+
+        path += ".png";
+        c2->SaveAs(path);
+        c2->SetGrid(0,0);
+
+        h1_pull_bar[i]->GetXaxis()->SetTitle(dt->GetName());
+        c2->SetGrid();
+        h1_pull_bar[i]->Draw();
+        h1_pull_bar[i]->Write();
+        path = "plots/pull_bar_";
+        path += dt->GetName();
+        path += "_";
+
+        if(i == 3) path += "a";
+        else if(i == 4) path += "ab";
+        else if(i == 5) path += "b";
+        else if(i == 6) path += "bb";
+
+        path += ".png";
+        c2->SaveAs(path);
+        c2->SetGrid(0,0);
+    }
+
+
+
+//    SaveNllPlot(ap);
+//    SaveNllPlot(apa);
+//    SaveNllPlot(a0);
+//    SaveNllPlot(ata);
+//    SaveNllPlot(phiw);
+//    SaveNllPlot(sp);
+//    SaveNllPlot(s0);
+//    SaveNllPlot(st);
+//    SaveNllPlot(rp);
+//    SaveNllPlot(r0);
+//    SaveNllPlot(rt);
+//    SaveNllPlot(phiw,r0);
+
+    ///This is outside of the preceding loop because it would be intersparsed by different messages
+    for(int i = 0; i < 3; i++)
+        printf("%s\tchi2: %f\tndof: %i\tchi2red: %f\tprob: %f\n",vars[i]->GetName(),chi2[i],ndof[i],chi2[i]/ndof[i],TMath::Prob(chi2[i],ndof[i]));
+
+    for(int i = 3; i < 7; i++)
+        printf("%s_%i\tchi2: %f\tndof: %i\tchi2red: %f\tprob: %f\n",dt->GetName(),i,chi2[i],ndof[i],chi2[i]/ndof[i],TMath::Prob(chi2[i],ndof[i]));
+
+    /// Cycle through the centers of all bins
+    /// I'm getting width of the first bin, because all bins are of equal width
+//    for(*var1 = var1->getMin()+var1->getBinWidth(0)/2; var1->getVal() < var1->getMax(); var1->setVal(var1->getVal()+var1->getBinWidth(0)))
+//    {
+//        for(*var2 = var2->getMin()+var2->getBinWidth(0)/2; var2->getVal() < var2->getMax(); var2->setVal(var2->getVal()+var2->getBinWidth(0)))
+//        {
+//            for(*var3 = var3->getMin()+var3->getBinWidth(0)/2; var3->getVal() < var3->getMax(); var3->setVal(var3->getVal()+var3->getBinWidth(0)))
+//            {
+//                for(*var4 = var4->getMin()+var4->getBinWidth(0)/2; var4->getVal() < var4->getMax(); var4->setVal(var4->getVal()+var4->getBinWidth(0)))
+//                {
+//
+//                    /// Weight is actually the bin content
+//                    n = dataSet_binned->weight(RooArgSet(*var1,*var2,*var3,*var4),0);
+//                    //if(n == 0) continue;
+//                    if(n == 0) continue;
+//                    v = pdf->getVal(RooArgSet(*var1,*var2,*var3,*var4))*binVolume*binnedNumEntries;
+//
+//                    if(((n-v)*(n-v)/v) > 1)
+//                    {
+//                        v = GetVPrecise(pdf);
+//                    }
+//
+//                    dchi2 = (n-v)*(n-v)/v;
+//
+//                    //h1_chi2->Fill(dchi2);
+//                    h2_chi2_1->Fill(var1->getVal(),var2->getVal(),dchi2);
+//                    h2_chi2_2->Fill(var1->getVal(),var3->getVal(),dchi2);
+//                    h2_chi2_3->Fill(var1->getVal(),var4->getVal(),dchi2);
+//                    h2_chi2_4->Fill(var2->getVal(),var3->getVal(),dchi2);
+//                    h2_chi2_5->Fill(var2->getVal(),var4->getVal(),dchi2);
+//                    h2_chi2_6->Fill(var3->getVal(),var4->getVal(),dchi2);
+//                    mychi2 += dchi2;
+//
+//                    for(int i = 0; i < 4; i++)
+//                        h1_resid[i]->Fill(vars[i]->getVal(),(n-v)/v);
+//                }
+//            }
+//        }
+//    }
+
+//    delete dataSet_binned;
+
 
     for(int i = 0; i < 4; i++)
     {
         h1_resid[i]->GetXaxis()->SetTitle(vars[i]->GetName());
+        c2->SetGrid();
         h1_resid[i]->Draw();
         h1_resid[i]->Write();
         path = "plots/residual_";
@@ -630,7 +871,7 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
         path += ".png";
         c2->SaveAs(path);
     }
-
+    c2->SetGrid(0,0);
 
     //c2->SetLogy(kTRUE);
     h1_chi2->GetXaxis()->SetTitle("dchi");
@@ -733,16 +974,90 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 
     file->Close();
 
-    delete h1_chi2;
-    delete h2_chi2_1;
-    delete h2_chi2_2;
-    delete h2_chi2_3;
-    delete h2_chi2_4;
-    delete h2_chi2_5;
-    delete h2_chi2_6;
+//    delete h1_chi2;
+//    delete h2_chi2_1;
+//    delete h2_chi2_2;
+//    delete h2_chi2_3;
+//    delete h2_chi2_4;
+//    delete h2_chi2_5;
+//    delete h2_chi2_6;
     delete c2;
 
     return mychi2;
+}
+
+void FitterTrans::SaveNllPlot(RooRealVar* var)
+{
+    const int steps = 100;
+    Double_t orig_val = var->getVal();
+    TCanvas c_nll("c_nll","c_nll",800,600);
+    TString name;
+    TString path;
+    name = "h1_nll_";
+    name += var->GetName();
+
+    TH1F h1_nll("name","name",steps,var->getMin(),var->getMax());
+    RooAbsReal* nll;
+    Int_t i = 0;
+    for(Int_t i = 0; i < steps; i++)
+    {
+        var->setVal(i*var->getMax()/steps+(var->getMax()-var->getMin())/(2*steps));
+        printf("Computing %i/%i likelihood function.\n",i,steps);
+        nll = simPdf->createNLL(*dataSet);
+        h1_nll.Fill(var->getVal(),2*nll->getVal());
+        delete nll;
+    }
+    h1_nll.GetXaxis()->SetTitle(var->GetName());
+    h1_nll.Draw();
+    h1_nll.Write();
+    path = "plots/nll_";
+    path += var->GetName();
+    path += ".png";
+    c_nll.SaveAs(path);
+    var->setVal(orig_val);
+}
+
+void FitterTrans::SaveNllPlot(RooRealVar* var1, RooRealVar* var2)
+{
+    const int steps1 = 30;
+    const int steps2 = 30;
+    Double_t orig_val1 = var1->getVal();
+    Double_t orig_val2 = var2->getVal();
+    TCanvas c_nll("c_nll","c_nll",600,600);
+    TString name;
+    TString path;
+    name = "h2_nll_";
+    name += var1->GetName();
+    name += "_";
+    name += var2->GetName();
+
+    TH2F h2_nll("name","name",steps1,var1->getMin(),var1->getMax(),steps2,var2->getMin(),var2->getMax());
+    RooAbsReal* nll;
+    Int_t i = 0;
+    for(Int_t i = 0; i < steps1; i++)
+    {
+        for(Int_t j = 0; j < steps2; j++)
+        {
+            var1->setVal(i*var1->getMax()/steps1+(var1->getMax()-var1->getMin())/(2*steps1));
+            var2->setVal(j*var2->getMax()/steps2+(var2->getMax()-var2->getMin())/(2*steps2));
+            printf("Computing %i/%i likelihood function.\n",i*steps2+j,steps1*steps2);
+            nll = simPdf->createNLL(*dataSet);
+            h2_nll.Fill(var1->getVal(),var2->getVal(),2*nll->getVal());
+            delete nll;
+        }
+    }
+    h2_nll.GetXaxis()->SetTitle(var1->GetName());
+    h2_nll.GetYaxis()->SetTitle(var2->GetName());
+    h2_nll.Draw();
+    h2_nll.Write();
+    path = "plots/nll2_";
+    path += var1->GetName();
+    path += "_";
+    path += var2->GetName();
+    path += ".png";
+    c_nll.SaveAs(path);
+    var1->setVal(orig_val1);
+    var2->setVal(orig_val2);
 }
 
 void FitterTrans::GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters)
@@ -780,6 +1095,14 @@ RooDataHist* FitterTrans::GetBinnedDataSet()
         CreateBinnedDataSet("a");
 
     return dataSet_binned;
+}
+
+RooDataSet* FitterTrans::GetReducedDataSet()
+{
+    if(dataSet_reduced == NULL)
+        CreateBinnedDataSet("a");
+
+    return dataSet_reduced;
 }
 
 void FitterTrans::FixAllParameters()

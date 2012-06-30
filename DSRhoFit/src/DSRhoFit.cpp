@@ -259,7 +259,7 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
 //        fitter->FreeParameter("apa");
 //        fitter->FreeParameter("a0");
 //        fitter->FreeParameter("ata");
-        fitter->FreeParameter("phiw");
+//        fitter->FreeParameter("phiw");
 //        fitter->FreeParameter("rp");
 //        fitter->FreeParameter("r0");
 //        fitter->FreeParameter("rt");
@@ -295,7 +295,7 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
         //SaveChi2Maps(fitter->GetBinnedDataSet(),dataSet->numEntries(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
         Double_t mychi2 = fitter->SaveChi2Maps("a");
         printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
-        SavePlots(dataSet,fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
+        SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
     }
 
     return 0;

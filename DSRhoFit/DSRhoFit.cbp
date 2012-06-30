@@ -21,6 +21,7 @@
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="data/dataset_2a results/output 0.275 0.57 0.936 2.84 1.79371 0.01 0.01 0.01 0 0 0 1 1" />
 				<Compiler>
 					<Add option="-O2" />
 				</Compiler>
@@ -126,6 +127,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger />
+			<envvars />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

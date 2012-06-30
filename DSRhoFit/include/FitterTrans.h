@@ -12,6 +12,8 @@ class FitterTrans
         Int_t ComputeChi2(const char* type);
         Double_t GetChi2(const char* type);
         Double_t SaveChi2Maps(const char* type);
+        void SaveNllPlot(RooRealVar* var);
+        void SaveNllPlot(RooRealVar* var1, RooRealVar* var2);
         void GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters);
         RooRealVar* GetTht(){return tht;};
         RooRealVar* GetThb(){return thb;};
@@ -19,6 +21,8 @@ class FitterTrans
         RooRealVar* GetDt(){return dt;};
         DSRhoPDF* GetPdf(){return pdf_a;};
         RooDataHist* GetBinnedDataSet();
+        RooDataSet* GetReducedDataSet();
+        RooDataSet* GetDataSet(){return dataSet;};
         void FixAllParameters();
         void FixParameter(const char* par);
         void FreeParameter(const char* par);
@@ -28,10 +32,14 @@ class FitterTrans
     private:
         TPluginManager* gPluginMgr;
 
+        void CreateReducedDataset(const char* type);
         void CreateBinnedDataSet(const char* type);
         Double_t GetVPrecise(DSRhoPDF* pdf);
+        Double_t GetVPrecise1D(const int i,DSRhoPDF* pdf);
+        Double_t GetVPrecise1D(const int i,RooSimultaneous* spdf);
 
         RooDataSet* dataSet;
+        RooDataSet* dataSet_reduced;
         RooDataHist* dataSet_binned;
         Int_t binnedNumEntries;
         Double_t par_input[11];
@@ -45,11 +53,15 @@ class FitterTrans
         Int_t thb_bins;
         Int_t phit_bins;
         Int_t dt_bins;
+        Int_t vars_bins[4];
 
         RooRealVar* tht;
         RooRealVar* thb;
         RooRealVar* phit;
         RooRealVar* dt;
+
+        RooRealVar* vars[4];
+
         RooCategory* decType;
         RooRealVar* gamma;
 

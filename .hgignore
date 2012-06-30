@@ -5,8 +5,9 @@ old/
 DSRho*/data
 DSRho*/bin
 DSRho*/obj
-DSRho*/plots
+DSRho*/plots*
 DSRho*/results
+DSRho*/temp
 *.save
 *.layout
 *.tgz
