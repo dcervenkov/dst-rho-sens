@@ -32,11 +32,11 @@ class FitterTrans
     private:
         TPluginManager* gPluginMgr;
 
-        void CreateReducedDataset(const char* type);
+        void CreateReducedDataSet(const char* type);
         void CreateBinnedDataSet(const char* type);
         Double_t GetVPrecise(DSRhoPDF* pdf);
-        Double_t GetVPrecise1D(const int i,DSRhoPDF* pdf);
-        Double_t GetVPrecise1D(const int i,RooSimultaneous* spdf);
+        Double_t GetVPrecise1D(const int i,DSRhoPDF* pdf,RooDataSet* loc_dataset);
+        Double_t GetVPrecise1D(const int i,RooSimultaneous* spdf,RooDataSet* loc_dataset);
 
         RooDataSet* dataSet;
         RooDataSet* dataSet_reduced;
