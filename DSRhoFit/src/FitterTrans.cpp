@@ -595,7 +595,7 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
     DSRhoPDF* pdf = 0;
 
     TFile* file = new TFile("plots/chi2maps.root","RECREATE");
-    TCanvas* c2 = new TCanvas("c2","c2",600,600);
+    TCanvas* c2 = new TCanvas("c2","c2",800,600);
     TString path;
 
     if(strcmp(type,"a") == 0)       pdf = pdf_a;
@@ -617,30 +617,23 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
     TH2F* h2_chi2_6 = new TH2F("h2_chi2_6","h2_chi2_6",var3_bins,var3->getMin(),var3->getMax(),var4_bins,var4->getMin(),var4->getMax());
 
     TString name;
-    TH1F* h1_resid[4];
-
-    for(int i = 0; i < 4; i++)
-    {
-        name = "h1_resid_";
-        name += i+1;
-        h1_resid[i] = new TH1F(name,name,vars_bins[i],vars[i]->getMin(),vars[i]->getMax());
-    }
-
-
-
-    TH2F* h2_pull[7];
-    TH1F* h1_pull_bar[7];
+    TH2F* h2_residual[7];
+    TH1F* h1_residual_bar[7];
+    TH1F* h1_pull[7];
     Double_t chi2[7] = {0,0,0,0,0,0,0};
     Int_t ndof[7] = {0,0,0,0,0,0,0};
 
     for(int i = 0; i < 3; i++)
     {
-        name = "h2_pull_";
+        name = "h2_residual_";
         name += i+1;
-        h2_pull[i] = new TH2F(name,name,vars_bins[i],vars[i]->getMin(),vars[i]->getMax(),50,-5,5);
-        name = "h2_pull_bar_";
+        h2_residual[i] = new TH2F(name,name,vars_bins[i],vars[i]->getMin(),vars[i]->getMax(),50,-5,5);
+        name = "h1_residual_bar_";
         name += i+1;
-        h1_pull_bar[i] = new TH1F(name,name,vars_bins[i],vars[i]->getMin(),vars[i]->getMax());
+        h1_residual_bar[i] = new TH1F(name,name,vars_bins[i],vars[i]->getMin(),vars[i]->getMax());
+        name = "h1_pull_";
+        name += i+1;
+        h1_pull[i] = new TH1F(name,name,40,-7,7);
         RooDataHist* temp_dataSet_binned = new RooDataHist("temp_dataSet_binned","temp_dataSet_binned",RooArgSet(*vars[i]),*dataSet_reduced);
         RooAbsReal* vr;
 
@@ -654,8 +647,9 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 //            vr = pdf->createIntegral(intSet,RooArgSet(*var1,*var2,*var3,*var4));
 //            v = vr->getVal()*vars[i]->getBinWidth(0)*binnedNumEntries;
 //            printf("n: %f\nv: %f\ndchi2: %f\n\n",n,v,((n-v)*(n-v))/v);
-            h2_pull[i]->Fill(vars[i]->getVal(),(n-v)/sqrt(n));
-            h1_pull_bar[i]->Fill(vars[i]->getVal(),(n-v)/sqrt(n));
+            h2_residual[i]->Fill(vars[i]->getVal(),(n-v)/sqrt(n));
+            h1_residual_bar[i]->Fill(vars[i]->getVal(),(n-v)/sqrt(n));
+            h1_pull[i]->Fill((n-v)/sqrt(n));
             chi2[i] += ((n-v)*(n-v))/v;
             ndof[i]++;
             if(i==0) h1_chi2->Fill(((n-v)*(n-v))/v);
@@ -663,30 +657,40 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 
         delete temp_dataSet_binned;
 
-        h2_pull[i]->GetXaxis()->SetTitle(vars[i]->GetName());
-        h2_pull[i]->SetMarkerStyle(7);
+        h2_residual[i]->GetXaxis()->SetTitle(vars[i]->GetName());
+        h2_residual[i]->SetMarkerStyle(7);
         TLine baseline(vars[i]->getMin(),0,vars[i]->getMax(),0);
         TLine three_sigma_up(vars[i]->getMin(),3,vars[i]->getMax(),3);
         TLine three_sigma_down(vars[i]->getMin(),-3,vars[i]->getMax(),-3);
         three_sigma_up.SetLineColor(2);
         three_sigma_down.SetLineColor(2);
         c2->SetGrid();
-        h2_pull[i]->Draw();
+        h2_residual[i]->Draw();
         baseline.Draw();
         three_sigma_up.Draw();
         three_sigma_down.Draw();
-        h2_pull[i]->Write();
-        path = "plots/pull_";
+        h2_residual[i]->Write();
+        path = "plots/residual_";
         path += vars[i]->GetName();
         path += ".png";
         c2->SaveAs(path);
         c2->SetGrid(0,0);
 
-        h1_pull_bar[i]->GetXaxis()->SetTitle(vars[i]->GetName());
+        h1_residual_bar[i]->GetXaxis()->SetTitle(vars[i]->GetName());
         c2->SetGrid();
-        h1_pull_bar[i]->Draw();
-        h1_pull_bar[i]->Write();
-        path = "plots/pull_bar_";
+        h1_residual_bar[i]->Draw();
+        h1_residual_bar[i]->Write();
+        path = "plots/residual_bar_";
+        path += vars[i]->GetName();
+        path += ".png";
+        c2->SaveAs(path);
+        c2->SetGrid(0,0);
+
+        h1_pull[i]->Fit("gaus");
+        h1_pull[i]->GetXaxis()->SetTitle(vars[i]->GetName());
+        h1_pull[i]->Draw();
+        h1_pull[i]->Write();
+        path = "plots/pull_";
         path += vars[i]->GetName();
         path += ".png";
         c2->SaveAs(path);
@@ -698,12 +702,15 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 
     for(int i = 3; i < 7; i++)
     {
-        name = "h2_pull_";
+        name = "h2_residual_";
         name += i+1;
-        h2_pull[i] = new TH2F(name,name,dt_bins,dt->getMin(),dt->getMax(),50,-5,5);
-        name = "h2_pull_bar_";
+        h2_residual[i] = new TH2F(name,name,dt_bins,dt->getMin(),dt->getMax(),50,-5,5);
+        name = "h2_residual_bar_";
         name += i+1;
-        h1_pull_bar[i] = new TH1F(name,name,dt_bins,dt->getMin(),dt->getMax());
+        h1_residual_bar[i] = new TH1F(name,name,dt_bins,dt->getMin(),dt->getMax());
+        name = "h1_pull_";
+        name += i+1;
+        h1_pull[i] = new TH1F(name,name,40,-7,7);
 
         if(i == 3)
         {
@@ -743,28 +750,29 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
     //            vr = pdf->createIntegral(intSet,RooArgSet(*var1,*var2,*var3,*var4));
     //            v = vr->getVal()*vars[i]->getBinWidth(0)*binnedNumEntries;
     //            printf("n: %f\nv: %f\ndchi2: %f\n\n",n,v,((n-v)*(n-v))/v);
-            h2_pull[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
-            h1_pull_bar[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
+            h2_residual[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
+            h1_residual_bar[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
+            h1_pull[i]->Fill((n-v)/sqrt(n));
             chi2[i] += ((n-v)*(n-v))/v;
             ndof[i]++;
         }
 
         delete temp_dataSet_binned;
 
-        h2_pull[i]->GetXaxis()->SetTitle(dt->GetName());
-        h2_pull[i]->SetMarkerStyle(7);
+        h2_residual[i]->GetXaxis()->SetTitle(dt->GetName());
+        h2_residual[i]->SetMarkerStyle(7);
         TLine baseline(dt->getMin(),0,dt->getMax(),0);
         TLine three_sigma_up(dt->getMin(),3,dt->getMax(),3);
         TLine three_sigma_down(dt->getMin(),-3,dt->getMax(),-3);
         three_sigma_up.SetLineColor(2);
         three_sigma_down.SetLineColor(2);
         c2->SetGrid();
-        h2_pull[i]->Draw();
+        h2_residual[i]->Draw();
         baseline.Draw();
         three_sigma_up.Draw();
         three_sigma_down.Draw();
-        h2_pull[i]->Write();
-        path = "plots/pull_";
+        h2_residual[i]->Write();
+        path = "plots/residual_";
         path += dt->GetName();
         path += "_";
 
@@ -777,11 +785,29 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
         c2->SaveAs(path);
         c2->SetGrid(0,0);
 
-        h1_pull_bar[i]->GetXaxis()->SetTitle(dt->GetName());
+        h1_residual_bar[i]->GetXaxis()->SetTitle(dt->GetName());
         c2->SetGrid();
-        h1_pull_bar[i]->Draw();
-        h1_pull_bar[i]->Write();
-        path = "plots/pull_bar_";
+        h1_residual_bar[i]->Draw();
+        h1_residual_bar[i]->Write();
+        path = "plots/residual_bar_";
+        path += dt->GetName();
+        path += "_";
+
+        if(i == 3) path += "a";
+        else if(i == 4) path += "ab";
+        else if(i == 5) path += "b";
+        else if(i == 6) path += "bb";
+
+        path += ".png";
+        c2->SaveAs(path);
+        c2->SetGrid(0,0);
+
+
+        h1_pull[i]->Fit("gaus");
+        h1_pull[i]->GetXaxis()->SetTitle(dt->GetName());
+        h1_pull[i]->Draw();
+        h1_pull[i]->Write();
+        path = "plots/pull_";
         path += dt->GetName();
         path += "_";
 
@@ -860,18 +886,6 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 //    delete dataSet_binned;
 
 
-    for(int i = 0; i < 4; i++)
-    {
-        h1_resid[i]->GetXaxis()->SetTitle(vars[i]->GetName());
-        c2->SetGrid();
-        h1_resid[i]->Draw();
-        h1_resid[i]->Write();
-        path = "plots/residual_";
-        path += vars[i]->GetName();
-        path += ".png";
-        c2->SaveAs(path);
-    }
-    c2->SetGrid(0,0);
 
     //c2->SetLogy(kTRUE);
     h1_chi2->GetXaxis()->SetTitle("dchi");
