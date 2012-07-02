@@ -525,7 +525,7 @@ Double_t FitterTrans::GetVPrecise(DSRhoPDF* pdf)
 
 Double_t FitterTrans::GetVPrecise1D(const int i,DSRhoPDF* pdf,RooDataSet* loc_dataset)
 {
-    const Double_t num_subbins = 10;
+    const Double_t num_subbins = 5;
 
     RooArgSet intSet;
     for(int j = 0; j < 4; j++) if(j != i) intSet.add(*vars[j]);
@@ -550,7 +550,7 @@ Double_t FitterTrans::GetVPrecise1D(const int i,DSRhoPDF* pdf,RooDataSet* loc_da
 
 Double_t FitterTrans::GetVPrecise1D(const int i,RooSimultaneous* spdf,RooDataSet* loc_dataset)
 {
-    const Double_t num_subbins = 10;
+    const Double_t num_subbins = 5;
 
     RooArgSet intSet;
     for(int j = 0; j < 4; j++) if(j != i) intSet.add(*vars[j]);
@@ -573,32 +573,268 @@ Double_t FitterTrans::GetVPrecise1D(const int i,RooSimultaneous* spdf,RooDataSet
     return v;
 }
 
-Double_t FitterTrans::SaveChi2Maps(const char* type)
+void FitterTrans::SaveResiduals()
 {
-    Double_t mychi2 = 0;
-    Double_t dchi2 = 0;
+
+    TFile* file = new TFile("plots/residuals.root","RECREATE");
+    TCanvas* c_residuals = new TCanvas("c2","c2",800,600);
+
     Double_t n = 0;
     Double_t v = 0;
 
-    RooRealVar* var1 = tht;
-    RooRealVar* var2 = thb;
-    RooRealVar* var3 = phit;
-    RooRealVar* var4 = dt;
-    Int_t var1_bins = tht_bins;
-    Int_t var2_bins = thb_bins;
-    Int_t var3_bins = phit_bins;
-    Int_t var4_bins = dt_bins;
+    /// Variables have to be binned to be able to call ->weight to get bin content
+    for(int i = 0; i < 4; i++)
+        vars[i]->setBins(vars_bins[i]);
+
+    TString name;
+    TString path;
+    TH2F* h2_residual[7];
+    TH1F* h1_residual_bar[7];
+    TH1F* h1_pull[7];
+    Double_t chi2[7] = {0,0,0,0,0,0,0};
+    Int_t ndof[7] = {0,0,0,0,0,0,0};
+
+    /// Loop for tht, thb and phit. Loop for dt_{a,ab,b,bb} follows.
+    for(int i = 0; i < 3; i++)
+    {
+        name = "h2_residual_";
+        name += vars[i]->GetName();
+        h2_residual[i] = new TH2F(name,name,vars_bins[i],vars[i]->getMin(),vars[i]->getMax(),50,-5,5);
+        name = "h1_residual_bar_";
+        name += vars[i]->GetName();
+        h1_residual_bar[i] = new TH1F(name,name,vars_bins[i],vars[i]->getMin(),vars[i]->getMax());
+        name = "h1_pull_";
+        name += vars[i]->GetName();
+        h1_pull[i] = new TH1F(name,name,40,-7,7);
+
+        /// Binned dataset with *only one* dimension is created from the whole dataset, because tht,thb,phit distributions
+        /// are the same for all four decay types.
+        RooDataHist* dataSet_binned_1D = new RooDataHist("dataSet_binned_1D","dataSet_binned_1D",RooArgSet(*vars[i]),*dataSet);
+        RooAbsReal* vr;
+
+        for(*vars[i] = vars[i]->getMin()+vars[i]->getBinWidth(0)/2; vars[i]->getVal() < vars[i]->getMax(); vars[i]->setVal(vars[i]->getVal()+vars[i]->getBinWidth(0)))
+        {
+            n = dataSet_binned_1D->weight(RooArgSet(*vars[i]),0);
+            if(n <= 1) continue;
+            v = GetVPrecise1D(i,pdf_a,dataSet);
+
+            h2_residual[i]->Fill(vars[i]->getVal(),(n-v)/sqrt(n));
+            h1_residual_bar[i]->Fill(vars[i]->getVal(),(n-v)/sqrt(n));
+            h1_pull[i]->Fill((n-v)/sqrt(n));
+
+            chi2[i] += ((n-v)*(n-v))/v;
+            ndof[i]++;
+        }
+
+        delete dataSet_binned_1D;
+
+        h2_residual[i]->GetXaxis()->SetTitle(vars[i]->GetName());
+        h2_residual[i]->SetMarkerStyle(7);
+
+        /// Prepare 3-sigma lines for the residual histograms
+        TLine baseline(vars[i]->getMin(),0,vars[i]->getMax(),0);
+        TLine three_sigma_up(vars[i]->getMin(),3,vars[i]->getMax(),3);
+        TLine three_sigma_down(vars[i]->getMin(),-3,vars[i]->getMax(),-3);
+        three_sigma_up.SetLineColor(2);
+        three_sigma_down.SetLineColor(2);
+
+        c_residuals->SetGrid();
+        h2_residual[i]->Draw();
+        baseline.Draw();
+        three_sigma_up.Draw();
+        three_sigma_down.Draw();
+        h2_residual[i]->Write();
+        path = "plots/residual_";
+        path += vars[i]->GetName();
+        path += ".png";
+        c_residuals->SaveAs(path);
+        c_residuals->SetGrid(0,0);
+
+        /// These residual_bar histograms are mainly for debugging purposes, may be disabled
+        h1_residual_bar[i]->GetXaxis()->SetTitle(vars[i]->GetName());
+        c_residuals->SetGrid();
+        h1_residual_bar[i]->Draw();
+        h1_residual_bar[i]->Write();
+        path = "plots/residual_bar_";
+        path += vars[i]->GetName();
+        path += ".png";
+        c_residuals->SaveAs(path);
+        c_residuals->SetGrid(0,0);
+
+        h1_pull[i]->Fit("gaus");
+        h1_pull[i]->GetXaxis()->SetTitle(vars[i]->GetName());
+        h1_pull[i]->Draw();
+        h1_pull[i]->Write();
+        path = "plots/pull_";
+        path += vars[i]->GetName();
+        path += ".png";
+        c_residuals->SaveAs(path);
+    }
 
     DSRhoPDF* pdf = 0;
+    /// Loop for dt_{a,ab,b,bb}
+    for(int i = 3; i < 7; i++)
+    {
+        char* type;
 
-    TFile* file = new TFile("plots/plots.root","RECREATE");
-    TCanvas* c2 = new TCanvas("c2","c2",800,600);
-    TString path;
+        switch (i)
+        {
+        case 3:
+            type = "a";
+            pdf = pdf_a;
+            break;
 
-    if(strcmp(type,"a") == 0)       pdf = pdf_a;
-    else if(strcmp(type,"b") == 0)  pdf = pdf_b;
-    else if(strcmp(type,"ab") == 0) pdf = pdf_ab;
-    else if(strcmp(type,"bb") == 0) pdf = pdf_bb;
+        case 4:
+            type = "ab";
+            pdf = pdf_ab;
+            break;
+
+        case 5:
+            type = "b";
+            pdf = pdf_b;
+            break;
+
+        case 6:
+            type = "bb";
+            pdf = pdf_bb;
+            break;
+
+        default:
+            break;
+        }
+
+        name = "h2_residual_";
+        name += dt->GetName();
+        name += "_";
+        name += type;
+        h2_residual[i] = new TH2F(name,name,dt_bins,dt->getMin(),dt->getMax(),50,-5,5);
+
+        name = "h2_residual_bar_";
+        name += dt->GetName();
+        name += "_";
+        name += type;
+        h1_residual_bar[i] = new TH1F(name,name,dt_bins,dt->getMin(),dt->getMax());
+
+        name = "h1_pull_";
+        name += dt->GetName();
+        name += "_";
+        name += type;
+        h1_pull[i] = new TH1F(name,name,40,-7,7);
+
+        CreateReducedDataSet(type);
+        RooDataHist* dataSet_binned_1D = new RooDataHist("dataSet_binned_1D","dataSet_binned_1D",RooArgSet(*dt),*dataSet_reduced);
+
+        for(*dt = dt->getMin()+dt->getBinWidth(0)/2; dt->getVal() < dt->getMax(); dt->setVal(dt->getVal()+dt->getBinWidth(0)))
+        {
+            /// It seems the first and last bin collect some under/overflow and are therefore skipped.
+            /// TODO: Should be more thoroughly investigated.
+            if(dt->getVal() < dt->getMin()+dt->getBinWidth(0)) continue;
+            else if(dt->getVal() > dt->getMax()-dt->getBinWidth(0)) continue;
+
+            n = dataSet_binned_1D->weight(RooArgSet(*dt),0);
+            if(n <= 10) continue;
+            v = GetVPrecise1D(3,pdf,dataSet_reduced);
+
+            h2_residual[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
+            h1_residual_bar[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
+            h1_pull[i]->Fill((n-v)/sqrt(n));
+
+            chi2[i] += ((n-v)*(n-v))/v;
+            ndof[i]++;
+        }
+
+        delete dataSet_reduced;
+        delete dataSet_binned_1D;
+
+        h2_residual[i]->GetXaxis()->SetTitle(dt->GetName());
+        h2_residual[i]->SetMarkerStyle(7);
+
+        /// Prepare 3-sigma lines for the residual histograms
+        TLine baseline(dt->getMin(),0,dt->getMax(),0);
+        TLine three_sigma_up(dt->getMin(),3,dt->getMax(),3);
+        TLine three_sigma_down(dt->getMin(),-3,dt->getMax(),-3);
+        three_sigma_up.SetLineColor(2);
+        three_sigma_down.SetLineColor(2);
+
+        c_residuals->SetGrid();
+        h2_residual[i]->Draw();
+        baseline.Draw();
+        three_sigma_up.Draw();
+        three_sigma_down.Draw();
+        h2_residual[i]->Write();
+        path = "plots/residual_";
+        path += dt->GetName();
+        path += "_";
+        path += type;
+        path += ".png";
+        c_residuals->SaveAs(path);
+        c_residuals->SetGrid(0,0);
+
+        /// These residual_bar histograms are mainly for debugging purposes, may be disabled
+        h1_residual_bar[i]->GetXaxis()->SetTitle(dt->GetName());
+        c_residuals->SetGrid();
+        h1_residual_bar[i]->Draw();
+        h1_residual_bar[i]->Write();
+        path = "plots/residual_bar_";
+        path += dt->GetName();
+        path += "_";
+        path += type;
+        path += ".png";
+        c_residuals->SaveAs(path);
+        c_residuals->SetGrid(0,0);
+
+        h1_pull[i]->Fit("gaus");
+        h1_pull[i]->GetXaxis()->SetTitle(dt->GetName());
+        h1_pull[i]->Draw();
+        h1_pull[i]->Write();
+        path = "plots/pull_";
+        path += dt->GetName();
+        path += "_";
+        path += type;
+        path += ".png";
+        c_residuals->SaveAs(path);
+        c_residuals->SetGrid(0,0);
+    }
+
+    file->Close();
+    delete c_residuals;
+
+    ///This is outside of the preceding loop because it would be intersparsed by different messages
+    for(int i = 0; i < 3; i++)
+        printf("%s\tchi2: %.2f\tndof: %i\tchi2red: %.3f\tprob: %f\n",vars[i]->GetName(),chi2[i],ndof[i],chi2[i]/ndof[i],TMath::Prob(chi2[i],ndof[i]));
+
+    for(int i = 3; i < 7; i++)
+        printf("%s_%i\tchi2: %.2f\tndof: %i\tchi2red: %.3f\tprob: %f\n",dt->GetName(),i,chi2[i],ndof[i],chi2[i]/ndof[i],TMath::Prob(chi2[i],ndof[i]));
+
+}
+
+Double_t FitterTrans::SaveChi2Maps(const char* type)
+{
+
+//    Double_t mychi2 = 0;
+//    Double_t dchi2 = 0;
+//    Double_t n = 0;
+//    Double_t v = 0;
+//
+//    RooRealVar* var1 = tht;
+//    RooRealVar* var2 = thb;
+//    RooRealVar* var3 = phit;
+//    RooRealVar* var4 = dt;
+//    Int_t var1_bins = tht_bins;
+//    Int_t var2_bins = thb_bins;
+//    Int_t var3_bins = phit_bins;
+//    Int_t var4_bins = dt_bins;
+//
+//    DSRhoPDF* pdf = 0;
+//
+//    TFile* file = new TFile("plots/plots.root","RECREATE");
+//    TCanvas* c2 = new TCanvas("c2","c2",800,600);
+//    TString path;
+//
+//    if(strcmp(type,"a") == 0)       pdf = pdf_a;
+//    else if(strcmp(type,"b") == 0)  pdf = pdf_b;
+//    else if(strcmp(type,"ab") == 0) pdf = pdf_ab;
+//    else if(strcmp(type,"bb") == 0) pdf = pdf_bb;
 
 //    //if(dataSet_binned == NULL)
 //        CreateBinnedDataSet(type);
@@ -613,234 +849,6 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 //    TH2F* h2_chi2_5 = new TH2F("h2_chi2_5","h2_chi2_5",var2_bins,var2->getMin(),var2->getMax(),var4_bins,var4->getMin(),var4->getMax());
 //    TH2F* h2_chi2_6 = new TH2F("h2_chi2_6","h2_chi2_6",var3_bins,var3->getMin(),var3->getMax(),var4_bins,var4->getMin(),var4->getMax());
 
-    /// Variables have to be binned to be able to call ->weight to get bin content
-    for(int i = 0; i < 4; i++)
-        vars[i]->setBins(vars_bins[i]);
-
-    TString name;
-    TH2F* h2_residual[7];
-    TH1F* h1_residual_bar[7];
-    TH1F* h1_pull[7];
-    Double_t chi2[7] = {0,0,0,0,0,0,0};
-    Int_t ndof[7] = {0,0,0,0,0,0,0};
-
-    for(int i = 0; i < 3; i++)
-    {
-        name = "h2_residual_";
-        name += i+1;
-        h2_residual[i] = new TH2F(name,name,vars_bins[i],vars[i]->getMin(),vars[i]->getMax(),50,-5,5);
-        name = "h1_residual_bar_";
-        name += i+1;
-        h1_residual_bar[i] = new TH1F(name,name,vars_bins[i],vars[i]->getMin(),vars[i]->getMax());
-        name = "h1_pull_";
-        name += i+1;
-        h1_pull[i] = new TH1F(name,name,40,-7,7);
-        RooDataHist* temp_dataSet_binned = new RooDataHist("temp_dataSet_binned","temp_dataSet_binned",RooArgSet(*vars[i]),*dataSet);
-        RooAbsReal* vr;
-
-        for(*vars[i] = vars[i]->getMin()+vars[i]->getBinWidth(0)/2; vars[i]->getVal() < vars[i]->getMax(); vars[i]->setVal(vars[i]->getVal()+vars[i]->getBinWidth(0)))
-        {
-            n = temp_dataSet_binned->weight(RooArgSet(*vars[i]),0);
-            if(n <= 1) continue;
-            v = GetVPrecise1D(i,pdf,dataSet);
-//            RooArgSet intSet;
-//            for(int j = 0; j < 4; j++) if(j != i) intSet.add(*vars[j]);
-//            vr = pdf->createIntegral(intSet,RooArgSet(*var1,*var2,*var3,*var4));
-//            v = vr->getVal()*vars[i]->getBinWidth(0)*binnedNumEntries;
-//            printf("n: %f\nv: %f\ndchi2: %f\n\n",n,v,((n-v)*(n-v))/v);
-            h2_residual[i]->Fill(vars[i]->getVal(),(n-v)/sqrt(n));
-            h1_residual_bar[i]->Fill(vars[i]->getVal(),(n-v)/sqrt(n));
-            h1_pull[i]->Fill((n-v)/sqrt(n));
-            chi2[i] += ((n-v)*(n-v))/v;
-            ndof[i]++;
-        }
-
-        delete temp_dataSet_binned;
-
-        h2_residual[i]->GetXaxis()->SetTitle(vars[i]->GetName());
-        h2_residual[i]->SetMarkerStyle(7);
-        TLine baseline(vars[i]->getMin(),0,vars[i]->getMax(),0);
-        TLine three_sigma_up(vars[i]->getMin(),3,vars[i]->getMax(),3);
-        TLine three_sigma_down(vars[i]->getMin(),-3,vars[i]->getMax(),-3);
-        three_sigma_up.SetLineColor(2);
-        three_sigma_down.SetLineColor(2);
-        c2->SetGrid();
-        h2_residual[i]->Draw();
-        baseline.Draw();
-        three_sigma_up.Draw();
-        three_sigma_down.Draw();
-        h2_residual[i]->Write();
-        path = "plots/residual_";
-        path += vars[i]->GetName();
-        path += ".png";
-        c2->SaveAs(path);
-        c2->SetGrid(0,0);
-
-        h1_residual_bar[i]->GetXaxis()->SetTitle(vars[i]->GetName());
-        c2->SetGrid();
-        h1_residual_bar[i]->Draw();
-        h1_residual_bar[i]->Write();
-        path = "plots/residual_bar_";
-        path += vars[i]->GetName();
-        path += ".png";
-        c2->SaveAs(path);
-        c2->SetGrid(0,0);
-
-        h1_pull[i]->Fit("gaus");
-        h1_pull[i]->GetXaxis()->SetTitle(vars[i]->GetName());
-        h1_pull[i]->Draw();
-        h1_pull[i]->Write();
-        path = "plots/pull_";
-        path += vars[i]->GetName();
-        path += ".png";
-        c2->SaveAs(path);
-        c2->SetGrid(0,0);
-    }
-
-//    delete dataSet_binned;
-//    delete dataSet_reduced;
-
-    for(int i = 3; i < 7; i++)
-    {
-        name = "h2_residual_";
-        name += i+1;
-        h2_residual[i] = new TH2F(name,name,dt_bins,dt->getMin(),dt->getMax(),50,-5,5);
-        name = "h2_residual_bar_";
-        name += i+1;
-        h1_residual_bar[i] = new TH1F(name,name,dt_bins,dt->getMin(),dt->getMax());
-        name = "h1_pull_";
-        name += i+1;
-        h1_pull[i] = new TH1F(name,name,40,-7,7);
-
-        if(i == 3)
-        {
-            CreateReducedDataSet("a");
-            pdf = pdf_a;
-        }
-        else if(i == 4)
-        {
-            CreateReducedDataSet("ab");
-            pdf = pdf_ab;
-        }
-        else if(i == 5)
-        {
-            CreateReducedDataSet("b");
-            pdf = pdf_b;
-        }
-        else if(i == 6)
-        {
-            CreateReducedDataSet("bb");
-            pdf = pdf_bb;
-        }
-
-        RooDataHist* temp_dataSet_binned = new RooDataHist("temp_dataSet_binned","temp_dataSet_binned",RooArgSet(*dt),*dataSet_reduced);
-
-        for(*dt = dt->getMin()+dt->getBinWidth(0)/2; dt->getVal() < dt->getMax(); dt->setVal(dt->getVal()+dt->getBinWidth(0)))
-        {
-            if(dt->getVal() < dt->getMin()+dt->getBinWidth(0)) continue;
-            else if(dt->getVal() > dt->getMax()-dt->getBinWidth(0)) continue;
-            Double_t mydt = dt->getVal();
-            n = temp_dataSet_binned->weight(RooArgSet(*dt),0);
-            if(n <= 10) continue;
-            v = GetVPrecise1D(3,pdf,dataSet_reduced);
-    //            RooArgSet intSet;
-    //            for(int j = 0; j < 4; j++) if(j != i) intSet.add(*vars[j]);
-    //            vr = pdf->createIntegral(intSet,RooArgSet(*var1,*var2,*var3,*var4));
-    //            v = vr->getVal()*vars[i]->getBinWidth(0)*binnedNumEntries;
-    //            printf("n: %f\nv: %f\ndchi2: %f\n\n",n,v,((n-v)*(n-v))/v);
-            h2_residual[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
-            h1_residual_bar[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
-            h1_pull[i]->Fill((n-v)/sqrt(n));
-            chi2[i] += ((n-v)*(n-v))/v;
-            ndof[i]++;
-        }
-
-        delete dataSet_reduced;
-        delete temp_dataSet_binned;
-
-        h2_residual[i]->GetXaxis()->SetTitle(dt->GetName());
-        h2_residual[i]->SetMarkerStyle(7);
-        TLine baseline(dt->getMin(),0,dt->getMax(),0);
-        TLine three_sigma_up(dt->getMin(),3,dt->getMax(),3);
-        TLine three_sigma_down(dt->getMin(),-3,dt->getMax(),-3);
-        three_sigma_up.SetLineColor(2);
-        three_sigma_down.SetLineColor(2);
-        c2->SetGrid();
-        h2_residual[i]->Draw();
-        baseline.Draw();
-        three_sigma_up.Draw();
-        three_sigma_down.Draw();
-        h2_residual[i]->Write();
-        path = "plots/residual_";
-        path += dt->GetName();
-        path += "_";
-
-        if(i == 3) path += "a";
-        else if(i == 4) path += "ab";
-        else if(i == 5) path += "b";
-        else if(i == 6) path += "bb";
-
-        path += ".png";
-        c2->SaveAs(path);
-        c2->SetGrid(0,0);
-
-        h1_residual_bar[i]->GetXaxis()->SetTitle(dt->GetName());
-        c2->SetGrid();
-        h1_residual_bar[i]->Draw();
-        h1_residual_bar[i]->Write();
-        path = "plots/residual_bar_";
-        path += dt->GetName();
-        path += "_";
-
-        if(i == 3) path += "a";
-        else if(i == 4) path += "ab";
-        else if(i == 5) path += "b";
-        else if(i == 6) path += "bb";
-
-        path += ".png";
-        c2->SaveAs(path);
-        c2->SetGrid(0,0);
-
-
-        h1_pull[i]->Fit("gaus");
-        h1_pull[i]->GetXaxis()->SetTitle(dt->GetName());
-        h1_pull[i]->Draw();
-        h1_pull[i]->Write();
-        path = "plots/pull_";
-        path += dt->GetName();
-        path += "_";
-
-        if(i == 3) path += "a";
-        else if(i == 4) path += "ab";
-        else if(i == 5) path += "b";
-        else if(i == 6) path += "bb";
-
-        path += ".png";
-        c2->SaveAs(path);
-        c2->SetGrid(0,0);
-    }
-
-
-
-//    SaveNllPlot(ap);
-//    SaveNllPlot(apa);
-//    SaveNllPlot(a0);
-//    SaveNllPlot(ata);
-    SaveNllPlot(phiw);
-//    SaveNllPlot(sp);
-//    SaveNllPlot(s0);
-//    SaveNllPlot(st);
-//    SaveNllPlot(rp);
-//    SaveNllPlot(r0);
-//    SaveNllPlot(rt);
-    SaveNllPlot(phiw,r0);
-
-    ///This is outside of the preceding loop because it would be intersparsed by different messages
-    for(int i = 0; i < 3; i++)
-        printf("%s\tchi2: %.2f\tndof: %i\tchi2red: %.3f\tprob: %f\n",vars[i]->GetName(),chi2[i],ndof[i],chi2[i]/ndof[i],TMath::Prob(chi2[i],ndof[i]));
-
-    for(int i = 3; i < 7; i++)
-        printf("%s_%i\tchi2: %.2f\tndof: %i\tchi2red: %.3f\tprob: %f\n",dt->GetName(),i,chi2[i],ndof[i],chi2[i]/ndof[i],TMath::Prob(chi2[i],ndof[i]));
 
     /// Cycle through the centers of all bins
     /// I'm getting width of the first bin, because all bins are of equal width
@@ -985,7 +993,7 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 //    path += ".png";
 //    c2->SaveAs(path);
 
-    file->Close();
+//    file->Close();
 
 //    delete h1_chi2;
 //    delete h2_chi2_1;
@@ -994,9 +1002,9 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 //    delete h2_chi2_4;
 //    delete h2_chi2_5;
 //    delete h2_chi2_6;
-    delete c2;
-
-    return mychi2;
+//    delete c2;
+//
+//    return mychi2;
 }
 
 void FitterTrans::SaveNllPlot(RooRealVar* var)
@@ -1149,3 +1157,26 @@ void FitterTrans::FreeParameter(const char* par)
         rooPar->setConstant(kFALSE);
 }
 
+void FitterTrans::SaveNllPlot(const char* par)
+{
+    RooRealVar* rooPar = 0;
+    rooPar = (RooRealVar*)parameters->find(par);
+    if(rooPar != 0)
+        SaveNllPlot(rooPar);
+    else
+        printf("ERROR: Parameter %s doesn't exist! Can't save Nll plot.\n",par);
+}
+
+void FitterTrans::SaveNllPlot(const char* par1, const char* par2)
+{
+    RooRealVar* rooPar1 = 0;
+    RooRealVar* rooPar2 = 0;
+    rooPar1 = (RooRealVar*)parameters->find(par1);
+    rooPar2 = (RooRealVar*)parameters->find(par2);
+    if(rooPar1 != 0 && rooPar2 != 0)
+        SaveNllPlot(rooPar1,rooPar2);
+    if(rooPar1 == 0)
+        printf("ERROR: Parameter %s doesn't exist! Can't save Nll plot.\n",par1);
+    if(rooPar2 == 0)
+        printf("ERROR: Parameter %s doesn't exist! Can't save Nll plot.\n",par2);
+}

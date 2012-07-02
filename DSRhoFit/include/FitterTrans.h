@@ -12,8 +12,8 @@ class FitterTrans
         Int_t ComputeChi2(const char* type);
         Double_t GetChi2(const char* type);
         Double_t SaveChi2Maps(const char* type);
-        void SaveNllPlot(RooRealVar* var);
-        void SaveNllPlot(RooRealVar* var1, RooRealVar* var2);
+        void SaveNllPlot(const char* par);
+        void SaveNllPlot(const char* par1, const char* par2);
         void GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters);
         RooRealVar* GetTht(){return tht;};
         RooRealVar* GetThb(){return thb;};
@@ -26,11 +26,15 @@ class FitterTrans
         void FixAllParameters();
         void FixParameter(const char* par);
         void FreeParameter(const char* par);
+        void SaveResiduals();
 
 
     protected:
     private:
         TPluginManager* gPluginMgr;
+
+        void SaveNllPlot(RooRealVar* var);
+        void SaveNllPlot(RooRealVar* var1, RooRealVar* var2);
 
         void CreateReducedDataSet(const char* type);
         void CreateBinnedDataSet(const char* type);
