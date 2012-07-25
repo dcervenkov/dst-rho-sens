@@ -120,10 +120,14 @@
 		<Unit filename="include/Constants.h" />
 		<Unit filename="include/DSRhoFit.h" />
 		<Unit filename="include/DSRhoPDF.h" />
+		<Unit filename="include/DSRhoPDFTIndep.h" />
 		<Unit filename="include/FitterTrans.h" />
+		<Unit filename="include/FitterTransTIndep.h" />
 		<Unit filename="src/DSRhoFit.cpp" />
 		<Unit filename="src/DSRhoPDF.cpp" />
+		<Unit filename="src/DSRhoPDFTIndep.cpp" />
 		<Unit filename="src/FitterTrans.cpp" />
+		<Unit filename="src/FitterTransTIndep.cpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />

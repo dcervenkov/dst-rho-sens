@@ -100,8 +100,8 @@ int main(int argc, char* argv[])
     for(Int_t i = 0; i < numPars; i++)
         par_input[i] = atof(argv[i+3]);
 
-    Bool_t doFit = atoi(argv[argc-2]);
-    Bool_t doPlot = atoi(argv[argc-1]);
+    Int_t doFit = atoi(argv[argc-2]);
+    Int_t doPlot = atoi(argv[argc-1]);
 
     RooRealVar tha("tha","tha",0,PI);
     RooRealVar thb("thb","thb",0,PI);
@@ -116,8 +116,8 @@ int main(int argc, char* argv[])
     decType.defineType("bb",4);
 
     #ifdef HELICITY
-    RooDataSet* dataSet = new RooDataSet("data","data",RooArgList(tha,thb,chi,dt));
-    dataSet = RooDataSet::read(inputFile,RooArgList(tha,thb,chi,dt));
+    RooDataSet* dataSet = new RooDataSet("data","data",RooArgList(tha,thb,chi,dt,decType));
+    dataSet = RooDataSet::read(inputFile,RooArgList(tha,thb,chi,dt,decType));
     ConvertTransToHel(par_input);
     ProcessHel(dataSet,tha,thb,chi,dt,par_input,doFit,doPlot);
     #endif
@@ -125,7 +125,14 @@ int main(int argc, char* argv[])
     #ifdef TRANSVERSITY
     RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit,dt,decType));
     dataSet = RooDataSet::read(inputFile,RooArgList(tht,thb,phit,dt,decType));
-    ProcessTrans(dataSet,par_input,doFit,doPlot);
+    if(doFit == 2)
+    {
+        //ConvertHelToTrans(par_input);
+        //ToyProcessTrans(dataSet,par_input,doFit,doPlot);
+        ToyProcessTransNoTime(dataSet,par_input,doFit,doPlot);
+    }
+    else
+        ProcessTrans(dataSet,par_input,doFit,doPlot);
     #endif
 
     timer.Stop();
@@ -138,7 +145,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-int ProcessHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar& chi, RooRealVar& dt, Double_t* par_input, Bool_t doFit, Bool_t doPlot)
+int ProcessHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar& chi, RooRealVar& dt, Double_t* par_input, Int_t doFit, Int_t doPlot)
 {
     RooRealVar hp("hp","hp",par_input[0],0,0.4);
     RooRealVar hpa("hpa","hpa",par_input[1],0,2*PI);
@@ -247,7 +254,172 @@ int ProcessHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar
     return 0;
 }
 
-int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t doPlot)
+int ToyProcessTransNoTime(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t doPlot)
+{
+    const int numSubDataSets = 10;
+
+    RooRealVar tht("tht","tht",0,PI);
+    RooRealVar thb("thb","thb",0,PI);
+    RooRealVar phit("phit","phit",-PI,PI);
+
+    RooRealVar ap("ap","ap",par_input[0],0.1,0.4);
+    RooRealVar apa("apa","apa",par_input[1],0,2*PI);
+    RooFormulaVar apr("apr","ap*cos(apa)",RooArgSet(ap,apa));
+    RooFormulaVar api("api","ap*sin(apa)",RooArgSet(ap,apa));
+    RooRealVar a0("a0","a0",par_input[2],0.8,1);
+    RooRealVar a0a("a0a","a0a",0);
+    RooFormulaVar a0r("a0r","a0*cos(a0a)",RooArgSet(a0,a0a));
+    RooFormulaVar a0i("a0i","a0*sin(a0a)",RooArgSet(a0,a0a));
+    RooFormulaVar at("at","sqrt(1-ap*ap-a0*a0)",RooArgSet(ap,a0));
+    RooRealVar ata("ata","ata",par_input[3],0,2*PI);
+    RooFormulaVar atr("atr","at*cos(ata)",RooArgSet(at,ata));
+    RooFormulaVar ati("ati","at*sin(ata)",RooArgSet(at,ata));
+
+    RooFormulaVar ap0r("ap0r","ap*a0*cos(-apa+a0a)",RooArgSet(ap,apa,a0,a0a));
+    RooFormulaVar a0ti("a0ti","a0*at*sin(-a0a+ata)",RooArgSet(a0,a0a,at,ata));
+    RooFormulaVar apti("apti","ap*at*sin(-apa+ata)",RooArgSet(ap,apa,at,ata));
+
+
+    RooFormulaVar ap0i("ap0i","ap*a0*sin(-apa+a0a)",RooArgSet(ap,apa,a0,a0a));
+    RooFormulaVar a0tr("a0tr","a0*at*cos(-a0a+ata)",RooArgSet(a0,a0a,at,ata));
+    RooFormulaVar aptr("aptr","ap*at*cos(-apa+ata)",RooArgSet(ap,apa,at,ata));
+
+    RooArgSet varSet(tht,thb,phit,ap,apa,a0,a0a,at,ata);
+    varSet.add(ap0r);
+    varSet.add(a0ti);
+    varSet.add(apti);
+
+    /// numFitParameters holds # of NON-constant fit parameters
+    RooArgSet fitParameters(ap,apa,a0,ata);
+    Int_t numFitParameters = (fitParameters.selectByAttrib("Constant",kFALSE))->getSize();
+
+    const char* pdfFormula =   "ap*ap*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
+                                at*at*2*cos(tht)*cos(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)+\
+                                a0*a0*4*sin(tht)*sin(tht)*sin(tht)*cos(thb)*cos(thb)*sin(thb)*cos(phit)*cos(phit)+\
+                                sqrt(2)*ap0r*sin(tht)*sin(tht)*sin(tht)*sin(2*thb)*sin(thb)*sin(2*phit)-\
+                                sqrt(2)*a0ti*sin(2*tht)*sin(tht)*sin(2*thb)*sin(thb)*cos(phit)-\
+                                2*apti*sin(2*tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)";
+
+    RooGenericPdf* pdf = new RooGenericPdf("pdf","Generic PDF",pdfFormula,varSet);
+
+    RooFitResult* result = 0;
+
+    RooRealVar xhp("xhp","xhp",0,1);
+    RooRealVar xehp("xehp","xehp",0,1);
+    RooRealVar xhpa("xhpa","xhpa",-PI,PI);
+    RooRealVar xehpa("xehpa","xehpa",0,2*PI);
+    RooRealVar xh0("xh0","xh0",0,1);
+    RooRealVar xeh0("xeh0","xeh0",0,1);
+    RooRealVar xhm("xhm","xhm",0,1);
+    RooRealVar xehm("xehm","xehm",0,1);
+    RooRealVar xhma("xhma","xhma",-PI,PI);
+    RooRealVar xehma("xehma","xehma",0,2*PI);
+
+    //Double_t input[5] = {0.107,1.42,0.941,0.322,0.31};
+    Double_t input[5] = {0.152,1.47,0.936,0.317,0.19};
+    Double_t parameters[10];
+    RooRealVar rooParams[10] = {xhp,xehp,xhpa,xehpa,xh0,xeh0,xhm,xehm,xhma,xehma};
+
+    RooArgSet amplitudes;
+    for(int i = 0; i < 10; i++)
+        amplitudes.add(rooParams[i]);
+
+    RooDataSet fitsResults("fitsResults","fitsResults",amplitudes);
+
+    RooDataSet* subDataSet;
+
+    for(int i = 0; i < numSubDataSets; i++)
+    {
+        int event_lo = i*(dataSet->numEntries()/numSubDataSets);
+        int event_hi = (i+1)*(dataSet->numEntries()/numSubDataSets);
+
+        subDataSet = (RooDataSet*)dataSet->reduce(RooFit::EventRange(event_lo,event_hi));
+
+        result = pdf->fitTo(*subDataSet,RooFit::Save());
+
+        RooFormulaVar hpr("hpr","(apr + atr)/sqrt(2)",RooArgSet(apr,atr));
+        RooFormulaVar hpi("hpi","(api + ati)/sqrt(2)",RooArgSet(api,ati));
+        RooFormulaVar hp("hp","sqrt(hpr*hpr+hpi*hpi)",RooArgSet(hpr,hpi));
+        RooFormulaVar hpa("hpa","atan2(hpi,hpr)",RooArgSet(hpr,hpi));
+
+        RooFormulaVar hmr("hmr","(apr - atr)/sqrt(2)",RooArgSet(apr,atr));
+        RooFormulaVar hmi("hmi","(api - ati)/sqrt(2)",RooArgSet(api,ati));
+        RooFormulaVar hm("hm","sqrt(hmr*hmr+hmi*hmi)",RooArgSet(hmr,hmi));
+        RooFormulaVar hma("hma","atan2(hmi,hmr)",RooArgSet(hmr,hmi));
+
+        parameters[0] = hp.getVal();
+        parameters[1] = hp.getPropagatedError(*result);
+        parameters[2] = hpa.getVal();
+        parameters[3] = hpa.getPropagatedError(*result);
+        parameters[4] = a0.getVal();
+        parameters[5] = a0.getError();
+        parameters[6] = hm.getVal();
+        parameters[7] = hm.getPropagatedError(*result);
+        parameters[8] = hma.getVal();
+        parameters[9] = hma.getPropagatedError(*result);
+
+
+        for(int j = 0; j < 10; j++)
+                rooParams[j].setVal(parameters[j]);
+
+        fitsResults.add(amplitudes);
+
+        delete result;
+        delete subDataSet;
+    }
+
+    TFile* file = new TFile("plots/toy.root","RECREATE");
+    TCanvas* ctoy = new TCanvas("ctoy","ctoy",800,600);
+
+    TH1* hists[10];
+    TH1F* pulls[5];
+    TString name;
+
+    for(int i = 0; i < 10; i++)
+    {
+        name = "toy_";
+        name += rooParams[i].GetName();
+        hists[i] = fitsResults.createHistogram(name,rooParams[i],RooFit::AutoBinning(40));
+        hists[i]->Draw("HIST");
+        hists[i]->Write();
+        ctoy->SaveAs("plots/" + name + ".png");
+    }
+
+    for(int i = 0; i < 10; i+=2)
+    {
+        name = "toy_pull_";
+        name += rooParams[i].GetName();
+        pulls[i/2] = new TH1F(name,name,40,-5,5);
+    }
+
+    const RooArgSet* argSet;
+    for(int j = 0; j < fitsResults.numEntries(); j++)
+    {
+        argSet = fitsResults.get(j);
+        for(int i = 0; i < 10; i+=2)
+        {
+            //printf("i=%i name=%s\tval=%f\tinput=%f\terr=%f\tpull=%f\n",i,rooParams[i].GetName(),argSet->getRealValue(rooParams[i].GetName()),input[i/2],argSet->getRealValue(rooParams[i+1].GetName()),(argSet->getRealValue(rooParams[i].GetName()) - input[i/2])/argSet->getRealValue(rooParams[i+1].GetName()));
+            pulls[i/2]->Fill((argSet->getRealValue(rooParams[i].GetName()) - input[i/2])/argSet->getRealValue(rooParams[i+1].GetName()));
+        }
+    }
+
+
+    for(int i = 0; i < 10;i+=2)
+    {
+        name = "toy_pull_";
+        name += rooParams[i].GetName();
+        pulls[i/2]->Fit("gaus");
+        pulls[i/2]->Draw();
+        pulls[i/2]->Write();
+        ctoy->SaveAs("plots/" + name + ".png");
+    }
+
+    file->Close();
+
+    return 0;
+}
+
+int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t doPlot)
 {
 
     FitterTrans* fitter = new FitterTrans(dataSet,par_input);
@@ -255,11 +427,11 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
     if(doFit)
     {
         fitter->FixAllParameters();
-//        fitter->FreeParameter("ap");
-//        fitter->FreeParameter("apa");
-//        fitter->FreeParameter("a0");
-//        fitter->FreeParameter("ata");
-        fitter->FreeParameter("phiw");
+        fitter->FreeParameter("ap");
+        fitter->FreeParameter("apa");
+        fitter->FreeParameter("a0");
+        fitter->FreeParameter("ata");
+//        fitter->FreeParameter("phiw");
 //        fitter->FreeParameter("rp");
 //        fitter->FreeParameter("r0");
 //        fitter->FreeParameter("rt");
@@ -267,6 +439,9 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
 //        fitter->FreeParameter("s0");
 //        fitter->FreeParameter("st");
         fitter->Fit();
+        //fitter->PrintParameter("at");
+        fitter->PrintParameter("hp");
+        fitter->PrintParameter("hm");
 
 //        Double_t mychi2 = fitter->SaveChi2Maps("a");
 //        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
@@ -295,11 +470,117 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Bool_t doFit, Bool_t 
         //SaveChi2Maps(fitter->GetBinnedDataSet(),dataSet->numEntries(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
 //        Double_t mychi2 = fitter->SaveChi2Maps("a");
         fitter->SaveResiduals();
-        fitter->SaveNllPlot("phiw");
+//        fitter->SaveNllPlot("phiw");
 //        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
+
         SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
     }
 
+    return 0;
+}
+
+int ToyProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t doPlot)
+{
+    const int numSubDataSets = 300;
+
+    RooRealVar hp("hp","hp",0,1);
+    RooRealVar ehp("ehp","ehp",0,1);
+    RooRealVar hpa("hpa","hpa",-PI,PI);
+    RooRealVar ehpa("ehpa","ehpa",0,2*PI);
+    RooRealVar h0("h0","h0",0,1);
+    RooRealVar eh0("eh0","eh0",0,1);
+    RooRealVar hm("hm","hm",0,1);
+    RooRealVar ehm("ehm","ehm",0,1);
+    RooRealVar hma("hma","hma",-PI,PI);
+    RooRealVar ehma("ehma","ehma",0,2*PI);
+
+    //Double_t input[5] = {0.107,1.42,0.941,0.322,0.31};
+    Double_t input[5] = {0.152,1.47,0.936,0.317,0.19};
+    Double_t parameters[10];
+    RooRealVar rooParams[10] = {hp,ehp,hpa,ehpa,h0,eh0,hm,ehm,hma,ehma};
+
+    RooArgSet amplitudes;
+    for(int i = 0; i < 10; i++)
+        amplitudes.add(rooParams[i]);
+
+    RooDataSet fitsResults("fitsResults","fitsResults",amplitudes);
+
+    RooDataSet* subDataSet;
+    FitterTrans* fitter;
+
+    for(int i = 0; i < numSubDataSets; i++)
+    {
+        int event_lo = i*(dataSet->numEntries()/numSubDataSets);
+        int event_hi = (i+1)*(dataSet->numEntries()/numSubDataSets);
+
+        subDataSet = (RooDataSet*)dataSet->reduce(RooFit::EventRange(event_lo,event_hi));
+
+        fitter = new FitterTrans(subDataSet,par_input);
+        fitter->FixAllParameters();
+        fitter->FreeParameter("ap");
+        fitter->FreeParameter("apa");
+        fitter->FreeParameter("a0");
+        fitter->FreeParameter("ata");
+        fitter->Fit();
+
+        fitter->GetHelParameters(parameters);
+
+        for(int j = 0; j < 10; j++)
+                rooParams[j].setVal(parameters[j]);
+
+        fitsResults.add(amplitudes);
+
+        delete fitter;
+        delete subDataSet;
+    }
+
+    TFile* file = new TFile("plots/toy.root","RECREATE");
+    TCanvas* ctoy = new TCanvas("ctoy","ctoy",800,600);
+
+    TH1* hists[10];
+    TH1F* pulls[5];
+    TString name;
+
+    for(int i = 0; i < 10; i++)
+    {
+        name = "toy_";
+        name += rooParams[i].GetName();
+        hists[i] = fitsResults.createHistogram(name,rooParams[i],RooFit::AutoBinning(40));
+        hists[i]->Draw("HIST");
+        hists[i]->Write();
+        ctoy->SaveAs("plots/" + name + ".png");
+    }
+
+    for(int i = 0; i < 10; i+=2)
+    {
+        name = "toy_pull_";
+        name += rooParams[i].GetName();
+        pulls[i/2] = new TH1F(name,name,40,-5,5);
+    }
+
+    const RooArgSet* argSet;
+    for(int j = 0; j < fitsResults.numEntries(); j++)
+    {
+        argSet = fitsResults.get(j);
+        for(int i = 0; i < 10; i+=2)
+        {
+            //printf("i=%i name=%s\tval=%f\tinput=%f\terr=%f\tpull=%f\n",i,rooParams[i].GetName(),argSet->getRealValue(rooParams[i].GetName()),input[i/2],argSet->getRealValue(rooParams[i+1].GetName()),(argSet->getRealValue(rooParams[i].GetName()) - input[i/2])/argSet->getRealValue(rooParams[i+1].GetName()));
+            pulls[i/2]->Fill((argSet->getRealValue(rooParams[i].GetName()) - input[i/2])/argSet->getRealValue(rooParams[i+1].GetName()));
+        }
+    }
+
+
+    for(int i = 0; i < 10;i+=2)
+    {
+        name = "toy_pull_";
+        name += rooParams[i].GetName();
+        pulls[i/2]->Fit("gaus");
+        pulls[i/2]->Draw();
+        pulls[i/2]->Write();
+        ctoy->SaveAs("plots/" + name + ".png");
+    }
+
+    file->Close();
     return 0;
 }
 

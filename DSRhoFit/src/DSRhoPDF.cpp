@@ -90,7 +90,6 @@ DSRhoPDF::DSRhoPDF(const DSRhoPDF& other, const char* name) :
 
 Double_t DSRhoPDF::evaluate() const
 {
-
     Int_t phiw_sign = 1;
 
     Double_t a0a = 0;

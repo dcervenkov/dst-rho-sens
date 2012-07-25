@@ -8,6 +8,7 @@ DSRho*/obj
 DSRho*/plots*
 DSRho*/results
 DSRho*/temp
+DSRho*/log*
 *.save
 *.layout
 *.tgz

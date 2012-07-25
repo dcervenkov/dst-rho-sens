@@ -26,6 +26,8 @@ class FitterTrans
         void FixAllParameters();
         void FixParameter(const char* par);
         void FreeParameter(const char* par);
+        void PrintParameter(const char* par);
+        void GetHelParameters(Double_t* params);
         void SaveResiduals();
 
 

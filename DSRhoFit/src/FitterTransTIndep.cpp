@@ -13,15 +13,15 @@
 #include "TIterator.h"
 #include "TLine.h"
 
-#include "DSRhoPDF.h"
-#include "FitterTrans.h"
+#include "DSRhoPDFTIndep.h"
+#include "FitterTransTIndep.h"
 
 #include "TH1D.h"
 #include "TH2F.h"
 #include "TCanvas.h"
 #include "TFile.h"
 
-FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
+FitterTransTIndep::FitterTransTIndep(RooDataSet* outer_dataSet, Double_t* outer_par_input)
 {
     gPluginMgr = new TPluginManager;
     gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
@@ -36,29 +36,18 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     tht_bins = 60;
     thb_bins = 60;
     phit_bins = 60;
-    dt_bins = 80;
 
     vars_bins[0] = tht_bins;
     vars_bins[1] = thb_bins;
     vars_bins[2] = phit_bins;
-    vars_bins[3] = dt_bins;
 
     thb = new RooRealVar("thb","thb",0,PI);
     tht = new RooRealVar("tht","tht",0,PI);
     phit = new RooRealVar("phit","phit",-PI,PI);
-    dt = new RooRealVar("dt","dt",-3,3);
 
     vars[0] = tht;
     vars[1] = thb;
     vars[2] = phit;
-    vars[3] = dt;
-
-    decType = new RooCategory("decType","decType");
-    decType->defineType("a",1);
-    decType->defineType("ab",2);
-    decType->defineType("b",3);
-    decType->defineType("bb",4);
-    gamma = new RooRealVar("gamma","gamma",2.83);
 
     ap = new RooRealVar("ap","ap",par_input[0],0.1,0.4);
     apa = new RooRealVar("apa","apa",par_input[1],0.3,0.7);
@@ -77,136 +66,6 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     a0ti = new RooFormulaVar("a0ti","a0*at*sin(-a0a+ata)",RooArgSet(*a0,*a0a,*at,*ata));
     apti = new RooFormulaVar("apti","ap*at*sin(-apa+ata)",RooArgSet(*ap,*apa,*at,*ata));
 
-    /// Time-dep additional vars
-
-    dm = new RooRealVar("dm","dm",0.507e12);
-    phiw = new RooRealVar("phiw","phiw",par_input[4],0,2*PI);
-
-    rp = new RooRealVar("rp","rp",par_input[5],0,0.1);
-    r0 = new RooRealVar("r0","r0",par_input[6],0,0.1);
-    rt = new RooRealVar("rt","rt",par_input[7],0,0.1); /// eq. (100) in BN419 approximates this
-
-    /// s is strong phase; delta_polarization in BN419
-    sp = new RooRealVar("sp","sp",par_input[8],-PI,PI);
-    s0 = new RooRealVar("s0","s0",par_input[9],-PI,PI);
-    st = new RooRealVar("st","st",par_input[10],-PI,PI);
-
-    ap0i = new RooFormulaVar("ap0i","ap*a0*sin(-apa+a0a)",RooArgSet(*ap,*apa,*a0,*a0a));
-    a0tr = new RooFormulaVar("a0tr","a0*at*cos(-a0a+ata)",RooArgSet(*a0,*a0a,*at,*ata));
-    aptr = new RooFormulaVar("aptr","ap*at*cos(-apa+ata)",RooArgSet(*ap,*apa,*at,*ata));
-
-    At2_a = new RooFormulaVar("At2_a","at*at*((1+rt*rt)+(1-rt*rt)*cos(dm*dt)+2*rt*sin(phiw-st)*sin(dm*dt))",RooArgSet(*at,*rt,*dm,*dt,*phiw,*st));
-    Ap2_a = new RooFormulaVar("Ap2_a","ap*ap*((1+rp*rp)+(1-rp*rp)*cos(dm*dt)-2*rp*sin(phiw-sp)*sin(dm*dt))",RooArgSet(*ap,*rp,*dm,*dt,*phiw,*sp));
-    A02_a = new RooFormulaVar("A02_a","a0*a0*((1+r0*r0)+(1-r0*r0)*cos(dm*dt)-2*r0*sin(phiw-s0)*sin(dm*dt))",RooArgSet(*a0,*r0,*dm,*dt,*phiw,*s0));
-
-    Ap0r_a = new RooFormulaVar("Ap0r_a","ap0r*(1+rp*r0*cos(sp-s0))+ap0i*rp*r0*sin(sp-s0)+\
-                              (ap0r*(1-rp*r0*cos(sp-s0))-ap0i*rp*r0*sin(sp-s0))*cos(dm*dt)-\
-                              (ap0r*(rp*sin(phiw-sp)+r0*sin(phiw-s0))+\
-                               ap0i*(rp*cos(phiw-sp)-r0*cos(phiw-s0)))*sin(dm*dt)",RooArgSet(*ap0r,*ap0i,*rp,*r0,*sp,*s0,*dm,*dt,*phiw));
-
-    A0ti_a = new RooFormulaVar("A0ti_a","a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st)+\
-                              (a0ti*(1+r0*rt*cos(s0-st))-a0tr*r0*rt*sin(s0-st))*cos(dm*dt)-\
-                              (a0ti*(r0*sin(phiw-s0)-rt*sin(phiw-st))-\
-                               a0tr*(r0*cos(phiw-s0)+rt*cos(phiw-st)))*sin(dm*dt)",RooArgSet(*a0ti,*a0tr,*r0,*rt,*s0,*st,*dm,*dt,*phiw));
-
-    Apti_a = new RooFormulaVar("Apti_a","apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
-                              (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*cos(dm*dt)-\
-                              (apti*(rp*sin(phiw-sp)-rt*sin(phiw-st))-\
-                               aptr*(rp*cos(phiw-sp)+rt*cos(phiw-st)))*sin(dm*dt)",RooArgSet(*apti,*aptr,*rp,*rt,*sp,*st,*dm,*dt,*phiw));
-
-
-    At2_ab = new RooFormulaVar("At2_ab","at*at*((1+rt*rt)+(1-rt*rt)*cos(dm*dt)+2*rt*sin(-phiw-st)*sin(dm*dt))",RooArgSet(*at,*rt,*dm,*dt,*phiw,*st));
-    Ap2_ab = new RooFormulaVar("Ap2_ab","ap*ap*((1+rp*rp)+(1-rp*rp)*cos(dm*dt)-2*rp*sin(-phiw-sp)*sin(dm*dt))",RooArgSet(*ap,*rp,*dm,*dt,*phiw,*sp));
-    A02_ab = new RooFormulaVar("A02_ab","a0*a0*((1+r0*r0)+(1-r0*r0)*cos(dm*dt)-2*r0*sin(-phiw-s0)*sin(dm*dt))",RooArgSet(*a0,*r0,*dm,*dt,*phiw,*s0));
-
-    Ap0r_ab = new RooFormulaVar("Ap0r_ab","ap0r*(1+rp*r0*cos(sp-s0))+ap0i*rp*r0*sin(sp-s0)+\
-                              (ap0r*(1-rp*r0*cos(sp-s0))-ap0i*rp*r0*sin(sp-s0))*cos(dm*dt)-\
-                              (ap0r*(rp*sin(-phiw-sp)+r0*sin(-phiw-s0))+\
-                               ap0i*(rp*cos(-phiw-sp)-r0*cos(-phiw-s0)))*sin(dm*dt)",RooArgSet(*ap0r,*ap0i,*rp,*r0,*sp,*s0,*dm,*dt,*phiw));
-
-    A0ti_ab = new RooFormulaVar("A0ti_ab","a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st)+\
-                              (a0ti*(1+r0*rt*cos(s0-st))-a0tr*r0*rt*sin(s0-st))*cos(dm*dt)-\
-                              (a0ti*(r0*sin(-phiw-s0)-rt*sin(-phiw-st))-\
-                               a0tr*(r0*cos(-phiw-s0)+rt*cos(-phiw-st)))*sin(dm*dt)",RooArgSet(*a0ti,*a0tr,*r0,*rt,*s0,*st,*dm,*dt,*phiw));
-
-    Apti_ab = new RooFormulaVar("Apti_ab","apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
-                              (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*cos(dm*dt)-\
-                              (apti*(rp*sin(-phiw-sp)-rt*sin(-phiw-st))-\
-                               aptr*(rp*cos(-phiw-sp)+rt*cos(-phiw-st)))*sin(dm*dt)",RooArgSet(*apti,*aptr,*rp,*rt,*sp,*st,*dm,*dt,*phiw));
-
-
-    At2_b = new RooFormulaVar("At2_b","at*at*((1+rt*rt)+(1-rt*rt)*(-1)*cos(dm*dt)+2*rt*sin(phiw-st)*(-1)*sin(dm*dt))",RooArgSet(*at,*rt,*dm,*dt,*phiw,*st));
-    Ap2_b = new RooFormulaVar("Ap2_b","ap*ap*((1+rp*rp)+(1-rp*rp)*(-1)*cos(dm*dt)-2*rp*sin(phiw-sp)*(-1)*sin(dm*dt))",RooArgSet(*ap,*rp,*dm,*dt,*phiw,*sp));
-    A02_b = new RooFormulaVar("A02_b","a0*a0*((1+r0*r0)+(1-r0*r0)*(-1)*cos(dm*dt)-2*r0*sin(phiw-s0)*(-1)*sin(dm*dt))",RooArgSet(*a0,*r0,*dm,*dt,*phiw,*s0));
-
-    Ap0r_b = new RooFormulaVar("Ap0r_b","ap0r*(1+rp*r0*cos(sp-s0))+ap0i*rp*r0*sin(sp-s0)+\
-                              (ap0r*(1-rp*r0*cos(sp-s0))-ap0i*rp*r0*sin(sp-s0))*(-1)*cos(dm*dt)-\
-                              (ap0r*(rp*sin(phiw-sp)+r0*sin(phiw-s0))+\
-                               ap0i*(rp*cos(phiw-sp)-r0*cos(phiw-s0)))*(-1)*sin(dm*dt)",RooArgSet(*ap0r,*ap0i,*rp,*r0,*sp,*s0,*dm,*dt,*phiw));
-
-    A0ti_b = new RooFormulaVar("A0ti_b","a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st)+\
-                              (a0ti*(1+r0*rt*cos(s0-st))-a0tr*r0*rt*sin(s0-st))*(-1)*cos(dm*dt)-\
-                              (a0ti*(r0*sin(phiw-s0)-rt*sin(phiw-st))-\
-                               a0tr*(r0*cos(phiw-s0)+rt*cos(phiw-st)))*(-1)*sin(dm*dt)",RooArgSet(*a0ti,*a0tr,*r0,*rt,*s0,*st,*dm,*dt,*phiw));
-
-    Apti_b = new RooFormulaVar("Apti_b","apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
-                              (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*(-1)*cos(dm*dt)-\
-                              (apti*(rp*sin(phiw-sp)-rt*sin(phiw-st))-\
-                               aptr*(rp*cos(phiw-sp)+rt*cos(phiw-st)))*(-1)*sin(dm*dt)",RooArgSet(*apti,*aptr,*rp,*rt,*sp,*st,*dm,*dt,*phiw));
-
-
-    At2_bb = new RooFormulaVar("At2_bb","at*at*((1+rt*rt)+(1-rt*rt)*(-1)*cos(dm*dt)+2*rt*sin(-phiw-st)*(-1)*sin(dm*dt))",RooArgSet(*at,*rt,*dm,*dt,*phiw,*st));
-    Ap2_bb = new RooFormulaVar("Ap2_bb","ap*ap*((1+rp*rp)+(1-rp*rp)*(-1)*cos(dm*dt)-2*rp*sin(-phiw-sp)*(-1)*sin(dm*dt))",RooArgSet(*ap,*rp,*dm,*dt,*phiw,*sp));
-    A02_bb = new RooFormulaVar("A02_bb","a0*a0*((1+r0*r0)+(1-r0*r0)*(-1)*cos(dm*dt)-2*r0*sin(-phiw-s0)*(-1)*sin(dm*dt))",RooArgSet(*a0,*r0,*dm,*dt,*phiw,*s0));
-
-    Ap0r_bb = new RooFormulaVar("Ap0r_bb","ap0r*(1+rp*r0*cos(sp-s0))+ap0i*rp*r0*sin(sp-s0)+\
-                              (ap0r*(1-rp*r0*cos(sp-s0))-ap0i*rp*r0*sin(sp-s0))*(-1)*cos(dm*dt)-\
-                              (ap0r*(rp*sin(-phiw-sp)+r0*sin(-phiw-s0))+\
-                               ap0i*(rp*cos(-phiw-sp)-r0*cos(-phiw-s0)))*(-1)*sin(dm*dt)",RooArgSet(*ap0r,*ap0i,*rp,*r0,*sp,*s0,*dm,*dt,*phiw));
-
-    A0ti_bb = new RooFormulaVar("A0ti_bb","a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st)+\
-                              (a0ti*(1+r0*rt*cos(s0-st))-a0tr*r0*rt*sin(s0-st))*(-1)*cos(dm*dt)-\
-                              (a0ti*(r0*sin(-phiw-s0)-rt*sin(-phiw-st))-\
-                               a0tr*(r0*cos(-phiw-s0)+rt*cos(-phiw-st)))*(-1)*sin(dm*dt)",RooArgSet(*a0ti,*a0tr,*r0,*rt,*s0,*st,*dm,*dt,*phiw));
-
-    Apti_bb = new RooFormulaVar("Apti_bb","apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
-                              (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*(-1)*cos(dm*dt)-\
-                              (apti*(rp*sin(-phiw-sp)-rt*sin(-phiw-st))-\
-                               aptr*(rp*cos(-phiw-sp)+rt*cos(-phiw-st)))*(-1)*sin(dm*dt)",RooArgSet(*apti,*aptr,*rp,*rt,*sp,*st,*dm,*dt,*phiw));
-
-    /// a decays are favored, b corresponding suppressed; a is B0 -> D*- + rho+
-    formula_a ="exp(-gamma*abs(dt))*(Ap2_a*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
-                        At2_a*2*cos(tht)*cos(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)+\
-                        A02_a*4*sin(tht)*sin(tht)*sin(tht)*cos(thb)*cos(thb)*sin(thb)*cos(phit)*cos(phit)+\
-                        sqrt(2)*Ap0r_a*sin(tht)*sin(tht)*sin(tht)*sin(2*thb)*sin(thb)*sin(2*phit)-\
-                        sqrt(2)*A0ti_a*sin(2*tht)*sin(tht)*sin(2*thb)*sin(thb)*cos(phit)-\
-                        2*Apti_a*sin(2*tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit))";
-
-
-    formula_ab="exp(-gamma*abs(dt))*(Ap2_ab*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
-                        At2_ab*2*cos(tht)*cos(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)+\
-                        A02_ab*4*sin(tht)*sin(tht)*sin(tht)*cos(thb)*cos(thb)*sin(thb)*cos(phit)*cos(phit)+\
-                        sqrt(2)*Ap0r_ab*sin(tht)*sin(tht)*sin(tht)*sin(2*thb)*sin(thb)*sin(2*phit)-\
-                        sqrt(2)*A0ti_ab*sin(2*tht)*sin(tht)*sin(2*thb)*sin(thb)*cos(phit)-\
-                        2*Apti_ab*sin(2*tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit))";
-
-
-    formula_b="exp(-gamma*abs(dt))*(Ap2_b*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
-                        At2_b*2*cos(tht)*cos(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)+\
-                        A02_b*4*sin(tht)*sin(tht)*sin(tht)*cos(thb)*cos(thb)*sin(thb)*cos(phit)*cos(phit)+\
-                        sqrt(2)*Ap0r_b*sin(tht)*sin(tht)*sin(tht)*sin(2*thb)*sin(thb)*sin(2*phit)-\
-                        sqrt(2)*A0ti_b*sin(2*tht)*sin(tht)*sin(2*thb)*sin(thb)*cos(phit)-\
-                        2*Apti_b*sin(2*tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit))";
-
-
-    formula_bb="exp(-gamma*abs(dt))*(Ap2_bb*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
-                        At2_bb*2*cos(tht)*cos(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)+\
-                        A02_bb*4*sin(tht)*sin(tht)*sin(tht)*cos(thb)*cos(thb)*sin(thb)*cos(phit)*cos(phit)+\
-                        sqrt(2)*Ap0r_bb*sin(tht)*sin(tht)*sin(tht)*sin(2*thb)*sin(thb)*sin(2*phit)-\
-                        sqrt(2)*A0ti_bb*sin(2*tht)*sin(tht)*sin(2*thb)*sin(thb)*cos(phit)-\
-                        2*Apti_bb*sin(2*tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit))";
-
-    //formula_bb="3*dt";
 
     varSet_a = new RooArgSet(*Ap2_a,*At2_a,*A02_a,*Ap0r_a,*A0ti_a,*Apti_a,*tht,*thb,*phit);
     varSet_a->add(*dt);
@@ -263,7 +122,7 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
 
 }
 
-FitterTrans::~FitterTrans()
+FitterTransTIndep::~FitterTransTIndep()
 {
     delete gPluginMgr;
     delete thb;
@@ -335,7 +194,7 @@ FitterTrans::~FitterTrans()
     delete fitParameters;
 }
 
-Int_t FitterTrans::Fit()
+Int_t FitterTransTIndep::Fit()
 {
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
     //TPluginManager* gPluginMgr = new TPluginManager;
@@ -345,7 +204,7 @@ Int_t FitterTrans::Fit()
     //result->Print();
 }
 
-void FitterTrans::CreateBinnedDataSet(const char* type)
+void FitterTransTIndep::CreateBinnedDataSet(const char* type)
 {
     tht->setBins(tht_bins);
     thb->setBins(thb_bins);
@@ -366,7 +225,7 @@ void FitterTrans::CreateBinnedDataSet(const char* type)
     //RooDataHist* dataSet_binned = pdf->generateBinned(RooArgSet(var1,var2,var3),dataSet->numEntries(),kFALSE);
 }
 
-void FitterTrans::CreateReducedDataSet(const char* type)
+void FitterTransTIndep::CreateReducedDataSet(const char* type)
 {
     TString cut = "decType==decType::";
     cut += type;
@@ -374,7 +233,7 @@ void FitterTrans::CreateReducedDataSet(const char* type)
     dataSet_reduced = (RooDataSet*)dataSet->reduce(cut);
 }
 
-Int_t FitterTrans::ComputeChi2(const char* type)
+Int_t FitterTransTIndep::ComputeChi2(const char* type)
 {
     //if(dataSet_binned == NULL)
         CreateBinnedDataSet(type);
@@ -403,7 +262,7 @@ Int_t FitterTrans::ComputeChi2(const char* type)
 }
 
 
-Double_t FitterTrans::GetChi2(const char* type)
+Double_t FitterTransTIndep::GetChi2(const char* type)
 {
     Double_t mychi2 = 0;
     Double_t n = 0;
@@ -479,7 +338,7 @@ Double_t FitterTrans::GetChi2(const char* type)
     return mychi2;
 }
 
-Double_t FitterTrans::GetVPrecise(DSRhoPDF* pdf)
+Double_t FitterTransTIndep::GetVPrecise(DSRhoPDF* pdf)
 {
     /// The pdf seems to be varying quite rapidly at some places, so the approximation of constant pdf in a voxel is sometimes bad.
     /// This function gives a better approximation of a pdf value in a voxel by averaging through multiple points inside it.
@@ -531,7 +390,7 @@ Double_t FitterTrans::GetVPrecise(DSRhoPDF* pdf)
     return v;
 }
 
-Double_t FitterTrans::GetVPrecise1D(const int i,DSRhoPDF* pdf,RooDataSet* loc_dataset)
+Double_t FitterTransTIndep::GetVPrecise1D(const int i,DSRhoPDF* pdf,RooDataSet* loc_dataset)
 {
     const Double_t num_subbins = 5;
 
@@ -556,7 +415,7 @@ Double_t FitterTrans::GetVPrecise1D(const int i,DSRhoPDF* pdf,RooDataSet* loc_da
     return v;
 }
 
-Double_t FitterTrans::GetVPrecise1D(const int i,RooSimultaneous* spdf,RooDataSet* loc_dataset)
+Double_t FitterTransTIndep::GetVPrecise1D(const int i,RooSimultaneous* spdf,RooDataSet* loc_dataset)
 {
     const Double_t num_subbins = 5;
 
@@ -581,7 +440,7 @@ Double_t FitterTrans::GetVPrecise1D(const int i,RooSimultaneous* spdf,RooDataSet
     return v;
 }
 
-void FitterTrans::SaveResiduals()
+void FitterTransTIndep::SaveResiduals()
 {
 
     TFile* file = new TFile("plots/residuals.root","RECREATE");
@@ -816,7 +675,7 @@ void FitterTrans::SaveResiduals()
 
 }
 
-Double_t FitterTrans::SaveChi2Maps(const char* type)
+Double_t FitterTransTIndep::SaveChi2Maps(const char* type)
 {
 
 
@@ -1016,7 +875,7 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 //    return mychi2;
 }
 
-void FitterTrans::SaveNllPlot(RooRealVar* var)
+void FitterTransTIndep::SaveNllPlot(RooRealVar* var)
 {
     const int steps = 100;
     Double_t orig_val = var->getVal();
@@ -1050,7 +909,7 @@ void FitterTrans::SaveNllPlot(RooRealVar* var)
     var->setVal(orig_val);
 }
 
-void FitterTrans::SaveNllPlot(RooRealVar* var1, RooRealVar* var2)
+void FitterTransTIndep::SaveNllPlot(RooRealVar* var1, RooRealVar* var2)
 {
     const int steps1 = 30;
     const int steps2 = 30;
@@ -1096,7 +955,7 @@ void FitterTrans::SaveNllPlot(RooRealVar* var1, RooRealVar* var2)
     var2->setVal(orig_val2);
 }
 
-void FitterTrans::GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters)
+void FitterTransTIndep::GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters)
 {
     RooRealVar* chi2red  = new RooRealVar("chi2red","reduced chi^2",0);
     chi2red->setVal(chi2Var->getVal()/(dataSet_binned->numEntries()-numFitParameters));
@@ -1125,7 +984,7 @@ void FitterTrans::GetRecoveredParameters(Int_t& numParameters, Double_t** recove
     *recoveredParameters = parameters;
 }
 
-RooDataHist* FitterTrans::GetBinnedDataSet()
+RooDataHist* FitterTransTIndep::GetBinnedDataSet()
 {
     if(dataSet_binned == NULL)
         CreateBinnedDataSet("a");
@@ -1133,7 +992,7 @@ RooDataHist* FitterTrans::GetBinnedDataSet()
     return dataSet_binned;
 }
 
-RooDataSet* FitterTrans::GetReducedDataSet()
+RooDataSet* FitterTransTIndep::GetReducedDataSet()
 {
     if(dataSet_reduced == NULL)
         CreateBinnedDataSet("a");
@@ -1141,7 +1000,7 @@ RooDataSet* FitterTrans::GetReducedDataSet()
     return dataSet_reduced;
 }
 
-void FitterTrans::FixAllParameters()
+void FitterTransTIndep::FixAllParameters()
 {
     RooRealVar* rooPar = 0;
     TIterator* parIter = parameters->createIterator();
@@ -1150,7 +1009,7 @@ void FitterTrans::FixAllParameters()
 
 }
 
-void FitterTrans::FixParameter(const char* par)
+void FitterTransTIndep::FixParameter(const char* par)
 {
     RooRealVar* rooPar = 0;
     rooPar = (RooRealVar*)parameters->find(par);
@@ -1158,7 +1017,7 @@ void FitterTrans::FixParameter(const char* par)
         rooPar->setConstant();
 }
 
-void FitterTrans::FreeParameter(const char* par)
+void FitterTransTIndep::FreeParameter(const char* par)
 {
     RooRealVar* rooPar = 0;
     rooPar = (RooRealVar*)parameters->find(par);
@@ -1166,7 +1025,7 @@ void FitterTrans::FreeParameter(const char* par)
         rooPar->setConstant(kFALSE);
 }
 
-void FitterTrans::PrintParameter(const char* par)
+void FitterTransTIndep::PrintParameter(const char* par)
 {
     RooRealVar* rooPar = 0;
     rooPar = (RooRealVar*)parameters->find(par);
@@ -1201,7 +1060,7 @@ void FitterTrans::PrintParameter(const char* par)
         printf("ERROR: Parameter '%s' doesn't exist! Can't print its value.\n",par);
 }
 
-void FitterTrans::GetHelParameters(Double_t* params)
+void FitterTransTIndep::GetHelParameters(Double_t* params)
 {
     RooFormulaVar hpr("hpr","(apr + atr)/sqrt(2)",RooArgSet(*apr,*atr));
     RooFormulaVar hpi("hpi","(api + ati)/sqrt(2)",RooArgSet(*api,*ati));
@@ -1225,7 +1084,7 @@ void FitterTrans::GetHelParameters(Double_t* params)
     params[9] = hma.getPropagatedError(*result);
 }
 
-void FitterTrans::SaveNllPlot(const char* par)
+void FitterTransTIndep::SaveNllPlot(const char* par)
 {
     RooRealVar* rooPar = 0;
     rooPar = (RooRealVar*)parameters->find(par);
@@ -1235,7 +1094,7 @@ void FitterTrans::SaveNllPlot(const char* par)
         printf("ERROR: Parameter '%s' doesn't exist! Can't save Nll plot.\n",par);
 }
 
-void FitterTrans::SaveNllPlot(const char* par1, const char* par2)
+void FitterTransTIndep::SaveNllPlot(const char* par1, const char* par2)
 {
     RooRealVar* rooPar1 = 0;
     RooRealVar* rooPar2 = 0;
