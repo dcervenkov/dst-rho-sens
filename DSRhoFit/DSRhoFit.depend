@@ -177,7 +177,7 @@
 1328001667 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/ASSERT.h
 	<iostream>
 
-1343212230 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/DSRhoFit.cpp
+1343300620 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/DSRhoFit.cpp
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
@@ -217,6 +217,7 @@
 	"Constants.h"
 	"ASSERT.h"
 	"FitterTrans.h"
+	"FitterTransTIndep.h"
 	<unistd.h>
 
 1328031616 /usr/local/include/root/TROOT.h
@@ -950,8 +951,9 @@
 	"RooHashTable.h"
 	"RooLinkedList.h"
 
-1343212018 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/DSRhoFit.h
+1343291708 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/DSRhoFit.h
 	"DSRhoPDF.h"
+	"DSRhoPDFTIndep.h"
 
 1335259467 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/Constants.h
 
@@ -959,7 +961,7 @@
 	"Rtypes.h"
 	"TRandom.h"
 
-1343121769 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/FitterTrans.cpp
+1343300482 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/FitterTrans.cpp
 	"RooRealVar.h"
 	"RooFormulaVar.h"
 	"RooCategory.h"
@@ -1240,4 +1242,45 @@
 1328031617 /usr/local/include/root/TLine.h
 	"TObject.h"
 	"TAttLine.h"
+
+1343293583 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/DSRhoPDFTIndep.cpp
+	"Riostream.h"
+	"RooAbsReal.h"
+	"RooAbsCategory.h"
+	<math.h>
+	"TMath.h"
+	"DSRhoPDFTIndep.h"
+	"Constants.h"
+
+1343212813 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/DSRhoPDFTIndep.h
+	"RooAbsPdf.h"
+	"RooRealProxy.h"
+	"RooCategoryProxy.h"
+	"RooAbsReal.h"
+	"RooAbsCategory.h"
+
+1343301591 source:/home/dc/bin/belle/DSRhoSens/DSRhoFit/src/FitterTransTIndep.cpp
+	"RooRealVar.h"
+	"RooFormulaVar.h"
+	"RooCategory.h"
+	"RooGenericPdf.h"
+	"Constants.h"
+	"RooDataSet.h"
+	"RooRandom.h"
+	"RooChi2Var.h"
+	"RooSimultaneous.h"
+	"Minuit2/Minuit2Minimizer.h"
+	"TPluginManager.h"
+	"TMath.h"
+	"TIterator.h"
+	"TLine.h"
+	"DSRhoPDFTIndep.h"
+	"FitterTransTIndep.h"
+	"TH1D.h"
+	"TH2F.h"
+	"TCanvas.h"
+	"TFile.h"
+
+1343285634 /home/dc/bin/belle/DSRhoSens/DSRhoFit/include/FitterTransTIndep.h
+	"DSRhoPDFTIndep.h"
 

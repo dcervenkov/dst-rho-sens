@@ -89,11 +89,11 @@ Int_t DSRhoPDFTIndep::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analV
     // if (matchArgs(allVars,analVars,x)) return 1 ;
 
     if(matchArgs(allVars,analVars,tht,thb,phit)) return 1;
-    //if(matchArgs(allVars,analVars,tht,thb)) return 2;
-    //if(matchArgs(allVars,analVars,tht,phit)) return 3;
+    if(matchArgs(allVars,analVars,tht,thb)) return 2;
+    if(matchArgs(allVars,analVars,tht,phit)) return 3;
     if(matchArgs(allVars,analVars,thb,phit)) return 4;
-    //if(matchArgs(allVars,analVars,tht)) return 5;
-    //if(matchArgs(allVars,analVars,thb)) return 6;
+    if(matchArgs(allVars,analVars,tht)) return 5;
+    if(matchArgs(allVars,analVars,thb)) return 6;
     if(matchArgs(allVars,analVars,phit)) return 7;
 
     return 0 ;
@@ -126,12 +126,26 @@ Double_t DSRhoPDFTIndep::analyticalIntegral(Int_t code, const char* rangeName) c
     case 1: // Int[g,{tht,thb,phit}]
         return 32.*PI/9;
 
+    case 2: // Int[g,{tht,thb}]
+        return 16./9.*(at*at + 2*a0*a0*cos(phit)*cos(phit) + 2*ap*ap*sin(phit)*sin(phit));
+
+    case 3: // Int[g,{tht,phit}]
+        return 8.*PI/3*((ap*ap+at*at)*sin(thb)*sin(thb) + 2*a0*a0*cos(thb)*cos(thb))*sin(thb);
+
     case 4: // Int[g,{thb,phit}]
-        return 4./3*((ap*ap+a0*a0)*sin(tht)*sin(tht) + at*at*2*cos(tht)*cos(tht));
+        return 8.*PI/3*((ap*ap+a0*a0)*sin(tht)*sin(tht) + 2*at*at*cos(tht)*cos(tht))*sin(tht);
+
+    case 5: // Int[g,{tht}]
+        return 4./3.*(4*a0*a0*cos(phit)*cos(phit)*cos(thb)*cos(thb) + \
+       (at*at + 2*ap*ap*sin(phit)*sin(phit))*sin(thb)*sin(thb) + sqrt(2)*ap0r*sin(2*phit)*sin(2*thb))*sin(thb);
+
+    case 6: // Int[g,{thb}]
+        return 8./3.*(at*at*cos(tht)*cos(tht) + a0*a0*cos(phit)*cos(phit)*sin(tht)*sin(tht) + \
+       sin(phit)*(ap*ap*sin(phit)*sin(tht)*sin(tht) - apti*sin(2*tht)))*sin(tht);
 
     case 7: // Int[g,{phit}]
-       return 16./9*(ap*ap*sin(tht)*sin(tht)*sin(thb)*sin(thb)+a0*a0*2*sin(tht)*sin(tht)*cos(thb)*cos(thb)+ \
-        at*at*2*cos(tht)*cos(tht)*sin(thb)*sin(thb));
+        return 2*PI*(2*at*at*cos(tht)*cos(tht)*sin(thb)*sin(thb) +
+       (2*a0*a0*cos(thb)*cos(thb) + ap*ap*sin(thb)*sin(thb))*sin(tht)*sin(tht))*(sin(tht)*sin(thb));
 
     default:
         return 0;

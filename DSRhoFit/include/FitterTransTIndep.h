@@ -18,7 +18,7 @@ class FitterTransTIndep
         RooRealVar* GetTht(){return tht;};
         RooRealVar* GetThb(){return thb;};
         RooRealVar* GetPhit(){return phit;};
-        DSRhoPDF* GetPdf(){return pdf;};
+        DSRhoPDFTIndep* GetPdf(){return pdf;};
         RooDataHist* GetBinnedDataSet();
         RooDataSet* GetReducedDataSet();
         RooDataSet* GetDataSet(){return dataSet;};

@@ -40,6 +40,7 @@
 #include "Constants.h"
 #include "ASSERT.h"
 #include "FitterTrans.h"
+#include "FitterTransTIndep.h"
 
 #include <unistd.h>
 
@@ -127,12 +128,18 @@ int main(int argc, char* argv[])
     dataSet = RooDataSet::read(inputFile,RooArgList(tht,thb,phit,dt,decType));
     if(doFit == 2)
     {
-        //ConvertHelToTrans(par_input);
+        ConvertHelToTrans(par_input);
         //ToyProcessTrans(dataSet,par_input,doFit,doPlot);
-        ToyProcessTransNoTime(dataSet,par_input,doFit,doPlot);
+        ToyProcessTrans(dataSet,par_input,doFit,doPlot);
     }
+    else if(doFit == 3)
+        ConvertHelToTrans(par_input);
+        //ConvertTransToHel(par_input);
     else
+    {
+        ConvertHelToTrans(par_input);
         ProcessTrans(dataSet,par_input,doFit,doPlot);
+    }
     #endif
 
     timer.Stop();
@@ -422,7 +429,7 @@ int ToyProcessTransNoTime(RooDataSet* dataSet, Double_t* par_input, Int_t doFit,
 int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t doPlot)
 {
 
-    FitterTrans* fitter = new FitterTrans(dataSet,par_input);
+    FitterTransTIndep* fitter = new FitterTransTIndep(dataSet,par_input);
 
     if(doFit)
     {
@@ -438,10 +445,10 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t do
 //        fitter->FreeParameter("sp");
 //        fitter->FreeParameter("s0");
 //        fitter->FreeParameter("st");
-        fitter->Fit();
+//        fitter->Fit();
         //fitter->PrintParameter("at");
-        fitter->PrintParameter("hp");
-        fitter->PrintParameter("hm");
+//        fitter->PrintParameter("hp");
+//        fitter->PrintParameter("hm");
 
 //        Double_t mychi2 = fitter->SaveChi2Maps("a");
 //        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
@@ -469,11 +476,12 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t do
     {
         //SaveChi2Maps(fitter->GetBinnedDataSet(),dataSet->numEntries(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
 //        Double_t mychi2 = fitter->SaveChi2Maps("a");
-        fitter->SaveResiduals();
+//        fitter->SaveResiduals();
 //        fitter->SaveNllPlot("phiw");
 //        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
 
-        SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
+        //SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
+        SavePlotsTIndep(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
     }
 
     return 0;
@@ -481,7 +489,7 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t do
 
 int ToyProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t doPlot)
 {
-    const int numSubDataSets = 300;
+    const int numSubDataSets = 1000;
 
     RooRealVar hp("hp","hp",0,1);
     RooRealVar ehp("ehp","ehp",0,1);
@@ -494,8 +502,8 @@ int ToyProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t
     RooRealVar hma("hma","hma",-PI,PI);
     RooRealVar ehma("ehma","ehma",0,2*PI);
 
-    //Double_t input[5] = {0.107,1.42,0.941,0.322,0.31};
-    Double_t input[5] = {0.152,1.47,0.936,0.317,0.19};
+    Double_t input[5] = {0.107,1.42,0.941,0.322,0.31};
+    //Double_t input[5] = {0.152,1.47,0.936,0.317,0.19};
     Double_t parameters[10];
     RooRealVar rooParams[10] = {hp,ehp,hpa,ehpa,h0,eh0,hm,ehm,hma,ehma};
 
@@ -506,7 +514,7 @@ int ToyProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t
     RooDataSet fitsResults("fitsResults","fitsResults",amplitudes);
 
     RooDataSet* subDataSet;
-    FitterTrans* fitter;
+    FitterTransTIndep* fitter;
 
     for(int i = 0; i < numSubDataSets; i++)
     {
@@ -515,7 +523,7 @@ int ToyProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t
 
         subDataSet = (RooDataSet*)dataSet->reduce(RooFit::EventRange(event_lo,event_hi));
 
-        fitter = new FitterTrans(subDataSet,par_input);
+        fitter = new FitterTransTIndep(subDataSet,par_input);
         fitter->FixAllParameters();
         fitter->FreeParameter("ap");
         fitter->FreeParameter("apa");
@@ -824,6 +832,84 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
     file->Close();
 }
 
+void SavePlotsTIndep(RooDataSet* dataSet, DSRhoPDFTIndep* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3)
+{
+    /// Directory and format of the saved plots
+    const TString dir = "plots/";
+    const TString format = ".png";
+    TString path;
+    TString name;
+
+    path = dir + "projections.root";
+    TFile* file = new TFile(path,"RECREATE");
+
+    TCanvas* c1 = new TCanvas("c1","c1",800,600);
+    RooPlot* frame = 0;
+
+    /// Create a binned pdf with the same number of events as the data, so that the 2d plots of pdf
+    /// and data are the same scale
+    //printf("Generation of binned dataset starting...\n");
+    //RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(var1,var2,var3,dt),dataSet->numEntries(),kTRUE);
+    //printf("Generation of binned dataset finished\n");
+
+    /// This is a quick and dirty solution to be able to loop through all variables (except dt, which is treated separetely)
+    const int numVars = 3;
+    RooRealVar vars[numVars] = {var1,var2,var3};
+
+    /// Saving simple projections on each of the variables
+    for(int i = 0; i < numVars; i++)
+    {
+        name = "proj_";
+        name += vars[i].GetName();
+        frame = vars[i].frame();
+        dataSet->plotOn(frame,RooFit::Name("data"));
+        //if(i == 1)
+            pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)));
+        frame->SetName(name);
+        frame->Draw();
+        frame->Write();
+        path = dir + name + format;
+        c1->SaveAs(path);
+        delete frame;
+    }
+
+    TH2* h2_pdf = 0;
+    TH2* h2_data = 0;
+
+    /// Saving projections of both data and pdf on 2 dimensions
+//    for(int i = 0; i < numVars; i++)
+//    {
+//        for(int j = i+1; j < numVars; j++)
+//        {
+//            name = "proj_";
+//            name += vars[i].GetName();
+//            name += "_";
+//            name += vars[j].GetName();
+//            h2_pdf = dynamic_cast<TH2*>(pdf_binned->createHistogram(name + "_pdf",vars[i],RooFit::YVar(vars[j])));
+//            h2_pdf->SetOption("colz");
+//            h2_pdf->SetStats(kFALSE);
+//            h2_pdf->SetMinimum(0);
+//            h2_data = dynamic_cast<TH2*>(dataSet->createHistogram(name + "_data",vars[i],RooFit::YVar(vars[j])));
+//            h2_data->SetOption("colz");
+//            h2_data->SetStats(kFALSE);
+//            h2_data->SetMinimum(0);
+//            h2_data->SetMaximum(h2_pdf->GetMaximum());
+//            h2_pdf->Draw();
+//            h2_pdf->Write();
+//            path = dir + name + "_pdf" + format;
+//            c1->SaveAs(path);
+//            h2_data->Draw();
+//            h2_data->Write();
+//            path = dir + name + "_data" + format;
+//            c1->SaveAs(path);
+//            delete h2_pdf;
+//            delete h2_data;
+//        }
+//    }
+
+    file->Close();
+}
+
 void ConvertTransToHel(Double_t* par_input)
 {
     RooRealVar ap("ap","ap",par_input[0]);
@@ -886,22 +972,22 @@ void ConvertHelToTrans(Double_t* par_input)
     RooFormulaVar at("at","sqrt(atr*atr+ati*ati)",RooArgSet(atr,ati));
     RooFormulaVar ata("ata","atan2(ati,atr)",RooArgSet(atr,ati));
 
-    printf("original hel:\t");
+    printf("original hel:\t\t");
     printf("par[0] = %f\tpar[1] = %f\tpar[2] = %f\tpar[3] = %f\n",par_input[0],par_input[1],par_input[2],par_input[3]);
 
-    par_input[0] = Round(ap.getVal(),2);
+    par_input[0] = Round(ap.getVal(),4);
 
     if(apa.getVal() < 0)
-        par_input[1] = Round(apa.getVal()+2*PI,2);
+        par_input[1] = Round(apa.getVal()+2*PI,4);
     else
-        par_input[1] = Round(apa.getVal(),2);
+        par_input[1] = Round(apa.getVal(),4);
 
     /// par_input[2] = par_input[2]; because a0 = h0
 
     if(ata.getVal() < 0)
-        par_input[3] = Round(ata.getVal()+2*PI,2);
+        par_input[3] = Round(ata.getVal()+2*PI,4);
     else
-        par_input[3] = Round(ata.getVal(),2);
+        par_input[3] = Round(ata.getVal(),4);
 
     printf("converted trans:\t");
     printf("par[0] = %f\tpar[1] = %f\tpar[2] = %f\tpar[3] = %f\n",par_input[0],par_input[1],par_input[2],par_input[3]);

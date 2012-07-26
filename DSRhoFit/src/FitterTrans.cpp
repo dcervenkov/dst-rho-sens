@@ -60,8 +60,8 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     decType->defineType("bb",4);
     gamma = new RooRealVar("gamma","gamma",2.83);
 
-    ap = new RooRealVar("ap","ap",par_input[0],0.1,0.4);
-    apa = new RooRealVar("apa","apa",par_input[1],0.3,0.7);
+    ap = new RooRealVar("ap","ap",par_input[0],0,0.5);
+    apa = new RooRealVar("apa","apa",par_input[1],0,1);
     apr = new RooFormulaVar("apr","ap*cos(apa)",RooArgSet(*ap,*apa));
     api = new RooFormulaVar("api","ap*sin(apa)",RooArgSet(*ap,*apa));
     a0 = new RooRealVar("a0","a0",par_input[2],0.8,1);
@@ -69,7 +69,7 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     a0r = new RooFormulaVar("a0r","a0*cos(a0a)",RooArgSet(*a0,*a0a));
     a0i = new RooFormulaVar("a0i","a0*sin(a0a)",RooArgSet(*a0,*a0a));
     at = new RooFormulaVar("at","sqrt(1-ap*ap-a0*a0)",RooArgSet(*ap,*a0));
-    ata = new RooRealVar("ata","ata",par_input[3],2.7,3);
+    ata = new RooRealVar("ata","ata",par_input[3],2,4);
     atr = new RooFormulaVar("atr","at*cos(ata)",RooArgSet(*at,*ata));
     ati = new RooFormulaVar("ati","at*sin(ata)",RooArgSet(*at,*ata));
 
