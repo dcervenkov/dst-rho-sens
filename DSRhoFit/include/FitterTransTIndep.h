@@ -9,8 +9,8 @@ class FitterTransTIndep
         FitterTransTIndep(RooDataSet* outer_dataSet, Double_t* outer_par_input);
         ~FitterTransTIndep();
         Int_t Fit();
-        Int_t ComputeChi2(const char* type);
-        Double_t GetChi2(const char* type);
+        Int_t ComputeChi2();
+        Double_t GetChi2();
         Double_t SaveChi2Maps(const char* type);
         void SaveNllPlot(const char* par);
         void SaveNllPlot(const char* par1, const char* par2);
@@ -37,8 +37,7 @@ class FitterTransTIndep
         void SaveNllPlot(RooRealVar* var);
         void SaveNllPlot(RooRealVar* var1, RooRealVar* var2);
 
-        void CreateReducedDataSet(const char* type);
-        void CreateBinnedDataSet(const char* type);
+        void CreateBinnedDataSet();
         Double_t GetVPrecise(DSRhoPDFTIndep* pdf);
         Double_t GetVPrecise1D(const int i,DSRhoPDFTIndep* pdf,RooDataSet* loc_dataset);
 

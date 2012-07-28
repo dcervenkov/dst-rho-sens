@@ -114,7 +114,7 @@ Int_t FitterTransTIndep::Fit()
     //result->Print();
 }
 
-void FitterTransTIndep::CreateBinnedDataSet(const char* type)
+void FitterTransTIndep::CreateBinnedDataSet()
 {
     tht->setBins(tht_bins);
     thb->setBins(thb_bins);
@@ -131,16 +131,14 @@ void FitterTransTIndep::CreateBinnedDataSet(const char* type)
 }
 
 
-Int_t FitterTransTIndep::ComputeChi2(const char* type)
+Int_t FitterTransTIndep::ComputeChi2()
 {
     //if(dataSet_binned == NULL)
-        CreateBinnedDataSet(type);
+        CreateBinnedDataSet();
 
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
 
     chi2Var = new RooChi2Var("chi2Var","chi2Var",*pdf,*dataSet_binned);
-
-	//chi2Var = new RooChi2Var("chi2Var","chi2Var",*simPdf,*dataSet_binned);
 
 	RooRealVar* ndof     = new RooRealVar("ndof","number of degrees of freedom",0);
 	RooRealVar* chi2red  = new RooRealVar("chi2red","reduced chi^2",0);
@@ -152,76 +150,78 @@ Int_t FitterTransTIndep::ComputeChi2(const char* type)
 
 	delete dataSet_binned;
 
-	printf("%s:\tchi2 = %f\n%s:\tndof = %f\n%s:\tchi2red = %f\n%s:\tprob = %f\n\n",type,chi2Var->getVal(),type,ndof->getVal(),type,chi2red->getVal(),type,prob->getVal());
+	printf("chi2 = %f\nndof = %f\nchi2red = %f\nprob = %f\n\n",chi2Var->getVal(),ndof->getVal(),chi2red->getVal(),prob->getVal());
 
 }
 
 
-Double_t FitterTransTIndep::GetChi2(const char* type)
+Double_t FitterTransTIndep::GetChi2()
 {
-    Double_t mychi2 = 0;
-    Double_t n = 0;
-    Double_t v = 0;
 
-//    TH1D* h_dchi2 = new TH1D("dchi2","dchi2",100,0,100000);
-
-
-    //if(dataSet_binned == NULL)
-        CreateBinnedDataSet(type);
-
-    Double_t binVolume = tht->getBinWidth(0)*thb->getBinWidth(0)*phit->getBinWidth(0);
-    Int_t numBins = dataSet_binned->numEntries();
-
-    Int_t numVPrecise = 0;
-
-    /// Cycle through the centers of all bins
-    /// I'm getting width of the first bin, because all bins are of equal width
-    for(*tht = tht->getMin()+tht->getBinWidth(0)/2; tht->getVal() < tht->getMax(); tht->setVal(tht->getVal()+tht->getBinWidth(0)))
-    {
-        for(*thb = thb->getMin()+thb->getBinWidth(0)/2; thb->getVal() < thb->getMax(); thb->setVal(thb->getVal()+thb->getBinWidth(0)))
-        {
-            for(*phit = phit->getMin()+phit->getBinWidth(0)/2; phit->getVal() < phit->getMax(); phit->setVal(phit->getVal()+phit->getBinWidth(0)))
-            {
-                /// Weight is actually the bin content
-                n = dataSet_binned->weight(RooArgSet(*tht,*thb,*phit),0);
-                if(n < 1)
-                {
-                    numBins--;
-                    continue;
-                }
-
-                v = pdf->getVal(RooArgSet(*tht,*thb,*phit))*binVolume*binnedNumEntries;
-
-                if(((n-v)*(n-v)/v) > 1)
-                {
-                    v = GetVPrecise(pdf);
-                    numVPrecise++;
-                }
-
-//                    printf("%.10f\t%.10f\n",v,GetVPrecise(pdf));
-
-                mychi2 += (n-v)*(n-v)/v;
-//                    h_dchi2->Fill((n-v)*(n-v)/v);
-
-            }
-        }
-    }
-
-    printf("# VPrecise called: %i\n",numVPrecise);
-
-//    TCanvas* c1 = new TCanvas("c1","c1",800,600);
-//    c1->SetLogy();
-//    h_dchi2->Draw();
-
-    delete dataSet_binned;
-
-    //printf("binVolume = %f\n",binVolume);
-    printf("%s: numEntries = %i\n",type,binnedNumEntries);
-    printf("%s: numBins = %i\n",type,numBins);
-    printf("%s: mychi2 = %f\n",type,mychi2);
-    printf("%s: mychi2red = %f\n",type,mychi2/numBins);
-    printf("%s: prob = %.10f\n\n",type,TMath::Prob(mychi2,numBins));
-    return mychi2;
+    return chi2Var->getVal();
+//    Double_t mychi2 = 0;
+//    Double_t n = 0;
+//    Double_t v = 0;
+//
+////    TH1D* h_dchi2 = new TH1D("dchi2","dchi2",100,0,100000);
+//
+//
+//    //if(dataSet_binned == NULL)
+//        CreateBinnedDataSet();
+//
+//    Double_t binVolume = tht->getBinWidth(0)*thb->getBinWidth(0)*phit->getBinWidth(0);
+//    Int_t numBins = dataSet_binned->numEntries();
+//
+//    Int_t numVPrecise = 0;
+//
+//    /// Cycle through the centers of all bins
+//    /// I'm getting width of the first bin, because all bins are of equal width
+//    for(*tht = tht->getMin()+tht->getBinWidth(0)/2; tht->getVal() < tht->getMax(); tht->setVal(tht->getVal()+tht->getBinWidth(0)))
+//    {
+//        for(*thb = thb->getMin()+thb->getBinWidth(0)/2; thb->getVal() < thb->getMax(); thb->setVal(thb->getVal()+thb->getBinWidth(0)))
+//        {
+//            for(*phit = phit->getMin()+phit->getBinWidth(0)/2; phit->getVal() < phit->getMax(); phit->setVal(phit->getVal()+phit->getBinWidth(0)))
+//            {
+//                /// Weight is actually the bin content
+//                n = dataSet_binned->weight(RooArgSet(*tht,*thb,*phit),0);
+//                if(n < 1)
+//                {
+//                    numBins--;
+//                    continue;
+//                }
+//
+//                v = pdf->getVal(RooArgSet(*tht,*thb,*phit))*binVolume*binnedNumEntries;
+//
+//                if(((n-v)*(n-v)/v) > 1)
+//                {
+//                    v = GetVPrecise(pdf);
+//                    numVPrecise++;
+//                }
+//
+////                    printf("%.10f\t%.10f\n",v,GetVPrecise(pdf));
+//
+//                mychi2 += (n-v)*(n-v)/v;
+////                    h_dchi2->Fill((n-v)*(n-v)/v);
+//
+//            }
+//        }
+//    }
+//
+//    printf("# VPrecise called: %i\n",numVPrecise);
+//
+////    TCanvas* c1 = new TCanvas("c1","c1",800,600);
+////    c1->SetLogy();
+////    h_dchi2->Draw();
+//
+//    delete dataSet_binned;
+//
+//    //printf("binVolume = %f\n",binVolume);
+//    printf("%s: numEntries = %i\n",binnedNumEntries);
+//    printf("%s: numBins = %i\n",numBins);
+//    printf("%s: mychi2 = %f\n",mychi2);
+//    printf("%s: mychi2red = %f\n",mychi2/numBins);
+//    printf("%s: prob = %.10f\n\n",TMath::Prob(mychi2,numBins));
+//    return mychi2;
 }
 
 Double_t FitterTransTIndep::GetVPrecise(DSRhoPDFTIndep* pdf)
@@ -716,7 +716,7 @@ void FitterTransTIndep::GetRecoveredParameters(Int_t& numParameters, Double_t** 
 RooDataHist* FitterTransTIndep::GetBinnedDataSet()
 {
     if(dataSet_binned == NULL)
-        CreateBinnedDataSet("a");
+        CreateBinnedDataSet();
 
     return dataSet_binned;
 }
