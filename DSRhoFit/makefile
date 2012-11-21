@@ -4,7 +4,7 @@ LIBS = $(shell root-config --libs)
 ROOLIBS = -lFoam -lRooFitCore -lRooFit -lRooStats -lMinuit# -lMathMore
 
 DSRhoFit : src/DSRhoFit.cpp src/FitterTrans.cpp src/DSRhoPDF.cpp
-	g++ $(LIBS) $(ROOLIBS) -o bin/Release/DSRhoFit src/DSRhoFit.cpp src/FitterTrans.cpp src/DSRhoPDF.cpp $(INCLUDE) $(CFLAGS)
+	g++ -o bin/Release/DSRhoFit src/DSRhoFit.cpp src/FitterTrans.cpp src/DSRhoPDF.cpp $(INCLUDE) $(CFLAGS) $(LIBS) $(ROOLIBS)
 
 clean : 
 	rm -f bin/Release/DSRhoFit

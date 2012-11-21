@@ -241,25 +241,26 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
 
 //    delete dataSet;
-//
-//    dataSet = pdf_a->generate(RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3],*decType),80000);
+
+//    dataSet = pdf_a->generate(RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3],*decType),10000);
 //    dataSet->write("data/dataset_from_pdf_a");
 //    delete dataSet;
 //
-//    dataSet = pdf_ab->generate(RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3]),80000);
+//    dataSet = pdf_ab->generate(RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3],*decType),80000);
 //    dataSet->write("data/dataset_from_pdf_ab");
 //    delete dataSet;
 //
-//    dataSet = pdf_b->generate(RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3]),20000);
+//    dataSet = pdf_b->generate(RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3],*decType),10000);
 //    dataSet->write("data/dataset_from_pdf_b");
 //    delete dataSet;
 //
-//    dataSet = pdf_bb->generate(RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3]),20000);
+//    dataSet = pdf_bb->generate(RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3],*decType),20000);
 //    dataSet->write("data/dataset_from_pdf_bb");
 //    delete dataSet;
 
 
-////    dataSet = simPdf->generate(RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3],*decType),10000,RooFit::Extended());
+//    dataSet = simPdf->generate(RooArgSet(*vars[0],*vars[1],*vars[2],*vars[3],*decType),*outer_dataSet,10000);
+//    dataSet->write("data/dataset_from_simpdf");
 
 }
 
@@ -343,6 +344,42 @@ Int_t FitterTrans::Fit()
     //result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
     result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit"),RooFit::Minos(),RooFit::Hesse(),RooFit::Strategy(1));//,RooFit::NumCPU(2));
     //result->Print();
+}
+
+void FitterTrans::GenerateDataSet(Int_t numEvents)
+{
+    const Double_t fracFav = 0.812;
+    const Double_t fracSup = 1 - fracFav;
+
+    if(dataSet != 0)
+        delete dataSet;
+
+    RooDataSet* temp_dataSet;
+    temp_dataSet = pdf_a->generate(RooArgSet(*tht,*thb,*phit,*dt),TMath::Nint(numEvents*fracFav/2));
+    decType->setLabel("a");
+    temp_dataSet->addColumn(*decType);
+
+    dataSet = (RooDataSet*)temp_dataSet->Clone();
+    delete temp_dataSet;
+
+    temp_dataSet = pdf_ab->generate(RooArgSet(*tht,*thb,*phit,*dt),TMath::Nint(numEvents*fracFav/2));
+    decType->setLabel("ab");
+    temp_dataSet->addColumn(*decType);
+    dataSet->append(*temp_dataSet);
+    delete temp_dataSet;
+
+    temp_dataSet = pdf_b->generate(RooArgSet(*tht,*thb,*phit,*dt),TMath::Nint(numEvents*fracSup/2));
+    decType->setLabel("b");
+    temp_dataSet->addColumn(*decType);
+    dataSet->append(*temp_dataSet);
+    delete temp_dataSet;
+
+    temp_dataSet = pdf_bb->generate(RooArgSet(*tht,*thb,*phit,*dt),TMath::Nint(numEvents*fracSup/2));
+    decType->setLabel("bb");
+    temp_dataSet->addColumn(*decType);
+    dataSet->append(*temp_dataSet);
+    delete temp_dataSet;
+    dataSet->write("data/dataset_from_pdf");
 }
 
 void FitterTrans::CreateBinnedDataSet(const char* type)

@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
         printf("Usage: DSRhoFit inputFile outputFile hp hpa h0 hma [doFit] [doPlot]\n");
         #endif
         #ifdef TRANSVERSITY
-        printf("Usage: DSRhoFit inputFile outputFile ap apa a0 ata phiw rp r0 rt sp s0 st doFit doPlot\n");
+        printf("Usage: DSRhoFit inputFile outputFile hp hpa h0 hma phiw rp r0 rm sp s0 sm doFit doPlot\n");
         #endif
         return 1;
     }
@@ -265,7 +265,9 @@ int ProcessHel(RooDataSet* dataSet, RooRealVar& tha, RooRealVar& thb, RooRealVar
 int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t doPlot)
 {
 
-    FitterTransTIndep* fitter = new FitterTransTIndep(dataSet,par_input);
+    //FitterTransTIndep* fitter = new FitterTransTIndep(dataSet,par_input);
+    FitterTrans* fitter = new FitterTrans(dataSet,par_input);
+    fitter->GenerateDataSet(100000);
 
     if(doFit)
     {
@@ -274,19 +276,19 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t do
         fitter->FreeParameter("apa");
         fitter->FreeParameter("a0");
         fitter->FreeParameter("ata");
-//        fitter->FreeParameter("phiw");
-//        fitter->FreeParameter("rp");
-//        fitter->FreeParameter("r0");
-//        fitter->FreeParameter("rt");
-//        fitter->FreeParameter("sp");
-//        fitter->FreeParameter("s0");
-//        fitter->FreeParameter("st");
+        fitter->FreeParameter("phiw");
+        fitter->FreeParameter("rp");
+        fitter->FreeParameter("r0");
+        fitter->FreeParameter("rt");
+        fitter->FreeParameter("sp");
+        fitter->FreeParameter("s0");
+        fitter->FreeParameter("st");
         fitter->Fit();
         //fitter->PrintParameter("at");
         fitter->PrintParameter("hp");
         fitter->PrintParameter("hm");
 
-        fitter->ComputeChi2();
+//        fitter->ComputeChi2();
 
 //        Double_t mychi2 = fitter->SaveChi2Maps("a");
 //        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
@@ -318,8 +320,8 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t do
 //        fitter->SaveNllPlot("phiw");
 //        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
 
-        //SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
-        SavePlotsTIndep(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
+//        SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
+        //SavePlotsTIndep(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
     }
 
     return 0;

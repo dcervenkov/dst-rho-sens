@@ -29,6 +29,7 @@ class FitterTrans
         void PrintParameter(const char* par);
         void GetHelParameters(Double_t* params);
         void SaveResiduals();
+        void GenerateDataSet(Int_t numEvents);
 
 
     protected:
