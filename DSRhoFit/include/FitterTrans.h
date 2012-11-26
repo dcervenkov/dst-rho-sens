@@ -60,17 +60,16 @@ class FitterTrans
         Int_t thb_bins;
         Int_t phit_bins;
         Int_t dt_bins;
-        Int_t vars_bins[4];
 
         RooRealVar* tht;
         RooRealVar* thb;
         RooRealVar* phit;
         RooRealVar* dt;
 
+        Int_t vars_bins[4];
         RooRealVar* vars[4];
 
         RooCategory* decType;
-        RooRealVar* gamma;
 
         RooRealVar* ap;
         RooRealVar* apa;
@@ -84,10 +83,6 @@ class FitterTrans
         RooRealVar* ata;
         RooFormulaVar* atr;
         RooFormulaVar* ati;
-
-        RooFormulaVar* ap0r;
-        RooFormulaVar* a0ti;
-        RooFormulaVar* apti;
 
         /// Time-dep additional vars
 
@@ -103,70 +98,15 @@ class FitterTrans
         RooRealVar* rp;
         RooRealVar* r0;
 
-        RooFormulaVar* ap0i;
-        RooFormulaVar* a0tr;
-        RooFormulaVar* aptr;
-
-        RooFormulaVar* At2_a;
-        RooFormulaVar* Ap2_a;
-        RooFormulaVar* A02_a;
-
-        RooFormulaVar* Ap0r_a;
-        RooFormulaVar* A0ti_a;
-        RooFormulaVar* Apti_a;
-
-        RooFormulaVar* At2_ab;
-        RooFormulaVar* Ap2_ab;
-        RooFormulaVar* A02_ab;
-
-        RooFormulaVar* Ap0r_ab;
-        RooFormulaVar* A0ti_ab;
-        RooFormulaVar* Apti_ab;
-
-        RooFormulaVar* At2_b;
-        RooFormulaVar* Ap2_b;
-        RooFormulaVar* A02_b;
-
-        RooFormulaVar* Ap0r_b;
-        RooFormulaVar* A0ti_b;
-        RooFormulaVar* Apti_b;
-
-        RooFormulaVar* At2_bb;
-        RooFormulaVar* Ap2_bb;
-        RooFormulaVar* A02_bb;
-
-        RooFormulaVar* Ap0r_bb;
-        RooFormulaVar* A0ti_bb;
-        RooFormulaVar* Apti_bb;
-
-        /// a decays are favored, b corresponding suppressed; a is B0 -> D*- + rho+
-        char* formula_a;
-        char* formula_ab;
-        char* formula_b;
-        char* formula_bb;
-
-        RooArgSet* varSet_a;
-        RooArgSet* varSet_b;
-        RooArgSet* varSet_ab;
-        RooArgSet* varSet_bb;
-
         DSRhoPDF* pdf_a;
         DSRhoPDF* pdf_b;
         DSRhoPDF* pdf_ab;
         DSRhoPDF* pdf_bb;
 
-        RooArgSet* varSet;
-
         /// numFitParameters holds # of NON-constant fit parameters
         RooArgSet* fitParameters;
         Int_t numFitParameters;
 
-//        char* pdfFormula;
-
-        //RooGenericPdf* pdf;
-
-//        DSRhoPDF* myPdf_a;
-//        DSRhoPDF* myPdf_b;
 };
 
 #endif // FITTERTRANS_H

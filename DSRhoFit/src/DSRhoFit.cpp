@@ -267,26 +267,27 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t do
 
     //FitterTransTIndep* fitter = new FitterTransTIndep(dataSet,par_input);
     FitterTrans* fitter = new FitterTrans(dataSet,par_input);
-    fitter->GenerateDataSet(100000);
+//    fitter->GenerateDataSet(100000);
 
     if(doFit)
     {
         fitter->FixAllParameters();
-        fitter->FreeParameter("ap");
-        fitter->FreeParameter("apa");
-        fitter->FreeParameter("a0");
-        fitter->FreeParameter("ata");
+//        fitter->FreeParameter("ap");
+//        fitter->FreeParameter("apa");
+//        fitter->FreeParameter("a0");
+//        fitter->FreeParameter("ata");
         fitter->FreeParameter("phiw");
-        fitter->FreeParameter("rp");
-        fitter->FreeParameter("r0");
-        fitter->FreeParameter("rt");
-        fitter->FreeParameter("sp");
-        fitter->FreeParameter("s0");
-        fitter->FreeParameter("st");
+//        fitter->FreeParameter("rp");
+//        fitter->FreeParameter("r0");
+//        fitter->FreeParameter("rt");
+//        fitter->FreeParameter("sp");
+//        fitter->FreeParameter("s0");
+//        fitter->FreeParameter("st");
         fitter->Fit();
         //fitter->PrintParameter("at");
         fitter->PrintParameter("hp");
         fitter->PrintParameter("hm");
+        fitter->PrintParameter("phiw");
 
 //        fitter->ComputeChi2();
 
@@ -305,9 +306,9 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t do
         Int_t numParameters = 0;
         Double_t* recoveredParameters = 0;
 
-        //fitter->GetRecoveredParameters(numParameters,&recoveredParameters);
+//        fitter->GetRecoveredParameters(numParameters,&recoveredParameters);
 
-        //WriteToFile(numParameters,recoveredParameters,outputFile);
+//        WriteToFile(numParameters,recoveredParameters,outputFile);
     }
     //else
         //fitter->ComputeChi2();
