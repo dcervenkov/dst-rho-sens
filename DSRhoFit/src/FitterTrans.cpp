@@ -21,7 +21,7 @@
 #include "TCanvas.h"
 #include "TFile.h"
 
-FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* par_input)
+FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
 {
     gPluginMgr = new TPluginManager;
     gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
@@ -57,6 +57,8 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* par_input)
     decType->defineType("b",3);
     decType->defineType("bb",4);
 
+    for (Int_t i = 0; i < 11; i++)
+        par_input[i] = outer_par_input[i];
 
     /// apr and other seemingly unnecessary vars are used when calculating/printing e.g. "hp"
     ap = new RooRealVar("ap","ap",par_input[0],0,0.5);
@@ -946,33 +948,10 @@ void FitterTrans::SaveNllPlot(RooRealVar* var1, RooRealVar* var2)
     var2->setVal(orig_val2);
 }
 
-void FitterTrans::GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters)
+void FitterTrans::SaveParameters(char* file)
 {
     RooRealVar* chi2red  = new RooRealVar("chi2red","reduced chi^2",0);
     //chi2red->setVal(chi2Var->getVal()/(dataSet_binned->numEntries()-numFitParameters));
-
-    numParameters = 17;
-    Double_t* parameters = new Double_t[numParameters];
-
-    parameters[0] = chi2red->getVal();
-    parameters[1] = ap->getVal();
-    parameters[2] = ap->getError();
-    parameters[3] = apa->getVal();
-    parameters[4] = apa->getError();
-    parameters[5] = a0->getVal();
-    parameters[6] = a0->getError();
-    parameters[7] = a0a->getVal();
-    parameters[8] = a0a->getError();
-    parameters[9] = at->getVal();
-    parameters[10] = at->getPropagatedError(*result);
-    parameters[11] = ata->getVal();
-    parameters[12] = ata->getError();
-    parameters[13] = par_input[0];
-    parameters[14] = par_input[1];
-    parameters[15] = par_input[2];
-    parameters[16] = par_input[3];
-
-    *recoveredParameters = parameters;
 
     FILE* pFile;
     pFile = fopen (file,"w");
@@ -982,39 +961,63 @@ void FitterTrans::GetRecoveredParameters(Int_t& numParameters, Double_t** recove
         return;
     }
 
-    parameters[0] = chi2red->getVal();
-    parameters[1] = ap->getVal();
-    parameters[2] = ap->getError();
-    parameters[3] = apa->getVal();
-    parameters[4] = apa->getError();
-    parameters[5] = a0->getVal();
-    parameters[6] = a0->getError();
-    parameters[7] = a0a->getVal();
-    parameters[8] = a0a->getError();
-    parameters[9] = at->getVal();
-    parameters[10] = at->getPropagatedError(*result);
-    parameters[11] = ata->getVal();
-    parameters[12] = ata->getError();
-    parameters[13] = par_input[0];
-    parameters[14] = par_input[1];
-    parameters[15] = par_input[2];
+    const Int_t numParameters = 40;
+    Double_t* parameters = new Double_t[numParameters];
+    //parameters[0] = chi2red->getVal();
+    parameters[1] = par_input[0];
+    parameters[2] = ap->getVal();
+    parameters[3] = ap->getError();
+    parameters[4] = par_input[1];
+    parameters[5] = apa->getVal();
+    parameters[6] = apa->getError();
+    parameters[7] = par_input[2];
+    parameters[8] = a0->getVal();
+    parameters[9] = a0->getError();
+    parameters[10] = 0;
+    parameters[11] = a0a->getVal();
+    parameters[12] = a0a->getError();
+    parameters[13] = sqrt(1-par_input[0]*par_input[0]-par_input[2]*par_input[2]);
+    parameters[14] = at->getVal();
+    parameters[15] = at->getPropagatedError(*result);
     parameters[16] = par_input[3];
+    parameters[17] = ata->getVal();
+    parameters[18] = ata->getError();
+    parameters[19] = par_input[4];
+    parameters[20] = phiw->getVal();
+    parameters[21] = phiw->getError();
+    parameters[22] = par_input[5];
+    parameters[23] = rp->getVal();
+    parameters[24] = rp->getError();
+    parameters[25] = par_input[6];
+    parameters[26] = r0->getVal();
+    parameters[27] = r0->getError();
+    parameters[28] = par_input[7];
+    parameters[29] = rt->getVal();
+    parameters[30] = rt->getError();
+    parameters[31] = par_input[8];
+    parameters[32] = sp->getVal();
+    parameters[33] = sp->getError();
+    parameters[34] = par_input[9];
+    parameters[35] = s0->getVal();
+    parameters[36] = s0->getError();
+    parameters[37] = par_input[10];
+    parameters[38] = st->getVal();
+    parameters[39] = st->getError();
+    Int_t separators[numParameters] = {2, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,2, 0,0,2, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,0};
 
-    Int_t separators[38] = {2, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,2, 2, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,0};
-
-    for(Int_t i = 0; i < 38; i++, vars++)
+    for(Int_t i = 1; i < numParameters; i++)
     {
-        fprintf(pFile,"%f ",*vars);
+        fprintf(pFile,"%.3f ",parameters[i]);
         if (separators[i] == 1)
-            fprintf(pFile,"| ")
+            fprintf(pFile,"| ");
         else if (separators[i] == 2)
-            fprintf(pFile,"# ");
+            fprintf(pFile,"|| ");
     }
     fprintf(pFile,"\n");
     fclose (pFile);
 
-    for (; ; )
-        ;
+//    for (; ; )
+//        ;
 }
 
 RooDataHist* FitterTrans::GetBinnedDataSet()

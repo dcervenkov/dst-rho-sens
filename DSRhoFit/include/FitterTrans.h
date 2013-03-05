@@ -14,7 +14,7 @@ class FitterTrans
         Double_t SaveChi2Maps(const char* type);
         void SaveNllPlot(const char* par);
         void SaveNllPlot(const char* par1, const char* par2);
-        void GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters);
+        void SaveParameters(char* file);
         RooRealVar* GetTht(){return tht;};
         RooRealVar* GetThb(){return thb;};
         RooRealVar* GetPhit(){return phit;};
