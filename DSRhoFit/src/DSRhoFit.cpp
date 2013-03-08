@@ -15,6 +15,7 @@
 #include "TH2D.h"
 #include "TStopwatch.h"
 #include "TMath.h"
+#include "TComplex.h"
 
 #include "RooFit.h"
 #include "RooGlobalFunc.h"
@@ -664,45 +665,49 @@ void ConvertTransToHel(Double_t* par_input)
 
 void ConvertHelToTrans(Double_t* par_input)
 {
-    RooRealVar hp("hp","hp",par_input[0]);
-    RooRealVar hpa("hpa","hpa",par_input[1]);
-    RooFormulaVar hpr("hpr","hp*cos(hpa)",RooArgSet(hp,hpa));
-    RooFormulaVar hpi("hpi","hp*sin(hpa)",RooArgSet(hp,hpa));
-    RooRealVar h0("h0","h0",par_input[2]);
-    RooFormulaVar hm("hm","sqrt(1-hp*hp-h0*h0)",RooArgSet(hp,h0));
-    RooRealVar hma("hma","hma",par_input[3]);
-    RooFormulaVar hmr("hmr","hm*cos(hma)",RooArgSet(hm,hma));
-    RooFormulaVar hmi("hmi","hm*sin(hma)",RooArgSet(hm,hma));
+    TComplex hp(par_input[0],par_input[1],true);
+    TComplex h0(par_input[2],0,true);
+    TComplex hm(sqrt(1-hp.Rho2()-h0.Rho2()),par_input[3],true);
 
-    RooFormulaVar apr("apr","(hpr + hmr)/sqrt(2)",RooArgSet(hpr,hmr));
-    RooFormulaVar api("api","(hpi + hmi)/sqrt(2)",RooArgSet(hpi,hmi));
-    RooFormulaVar ap("ap","sqrt(apr*apr+api*api)",RooArgSet(apr,api));
-    RooFormulaVar apa("apa","atan2(api,apr)",RooArgSet(apr,api));
+    TComplex hRhop(par_input[5],par_input[8],true);
+    TComplex hRho0(par_input[6],par_input[9],true);
+    TComplex hRhom(par_input[7],par_input[10],true);
 
-    RooFormulaVar atr("atr","(hpr - hmr)/sqrt(2)",RooArgSet(hpr,hmr));
-    RooFormulaVar ati("ati","(hpi - hmi)/sqrt(2)",RooArgSet(hpi,hmi));
-    RooFormulaVar at("at","sqrt(atr*atr+ati*ati)",RooArgSet(atr,ati));
-    RooFormulaVar ata("ata","atan2(ati,atr)",RooArgSet(atr,ati));
+    TComplex hps = hRhop * hp;
+    TComplex h0s = hRho0 * h0;
+    TComplex hms = hRhom * hm;
 
-    printf("original hel:\t\t");
-    printf("par[0] = %f\tpar[1] = %f\tpar[2] = %f\tpar[3] = %f\n",par_input[0],par_input[1],par_input[2],par_input[3]);
+    TComplex ap = (hp + hm)/sqrt(2);
+    TComplex a0 = h0;
+    TComplex at = (hp - hm)/sqrt(2);
 
-    par_input[0] = Round(ap.getVal(),4);
+    TComplex aps = (hps + hms)/sqrt(2);
+    TComplex a0s = h0s;
+    TComplex ats = (hps - hms)/sqrt(2);
 
-    if(apa.getVal() < 0)
-        par_input[1] = Round(apa.getVal()+2*PI,4);
-    else
-        par_input[1] = Round(apa.getVal(),4);
+    TComplex tRhop = aps/ap;
+    TComplex tRho0 = a0s/a0;
+    TComplex tRhot = ats/at;
 
-    /// par_input[2] = par_input[2]; because a0 = h0
+    printf("original hel:\t");
+    printf("hp = %.3f\thpa = %.2f\th0 = %.3f\thma = %.2f\tphiw = %.4f\trp = %.3f\tr0 = %.3f\trm = %.3f\tsp = %.3f\ts0 = %.3f\tsm = %.3f\n",\
+        par_input[0],par_input[1],par_input[2],par_input[3],par_input[4],par_input[5],par_input[6],par_input[7],par_input[8],par_input[9],par_input[10]);
 
-    if(ata.getVal() < 0)
-        par_input[3] = Round(ata.getVal()+2*PI,4);
-    else
-        par_input[3] = Round(ata.getVal(),4);
+    par_input[0] = ap.Rho();
+    par_input[1] = ap.Theta();
+    par_input[2] = a0.Rho();
+    par_input[3] = at.Theta();
+    par_input[5] = tRhop.Rho();
+    par_input[6] = tRho0.Rho();
+    par_input[7] = tRhot.Rho();
+    par_input[8] = tRhop.Theta();
+    par_input[9] = tRho0.Theta();
+    par_input[10] = tRhot.Theta();
 
-    printf("converted trans:\t");
-    printf("par[0] = %f\tpar[1] = %f\tpar[2] = %f\tpar[3] = %f\n",par_input[0],par_input[1],par_input[2],par_input[3]);
+    printf("converted trans:");
+    printf("ap = %.3f\tapa = %.2f\ta0 = %.3f\tata = %.2f\tphiw = %.4f\trp = %.3f\tr0 = %.3f\trt = %.3f\tsp = %.3f\ts0 = %.3f\tst = %.3f\n",\
+        par_input[0],par_input[1],par_input[2],par_input[3],par_input[4],par_input[5],par_input[6],par_input[7],par_input[8],par_input[9],par_input[10]);
+
 }
 
 Double_t Round(Double_t number, Int_t digits)
