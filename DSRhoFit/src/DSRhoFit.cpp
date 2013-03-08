@@ -129,16 +129,17 @@ int main(int argc, char* argv[])
     dataSet = RooDataSet::read(inputFile,RooArgList(tht,thb,phit,dt,decType));
     if(doFit == 2)
     {
-        ConvertHelToTrans(par_input);
+        ConvertBetweenHelAndTrans(par_input);
         //ToyProcessTrans(dataSet,par_input,doFit,doPlot);
         ToyProcessTrans(dataSet,par_input,doFit,doPlot);
     }
     else if(doFit == 3)
-        ConvertHelToTrans(par_input);
-        //ConvertTransToHel(par_input);
+    {
+        ConvertBetweenHelAndTrans(par_input);
+    }
     else
     {
-        ConvertHelToTrans(par_input);
+        ConvertBetweenHelAndTrans(par_input);
         ProcessTrans(dataSet,par_input,doFit,doPlot);
     }
     #endif
@@ -623,48 +624,12 @@ void SavePlotsTIndep(RooDataSet* dataSet, DSRhoPDFTIndep* pdf, const RooRealVar&
     file->Close();
 }
 
-void ConvertTransToHel(Double_t* par_input)
+void ConvertBetweenHelAndTrans(Double_t* par_input)
 {
-    RooRealVar ap("ap","ap",par_input[0]);
-    RooRealVar apa("apa","apa",par_input[1]);
-    RooFormulaVar apr("apr","ap*cos(apa)",RooArgSet(ap,apa));
-    RooFormulaVar api("api","ap*sin(apa)",RooArgSet(ap,apa));
-    RooRealVar a0("a0","a0",par_input[2]);
-    RooFormulaVar at("at","sqrt(1-ap*ap-a0*a0)",RooArgSet(ap,a0));
-    RooRealVar ata("ata","ata",par_input[3]);
-    RooFormulaVar atr("atr","at*cos(ata)",RooArgSet(at,ata));
-    RooFormulaVar ati("ati","at*sin(ata)",RooArgSet(at,ata));
+    /// The variables are named as if converting parameters from helicity to transversity
+    /// but the transformation is symmetric and can be used to convert from transversity
+    /// to helicity as well.
 
-    RooFormulaVar hpr("hpr","(apr + atr)/sqrt(2)",RooArgSet(apr,atr));
-    RooFormulaVar hpi("hpi","(api + ati)/sqrt(2)",RooArgSet(api,ati));
-    RooFormulaVar hp("hp","sqrt(hpr*hpr+hpi*hpi)",RooArgSet(hpr,hpi));
-    RooFormulaVar hpa("hpa","atan2(hpi,hpr)",RooArgSet(hpr,hpi));
-
-    RooFormulaVar hmr("hmr","(apr - atr)/sqrt(2)",RooArgSet(apr,atr));
-    RooFormulaVar hmi("hmi","(api - ati)/sqrt(2)",RooArgSet(api,ati));
-    RooFormulaVar hm("hm","sqrt(hmr*hmr+hmi*hmi)",RooArgSet(hmr,hmi));
-    RooFormulaVar hma("hma","atan2(hmi,hmr)",RooArgSet(hmr,hmi));
-
-    printf("original trans:\t");
-    printf("par[0] = %f\tpar[1] = %f\tpar[2] = %f\tpar[3] = %f\n",par_input[0],par_input[1],par_input[2],par_input[3]);
-
-    par_input[0] = Round(hp.getVal(),2);
-
-    if(hpa.getVal() < 0)
-        par_input[1] = Round(hpa.getVal()+2*PI,2);
-    else
-        par_input[1] = Round(hpa.getVal(),2);
-
-    /// par_input[2] = par_input[2]; because a0 = h0
-
-    par_input[3] = Round(hma.getVal(),2);
-
-    printf("converted hel:\t");
-    printf("par[0] = %f\tpar[1] = %f\tpar[2] = %f\tpar[3] = %f\n",par_input[0],par_input[1],par_input[2],par_input[3]);
-}
-
-void ConvertHelToTrans(Double_t* par_input)
-{
     TComplex hp(par_input[0],par_input[1],true);
     TComplex h0(par_input[2],0,true);
     TComplex hm(sqrt(1-hp.Rho2()-h0.Rho2()),par_input[3],true);
