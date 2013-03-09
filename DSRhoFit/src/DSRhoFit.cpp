@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        ConvertBetweenHelAndTrans(par_input);
+        //ConvertBetweenHelAndTrans(par_input);
         ProcessTrans(dataSet,par_input,doFit,doPlot);
     }
     #endif
@@ -169,7 +169,7 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t do
 //        fitter->FreeParameter("apa");
 //        fitter->FreeParameter("a0");
 //        fitter->FreeParameter("ata");
-        fitter->FreeParameter("phiw");
+//        fitter->FreeParameter("phiw");
 //        fitter->FreeParameter("rp");
 //        fitter->FreeParameter("r0");
 //        fitter->FreeParameter("rt");
@@ -178,9 +178,9 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t do
 //        fitter->FreeParameter("st");
         fitter->Fit();
         //fitter->PrintParameter("at");
-        fitter->PrintParameter("hp");
-        fitter->PrintParameter("hm");
-        fitter->PrintParameter("phiw");
+//        fitter->PrintParameter("hp");
+//        fitter->PrintParameter("hm");
+//        fitter->PrintParameter("phiw");
 
 //        fitter->ComputeChi2();
 

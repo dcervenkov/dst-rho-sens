@@ -7,6 +7,8 @@
 #include "RooRandom.h"
 #include "RooChi2Var.h"
 #include "RooSimultaneous.h"
+#include "RooPlot.h"
+
 #include "Minuit2/Minuit2Minimizer.h"
 #include "TPluginManager.h"
 #include "TMath.h"
@@ -79,9 +81,9 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     dm = new RooRealVar("dm","dm",0.507e12);
     phiw = new RooRealVar("phiw","phiw",par_input[4],0,2*PI);
 
-    rp = new RooRealVar("rp","rp",par_input[5],0,0.1);
-    r0 = new RooRealVar("r0","r0",par_input[6],0,0.1);
-    rt = new RooRealVar("rt","rt",par_input[7],0,0.1); /// eq. (100) in BN419 approximates this
+    rp = new RooRealVar("rp","rp",par_input[5],0,0.2);
+    r0 = new RooRealVar("r0","r0",par_input[6],0,0.2);
+    rt = new RooRealVar("rt","rt",par_input[7],0,0.2); /// eq. (100) in BN419 approximates this
 
     /// s is strong phase; delta_polarization in BN419
     sp = new RooRealVar("sp","sp",par_input[8],-PI,PI);
@@ -950,8 +952,32 @@ void FitterTrans::SaveNllPlot(RooRealVar* var1, RooRealVar* var2)
 
 void FitterTrans::SaveParameters(char* file)
 {
-    RooRealVar* chi2red  = new RooRealVar("chi2red","reduced chi^2",0);
-    //chi2red->setVal(chi2Var->getVal()/(dataSet_binned->numEntries()-numFitParameters));
+
+    /// The next 2 lines enable getting category items' names and therefore reduced datasets in a loop
+    const RooArgSet* args = dataSet->get();
+    const RooCategory* cat = (RooCategory*)args->find("decType");
+    RooDataSet* datacut;
+    RooPlot* frame = 0;
+
+    const Int_t numParameters = 43;
+    Double_t* parameters = new Double_t[numParameters];
+
+    /// Getting 1D chi^2 for all 4 decay types
+    for(int i = 1; i <= 4; i++)
+    {
+        frame = dt->frame();
+        TString type = (char*)cat->lookupType(i)->GetName();
+        TString cut = "decType==decType::" + type;
+        datacut = (RooDataSet*)dataSet->reduce(*dt,cut);
+        datacut->plotOn(frame,RooFit::Name("data"));
+
+        pdf_a->setType(i);
+        pdf_a->plotOn(frame,RooFit::Project(RooArgSet(*tht,*thb,*phit)));
+
+        parameters[i-1] = frame->chiSquare(numFitParameters);
+
+        delete frame;
+    }
 
     FILE* pFile;
     pFile = fopen (file,"w");
@@ -961,51 +987,52 @@ void FitterTrans::SaveParameters(char* file)
         return;
     }
 
-    const Int_t numParameters = 40;
-    Double_t* parameters = new Double_t[numParameters];
-    //parameters[0] = chi2red->getVal();
-    parameters[1] = par_input[0];
-    parameters[2] = ap->getVal();
-    parameters[3] = ap->getError();
-    parameters[4] = par_input[1];
-    parameters[5] = apa->getVal();
-    parameters[6] = apa->getError();
-    parameters[7] = par_input[2];
-    parameters[8] = a0->getVal();
-    parameters[9] = a0->getError();
-    parameters[10] = 0;
-    parameters[11] = a0a->getVal();
-    parameters[12] = a0a->getError();
-    parameters[13] = sqrt(1-par_input[0]*par_input[0]-par_input[2]*par_input[2]);
-    parameters[14] = at->getVal();
-    parameters[15] = at->getPropagatedError(*result);
-    parameters[16] = par_input[3];
-    parameters[17] = ata->getVal();
-    parameters[18] = ata->getError();
-    parameters[19] = par_input[4];
-    parameters[20] = phiw->getVal();
-    parameters[21] = phiw->getError();
-    parameters[22] = par_input[5];
-    parameters[23] = rp->getVal();
-    parameters[24] = rp->getError();
-    parameters[25] = par_input[6];
-    parameters[26] = r0->getVal();
-    parameters[27] = r0->getError();
-    parameters[28] = par_input[7];
-    parameters[29] = rt->getVal();
-    parameters[30] = rt->getError();
-    parameters[31] = par_input[8];
-    parameters[32] = sp->getVal();
-    parameters[33] = sp->getError();
-    parameters[34] = par_input[9];
-    parameters[35] = s0->getVal();
-    parameters[36] = s0->getError();
-    parameters[37] = par_input[10];
-    parameters[38] = st->getVal();
-    parameters[39] = st->getError();
-    Int_t separators[numParameters] = {2, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,2, 0,0,2, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,0};
+    parameters[4] = par_input[0];
+    parameters[5] = ap->getVal();
+    parameters[6] = ap->getError();
+    parameters[7] = par_input[1];
+    parameters[8] = apa->getVal();
+    parameters[9] = apa->getError();
+    parameters[10] = par_input[2];
+    parameters[11] = a0->getVal();
+    parameters[12] = a0->getError();
+    parameters[13] = 0;
+    parameters[14] = a0a->getVal();
+    parameters[15] = a0a->getError();
+    parameters[16] = sqrt(1-par_input[0]*par_input[0]-par_input[2]*par_input[2]);
+    parameters[17] = at->getVal();
+    if (result == 0){
+        parameters[18] = 0;
+    }else{
+        parameters[18] = at->getPropagatedError(*result);
+    }
+    parameters[19] = par_input[3];
+    parameters[20] = ata->getVal();
+    parameters[21] = ata->getError();
+    parameters[22] = par_input[4];
+    parameters[23] = phiw->getVal();
+    parameters[24] = phiw->getError();
+    parameters[25] = par_input[5];
+    parameters[26] = rp->getVal();
+    parameters[27] = rp->getError();
+    parameters[28] = par_input[6];
+    parameters[29] = r0->getVal();
+    parameters[30] = r0->getError();
+    parameters[31] = par_input[7];
+    parameters[32] = rt->getVal();
+    parameters[33] = rt->getError();
+    parameters[34] = par_input[8];
+    parameters[35] = sp->getVal();
+    parameters[36] = sp->getError();
+    parameters[37] = par_input[9];
+    parameters[38] = s0->getVal();
+    parameters[39] = s0->getError();
+    parameters[40] = par_input[10];
+    parameters[41] = st->getVal();
+    parameters[42] = st->getError();
+    Int_t separators[numParameters] = {0,0,0,2, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,2, 0,0,2, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,0};
 
-    for(Int_t i = 1; i < numParameters; i++)
+    for(Int_t i = 0; i < numParameters; i++)
     {
         fprintf(pFile,"%.3f ",parameters[i]);
         if (separators[i] == 1)
@@ -1015,9 +1042,6 @@ void FitterTrans::SaveParameters(char* file)
     }
     fprintf(pFile,"\n");
     fclose (pFile);
-
-//    for (; ; )
-//        ;
 }
 
 RooDataHist* FitterTrans::GetBinnedDataSet()
