@@ -3,7 +3,9 @@
 import sys
 import os
 import subprocess
+import time
 
+max_jobs = 13
 root_path = "../"
 data_path = "data/"
 results_path = "results/"
@@ -41,10 +43,15 @@ def parseMetafile(dataset,pars):
 	    elif tag == 'st':  pars[10] = val
 
 def createCommand(dataset,pars):
-    command = 'nohup bin/Release/DSRhoFit ' + dataset + ' ' + dataset.replace(data_path,results_path) + \
-	      '.res ' + ' '.join(pars) + ' 1 0' +' > ' + dataset.replace(data_path,log_path) + ' 2>&1'
-#    command = 'nohup scripts/sleepsong.sh &'
+    command = 'nice bin/Release/DSRhoFit ' + dataset + ' ' + dataset.replace(data_path,results_path) + \
+	      '.res ' + ' '.join(pars) + ' 1 0' +' > ' + dataset.replace(data_path,log_path) + '.log ' + '2>&1 &'
     return command
+
+def numberOfJobs():
+    stdout = subprocess.check_output('ps aux|grep bin/Release/DSRhoFit |wc -l',shell=True)
+    jobs = int(stdout) - 2
+    return jobs
+
 
 
 if len(sys.argv) != 3 :
@@ -67,4 +74,8 @@ for i in range(beg_dataset,end_dataset+1):
 for dataset in datasets:
     parseMetafile(dataset,pars)
     command = createCommand(dataset,pars)
+    
+    while(numberOfJobs() >= max_jobs):
+	time.sleep(10)
+
     subprocess.call(command,shell=True)
