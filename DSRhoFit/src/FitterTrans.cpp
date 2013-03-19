@@ -873,6 +873,7 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 void FitterTrans::SaveNllPlot(RooRealVar* var)
 {
     const int steps = 100;
+    Double_t stepsize = (var->getMax()-var->getMin())/steps;
     Double_t orig_val = var->getVal();
     TCanvas c_nll("c_nll","c_nll",800,600);
     TString name;
@@ -886,12 +887,14 @@ void FitterTrans::SaveNllPlot(RooRealVar* var)
     TH1F h1_nll(name,name,steps,var->getMin(),var->getMax());
     RooAbsReal* nll;
     nll = simPdf->createNLL(*dataSet,RooFit::NumCPU(2));
+
     for(Int_t i = 0; i < steps; i++)
     {
-        var->setVal(i*var->getMax()/steps+(var->getMax()-var->getMin())/(2*steps));
+        var->setVal(i*stepsize + var->getMin() + stepsize/2);
         printf("Computing %i/%i likelihood function.\n",i+1,steps);
         h1_nll.Fill(var->getVal(),2*nll->getVal());
     }
+
     delete nll;
     h1_nll.GetXaxis()->SetTitle(var->GetName());
     h1_nll.SetStats(kFALSE);
@@ -908,6 +911,8 @@ void FitterTrans::SaveNllPlot(RooRealVar* var1, RooRealVar* var2)
 {
     const int steps1 = 30;
     const int steps2 = 30;
+    Double_t stepsize1 = (var1->getMax()-var1->getMin())/steps1;
+    Double_t stepsize2 = (var2->getMax()-var2->getMin())/steps2;
     Double_t orig_val1 = var1->getVal();
     Double_t orig_val2 = var2->getVal();
     TCanvas c_nll("c_nll","c_nll",600,600);
@@ -927,8 +932,8 @@ void FitterTrans::SaveNllPlot(RooRealVar* var1, RooRealVar* var2)
     {
         for(Int_t j = 0; j < steps2; j++)
         {
-            var1->setVal(i*var1->getMax()/steps1+(var1->getMax()-var1->getMin())/(2*steps1));
-            var2->setVal(j*var2->getMax()/steps2+(var2->getMax()-var2->getMin())/(2*steps2));
+            var1->setVal(i*stepsize1 + var1->getMin() + stepsize1/2);
+            var2->setVal(j*stepsize2 + var2->getMin() + stepsize2/2);
             printf("Computing %i/%i likelihood function.\n",i*steps2+j+1,steps1*steps2);
             h2_nll.Fill(var1->getVal(),var2->getVal(),2*nll->getVal());
         }
@@ -974,7 +979,7 @@ void FitterTrans::SaveParameters(char* file)
         pdf_a->setType(i);
         pdf_a->plotOn(frame,RooFit::Project(RooArgSet(*tht,*thb,*phit)));
 
-        parameters[i-1] = frame->chiSquare(numFitParameters);
+        parameters[i-1] = frame->chiSquare(11);
 
         delete frame;
     }
@@ -1034,7 +1039,7 @@ void FitterTrans::SaveParameters(char* file)
 
     for(Int_t i = 0; i < numParameters; i++)
     {
-        fprintf(pFile,"%.3f ",parameters[i]);
+        fprintf(pFile,"%.5f ",parameters[i]);
         if (separators[i] == 1)
             fprintf(pFile,"| ");
         else if (separators[i] == 2)

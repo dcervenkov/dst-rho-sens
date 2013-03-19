@@ -6,11 +6,13 @@ DSRho*/data
 DSRho*/bin
 DSRho*/obj
 DSRho*/plots*
-DSRho*/results
+DSRho*/results*
 DSRho*/temp
 DSRho*/log*
 *.save
 *.layout
+*.depend
 *.tgz
+nohup.out
 old_eclipse_stuff
 DSRhoFit/scripts/hist_add
