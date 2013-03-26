@@ -86,9 +86,9 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     rt = new RooRealVar("rt","rt",par_input[7],0,0.2); /// eq. (100) in BN419 approximates this
 
     /// s is strong phase; delta_polarization in BN419
-    sp = new RooRealVar("sp","sp",par_input[8],-PI,PI);
-    s0 = new RooRealVar("s0","s0",par_input[9],-PI,PI);
-    st = new RooRealVar("st","st",par_input[10],-PI,PI);
+    sp = new RooRealVar("sp","sp",par_input[8],-3*PI/2,3*PI/2);
+    s0 = new RooRealVar("s0","s0",par_input[9],-3*PI/2,3*PI/2);
+    st = new RooRealVar("st","st",par_input[10],-3*PI/2,3*PI/2);
 
     pdf_a = new DSRhoPDF("pdf_a","pdf_a","a",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
     pdf_b = new DSRhoPDF("pdf_b","pdf_b","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);

@@ -120,4 +120,12 @@ void graphs() {
     c_rs_errors->cd(6);
     tree->Draw("ste");
 
+    TCanvas* c_phiw = new TCanvas("c_phiw","phiw",1200,400);
+    c_phiw->Divide(3,1);
+    c_phiw->cd(1);
+    tree->Draw("(phiw-phiwi)");
+    c_phiw->cd(2);
+    tree->Draw("(phiw-phiwi)/phiwe");
+    c_phiw->cd(3);
+    tree->Draw("phiwe");
 }
