@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
         printf("Usage: DSRhoFit inputFile outputFile hp hpa h0 hma [doFit] [doPlot]\n");
         #endif
         #ifdef TRANSVERSITY
-        printf("Usage: DSRhoFit inputFile outputFile hp hpa h0 hma phiw rp r0 rm sp s0 sm doFit doPlot\n");
+        printf("Usage: DSRhoFit inputFile outputFile ap apa a0 ata phiw rp r0 rt sp s0 st doFit doPlot\n");
         #endif
         return 1;
     }
@@ -127,18 +127,15 @@ int main(int argc, char* argv[])
     #ifdef TRANSVERSITY
     RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit,dt,decType));
     dataSet = RooDataSet::read(inputFile,RooArgList(tht,thb,phit,dt,decType));
-    if(doFit == 2)
-    {
-        ConvertBetweenHelAndTrans(par_input);
-        //ToyProcessTrans(dataSet,par_input,doFit,doPlot);
+    if(doFit == 2){
         ToyProcessTrans(dataSet,par_input,doFit,doPlot);
-    }
-    else if(doFit == 3)
-    {
+    }else if(doFit == 3){
         ConvertBetweenHelAndTrans(par_input);
-    }
-    else
-    {
+    }else if(doFit == 4){
+        FitterTrans* fitter = new FitterTrans(dataSet,par_input);
+        fitter->GenerateDataSet(1000);
+        fitter->GetDataSet()->write(inputFile);
+    }else{
         //ConvertBetweenHelAndTrans(par_input);
         ProcessTrans(dataSet,par_input,doFit,doPlot);
     }

@@ -196,7 +196,6 @@ void FitterTrans::GenerateDataSet(Int_t numEvents)
     temp_dataSet->addColumn(*decType);
     dataSet->append(*temp_dataSet);
     delete temp_dataSet;
-    dataSet->write("data/dataset_from_pdf");
 }
 
 void FitterTrans::CreateBinnedDataSet(const char* type)
@@ -1027,6 +1026,25 @@ void FitterTrans::SaveParameters(char* file)
     parameters[32] = rt->getVal();
     parameters[33] = rt->getError();
     parameters[34] = par_input[8];
+    /// To prevent the fitter from becoming stuck at the limit of strong phase
+    /// range, the range has been extended from the [-PI,PI] interval.
+    /// This is kosher as the strong phase is of course periodic.
+    /// The following code ensures the final result is in the [-PI,PI] interval.
+    if(sp->getVal() > PI){
+        sp->setVal(sp->getVal()-PI);
+    }else if(sp->getVal() < -PI){
+        sp->setVal(sp->getVal()+PI);
+    }
+    if(s0->getVal() > PI){
+        s0->setVal(s0->getVal()-PI);
+    }else if(s0->getVal() < -PI){
+        s0->setVal(s0->getVal()+PI);
+    }
+    if(st->getVal() > PI){
+        st->setVal(st->getVal()-PI);
+    }else if(st->getVal() < -PI){
+        st->setVal(st->getVal()+PI);
+    }
     parameters[35] = sp->getVal();
     parameters[36] = sp->getError();
     parameters[37] = par_input[9];
