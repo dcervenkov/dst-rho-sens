@@ -1,4 +1,34 @@
-const Double_t PI = 3.1415;
+#include <stdio.h>
+
+#include "TROOT.h"
+#include "TStyle.h"
+#include "TApplication.h"
+#include "TFile.h"
+#include "TCanvas.h"
+#include "TPad.h"
+#include "TTree.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TStopwatch.h"
+#include "TMath.h"
+#include "TComplex.h"
+
+#include "RooFit.h"
+#include "RooGlobalFunc.h"
+#include "RooRealVar.h"
+#include "RooCategory.h"
+#include "RooPlot.h"
+#include "RooDataSet.h"
+#include "RooArgSet.h"
+
+#include "DSRhoGraphs.h"
+
+int main() {
+    RooDataSet* dataset = readDataSet("fit5.res");
+    const RooArgSet* args = dataset->get();
+    args->Print();
+    return 0;
+}
 
 RooDataSet* readDataSet(const char* filename){
     RooRealVar chi2a ("chi2a","chi2a",0,10);
@@ -67,10 +97,4 @@ RooDataSet* readDataSet(const char* filename){
     argList.add(RooArgList(sti,st,ste));
     dataset = RooDataSet::read(filename,argList);
     return dataset;
-}
-
-void rgraphs() {
-    RooDataSet* dataset = readDataSet("fit5.res");
-    RooArgSet* args = dataset->get();
-    args->Print();
 }
