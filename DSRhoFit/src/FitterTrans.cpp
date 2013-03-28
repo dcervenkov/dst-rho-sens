@@ -86,9 +86,9 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     rt = new RooRealVar("rt","rt",par_input[7],0,0.2); /// eq. (100) in BN419 approximates this
 
     /// s is strong phase; delta_polarization in BN419
-    sp = new RooRealVar("sp","sp",par_input[8],-3*PI/2,3*PI/2);
-    s0 = new RooRealVar("s0","s0",par_input[9],-3*PI/2,3*PI/2);
-    st = new RooRealVar("st","st",par_input[10],-3*PI/2,3*PI/2);
+    sp = new RooRealVar("sp","sp",par_input[8],-3*PI,3*PI);
+    s0 = new RooRealVar("s0","s0",par_input[9],-3*PI,3*PI);
+    st = new RooRealVar("st","st",par_input[10],-3*PI,3*PI);
 
     pdf_a = new DSRhoPDF("pdf_a","pdf_a","a",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
     pdf_b = new DSRhoPDF("pdf_b","pdf_b","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
@@ -156,7 +156,7 @@ Int_t FitterTrans::Fit()
     //TPluginManager* gPluginMgr = new TPluginManager;
     //gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
     //result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
-    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit"),RooFit::Minos(),RooFit::Hesse(),RooFit::Strategy(1));//,RooFit::NumCPU(2));
+    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit"),RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1));//,RooFit::NumCPU(2));
     //result->Print();
 }
 
@@ -988,6 +988,7 @@ void FitterTrans::SaveParameters(char* file)
     if (pFile == NULL)
     {
         printf("ERROR: couldn't open file %s for writing!\n",file);
+        delete[] parameters;
         return;
     }
 
@@ -1028,22 +1029,22 @@ void FitterTrans::SaveParameters(char* file)
     parameters[34] = par_input[8];
     /// To prevent the fitter from becoming stuck at the limit of strong phase
     /// range, the range has been extended from the [-PI,PI] interval.
-    /// This is kosher as the strong phase is of course periodic.
+    /// This is kosher as the strong phase is of course 2*PI periodic.
     /// The following code ensures the final result is in the [-PI,PI] interval.
     if(sp->getVal() > PI){
-        sp->setVal(sp->getVal()-PI);
+        sp->setVal(sp->getVal()-2*PI);
     }else if(sp->getVal() < -PI){
-        sp->setVal(sp->getVal()+PI);
+        sp->setVal(sp->getVal()+2*PI);
     }
     if(s0->getVal() > PI){
-        s0->setVal(s0->getVal()-PI);
+        s0->setVal(s0->getVal()-2*PI);
     }else if(s0->getVal() < -PI){
-        s0->setVal(s0->getVal()+PI);
+        s0->setVal(s0->getVal()+2*PI);
     }
     if(st->getVal() > PI){
-        st->setVal(st->getVal()-PI);
+        st->setVal(st->getVal()-2*PI);
     }else if(st->getVal() < -PI){
-        st->setVal(st->getVal()+PI);
+        st->setVal(st->getVal()+2*PI);
     }
     parameters[35] = sp->getVal();
     parameters[36] = sp->getError();
@@ -1065,6 +1066,7 @@ void FitterTrans::SaveParameters(char* file)
     }
     fprintf(pFile,"\n");
     fclose (pFile);
+    delete[] parameters;
 }
 
 RooDataHist* FitterTrans::GetBinnedDataSet()
