@@ -1,3 +1,1 @@
-const Double_t PI = 3.1415;
-
-RooDataSet* readDataSet(const char* filename);
+static const double PI = 3.141592;

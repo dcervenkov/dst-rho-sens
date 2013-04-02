@@ -30,9 +30,25 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add directory="include" />
+			<Add directory="/usr/local/include/root" />
 		</Compiler>
+		<Linker>
+			<Add library="/usr/local/lib/root/libCore.so" />
+			<Add library="/usr/local/lib/root/libGpad.so" />
+			<Add library="/usr/local/lib/root/libHist.so" />
+			<Add library="/usr/local/lib/root/libMathCore.so" />
+			<Add library="/usr/local/lib/root/libMinuit.so" />
+			<Add library="/usr/local/lib/root/libMinuit2.so" />
+			<Add library="/usr/local/lib/root/libRooFit.so" />
+			<Add library="/usr/local/lib/root/libRooFitCore.so" />
+			<Add library="/usr/local/lib/root/libTree.so" />
+			<Add directory="/usr/local/lib/root" />
+		</Linker>
 		<Unit filename="include/DSRhoGraphs.h" />
+		<Unit filename="include/ObservablesCollection.h" />
 		<Unit filename="src/DSRhoGraphs.cpp" />
+		<Unit filename="src/ObservablesCollection.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
