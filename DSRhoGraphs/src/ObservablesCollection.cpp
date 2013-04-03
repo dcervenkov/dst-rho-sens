@@ -42,13 +42,13 @@ ObservablesCollection::ObservablesCollection()
     rte = new RooRealVar("rte","rte",0,1);
 
     sp = new RooRealVar("sp","sp",-PI,PI);
-    spi = new RooRealVar("spi","spi",-PI,PI);
+    spi = new RooRealVar("spi","spi",-2*PI,2*PI);
     spe = new RooRealVar("spe","spe",0,20);
     s0 = new RooRealVar("s0","s0",-PI,PI);
-    s0i = new RooRealVar("s0i","s0i",-PI,PI);
+    s0i = new RooRealVar("s0i","s0i",-2*PI,2*PI);
     s0e = new RooRealVar("s0e","s0e",0,20);
     st = new RooRealVar("st","st",-PI,PI);
-    sti = new RooRealVar("sti","sti",-PI,PI);
+    sti = new RooRealVar("sti","sti",-2*PI,2*PI);
     ste = new RooRealVar("ste","ste",0,20);
 }
 
@@ -80,7 +80,6 @@ RooArgList ObservablesCollection::CreateArgList()
 
 void ObservablesCollection::BindToDataset(RooDataSet* dataset){
     const RooArgSet* vars = dataset->get();
-
     chi2a = static_cast<RooRealVar*>(vars->find(chi2a->GetName()));
     chi2ab = static_cast<RooRealVar*>(vars->find(chi2ab->GetName()));
     chi2b = static_cast<RooRealVar*>(vars->find(chi2b->GetName()));
@@ -250,3 +249,28 @@ void ObservablesCollection::CreateResidualsAndPulls(RooDataSet* dataset){
     pulls[12] = pull_st;
 }
 
+void ObservablesCollection::AdjustInputSForPeriodicity(RooDataSet*& old_dataset){
+    RooDataSet* dataset = static_cast<RooDataSet*>(old_dataset->emptyClone());
+    for(int i = 0; i < old_dataset->sumEntries(); i++){
+        old_dataset->get(i);
+        if((sp->getVal()-spi->getVal()) > PI){
+            spi->setVal(spi->getVal() +2*PI);
+        } else if ((sp->getVal()-spi->getVal()) < -PI) {
+            spi->setVal(spi->getVal() -2*PI);
+        }
+        if((s0->getVal()-s0i->getVal()) > PI){
+            s0i->setVal(s0i->getVal() +2*PI);
+        } else if ((s0->getVal()-s0i->getVal()) < -PI) {
+            s0i->setVal(s0i->getVal() -2*PI);
+        }
+        if((st->getVal()-sti->getVal()) > PI){
+            sti->setVal(sti->getVal() +2*PI);
+        } else if ((st->getVal()-sti->getVal()) < -PI) {
+            sti->setVal(sti->getVal() -2*PI);
+        }
+        dataset->add(*(old_dataset->get()));
+    }
+    this->BindToDataset(dataset);
+    delete old_dataset;
+    old_dataset = dataset;
+}

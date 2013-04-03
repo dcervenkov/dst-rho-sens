@@ -81,9 +81,9 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     dm = new RooRealVar("dm","dm",0.507e12);
     phiw = new RooRealVar("phiw","phiw",par_input[4],0,2*PI);
 
-    rp = new RooRealVar("rp","rp",par_input[5],0,0.2);
-    r0 = new RooRealVar("r0","r0",par_input[6],0,0.2);
-    rt = new RooRealVar("rt","rt",par_input[7],0,0.2); /// eq. (100) in BN419 approximates this
+    rp = new RooRealVar("rp","rp",par_input[5],0.001,0.2);
+    r0 = new RooRealVar("r0","r0",par_input[6],0.001,0.2);
+    rt = new RooRealVar("rt","rt",par_input[7],0.001,0.2); /// eq. (100) in BN419 approximates this
 
     /// s is strong phase; delta_polarization in BN419
     sp = new RooRealVar("sp","sp",par_input[8],-3*PI,3*PI);

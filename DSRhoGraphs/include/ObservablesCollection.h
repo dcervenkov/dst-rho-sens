@@ -18,6 +18,7 @@ class ObservablesCollection
         RooArgList CreateArgList();
         void BindToDataset(RooDataSet*);
         void CreateResidualsAndPulls(RooDataSet* dataset);
+        void AdjustInputSForPeriodicity(RooDataSet*& dataset);
 
 
         RooRealVar* chi2a;
