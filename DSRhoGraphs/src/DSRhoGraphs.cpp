@@ -47,7 +47,7 @@ int main(int argc, char* argv[]){
     }
     #endif
     ObservablesCollection c;
-    RooDataSet* dataset = RooDataSet::read("data/fit6.res",c.CreateArgList());
+    RooDataSet* dataset = RooDataSet::read("data/fit7a.res",c.CreateArgList());
     c.BindToDataset(dataset);
     c.AdjustInputSForPeriodicity(dataset);
     c.CreateResidualsAndPulls(dataset);

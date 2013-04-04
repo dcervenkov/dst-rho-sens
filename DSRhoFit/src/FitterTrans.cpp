@@ -153,11 +153,7 @@ FitterTrans::~FitterTrans()
 Int_t FitterTrans::Fit()
 {
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
-    //TPluginManager* gPluginMgr = new TPluginManager;
-    //gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
-    //result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
-    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit"),RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1));//,RooFit::NumCPU(2));
-    //result->Print();
+    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"),RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(4));
 }
 
 void FitterTrans::GenerateDataSet(Int_t numEvents)
@@ -885,7 +881,7 @@ void FitterTrans::SaveNllPlot(RooRealVar* var)
 
     TH1F h1_nll(name,name,steps,var->getMin(),var->getMax());
     RooAbsReal* nll;
-    nll = simPdf->createNLL(*dataSet,RooFit::NumCPU(2));
+    nll = simPdf->createNLL(*dataSet,RooFit::NumCPU(4));
 
     for(Int_t i = 0; i < steps; i++)
     {
@@ -966,6 +962,8 @@ void FitterTrans::SaveParameters(char* file)
     const Int_t numParameters = 43;
     Double_t* parameters = new Double_t[numParameters];
 
+    const Int_t org_pdf_type = pdf_a->getType();
+
     /// Getting 1D chi^2 for all 4 decay types
     for(int i = 1; i <= 4; i++)
     {
@@ -982,6 +980,8 @@ void FitterTrans::SaveParameters(char* file)
 
         delete frame;
     }
+
+    pdf_a->setType(org_pdf_type);
 
     FILE* pFile;
     pFile = fopen (file,"w");

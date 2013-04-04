@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
         ConvertBetweenHelAndTrans(par_input);
     }else if(doFit == 4){
         FitterTrans* fitter = new FitterTrans(dataSet,par_input);
-        fitter->GenerateDataSet(1000);
+        fitter->GenerateDataSet(100000);
         fitter->GetDataSet()->write(inputFile);
     }else{
         //ConvertBetweenHelAndTrans(par_input);
@@ -154,10 +154,7 @@ int main(int argc, char* argv[])
 
 int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t doPlot)
 {
-
-    //FitterTransTIndep* fitter = new FitterTransTIndep(dataSet,par_input);
     FitterTrans* fitter = new FitterTrans(dataSet,par_input);
-//    fitter->GenerateDataSet(100000);
 
     if(doFit)
     {
@@ -174,39 +171,18 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t do
         fitter->FreeParameter("s0");
         fitter->FreeParameter("st");
         fitter->Fit();
-        //fitter->PrintParameter("at");
-//        fitter->PrintParameter("hp");
-//        fitter->PrintParameter("hm");
-//        fitter->PrintParameter("phiw");
-
-//        fitter->ComputeChi2();
-
-//        Double_t mychi2 = fitter->SaveChi2Maps("a");
-//        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
-
-////        fitter->ComputeChi2("a");
-//        fitter->GetChi2("a");
-////        fitter->ComputeChi2("b");
-//        fitter->GetChi2("b");
-////        fitter->ComputeChi2("ab");
-//        fitter->GetChi2("ab");
-////        fitter->ComputeChi2("bb");
-//        fitter->GetChi2("bb");
-
         fitter->SaveParameters(outputFile);
     }
-    //else
-        //fitter->ComputeChi2();
 
     if(doPlot == kTRUE)
     {
         //SaveChi2Maps(fitter->GetBinnedDataSet(),dataSet->numEntries(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
 //        Double_t mychi2 = fitter->SaveChi2Maps("a");
 //        fitter->SaveResiduals();
-//        fitter->SaveNllPlot("phiw");
+        fitter->SaveNllPlot("st");
 //        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
 
-        SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
+        //SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
         //SavePlotsTIndep(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
     }
 
