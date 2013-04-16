@@ -7,9 +7,11 @@ import time
 
 max_jobs = 13
 root_path = "../"
-data_path = "data/"
+data_path = "data_gen/"
 results_path = "results/"
 log_path = "logs/"
+do_fit = "1"
+do_plot = "0"
 
 pars = ['','','','','','','','','','','']
 
@@ -44,7 +46,7 @@ def parseMetafile(dataset,pars):
 
 def createCommand(dataset,pars):
     command = 'nice bin/Release/DSRhoFit ' + dataset + ' ' + dataset.replace(data_path,results_path) + \
-	      '.res ' + ' '.join(pars) + ' 1 0' +' > ' + dataset.replace(data_path,log_path) + '.log ' + '2>&1 &'
+	      '.res ' + ' '.join(pars) + ' ' + do_fit + ' ' + do_plot +' > ' + dataset.replace(data_path,log_path) + '.log ' + '2>&1 &'
     return command
 
 def numberOfJobs():

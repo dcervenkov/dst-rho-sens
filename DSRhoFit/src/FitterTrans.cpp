@@ -153,7 +153,7 @@ FitterTrans::~FitterTrans()
 Int_t FitterTrans::Fit()
 {
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
-    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"),RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(4));
+    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit"),RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(4));
 }
 
 void FitterTrans::GenerateDataSet(Int_t numEvents)
@@ -1058,7 +1058,13 @@ void FitterTrans::SaveParameters(char* file)
 
     for(Int_t i = 0; i < numParameters; i++)
     {
-        fprintf(pFile,"%.5f ",parameters[i]);
+        /// These parameters can be both positive and negative therefore the
+        /// added + in front of positive numbers keeps the columns aligned
+        if(i==34||i==35||i==37||i==38||i==40||i==41){
+            fprintf(pFile,"%+.5f ",parameters[i]);
+        } else {
+            fprintf(pFile,"%.5f ",parameters[i]);
+        }
         if (separators[i] == 1)
             fprintf(pFile,"| ");
         else if (separators[i] == 2)
