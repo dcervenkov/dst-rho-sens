@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "TROOT.h"
+#include "TEnv.h"
 #include "TStyle.h"
 #include "TApplication.h"
 #include "TFile.h"
@@ -48,8 +49,8 @@ int main(int argc, char* argv[]){
     #endif
     ObservablesCollection c;
 //    RooDataSet* dataset = RooDataSet::read("data/fit7a.res",c.CreateArgList());
-    RooDataSet* dataset = RooDataSet::read("data/f",c.CreateArgList());
-//    RooDataSet* dataset = RooDataSet::read("data/fit_gen.res",c.CreateArgList());
+//    RooDataSet* dataset = RooDataSet::read("data/f",c.CreateArgList());
+    RooDataSet* dataset = RooDataSet::read("data/fit_gen7.res",c.CreateArgList());
     c.BindToDataset(dataset);
     c.AdjustInputSForPeriodicity(dataset);
     c.CreateResidualsAndPulls(dataset);
@@ -170,6 +171,15 @@ int main(int argc, char* argv[]){
         dataset->plotOn(frame,RooFit::DrawOption("BX"));
         frame->Draw("BX");
     }
+
+    gEnv->SetValue("Canvas.PrintDirectory","plots");
+    c_amp_pulls->SaveAs(".gif");
+    c_amp_residuals->SaveAs(".gif");
+    c_amp_errors->SaveAs(".gif");
+    c_phiw->SaveAs(".gif");
+    c_rs_pulls->SaveAs(".gif");
+    c_rs_residuals->SaveAs(".gif");
+    c_rs_errors->SaveAs(".gif");
 
     #ifdef GRAPHIC
     printf("\nProgram execution has finished.\n");
