@@ -42,13 +42,13 @@ ObservablesCollection::ObservablesCollection()
     rte = new RooRealVar("rte","rte",0,1);
 
     sp = new RooRealVar("sp","sp",-PI,PI);
-    spi = new RooRealVar("spi","spi",-2*PI,2*PI);
+    spi = new RooRealVar("spi","spi",-1*PI,1*PI);
     spe = new RooRealVar("spe","spe",0,20);
     s0 = new RooRealVar("s0","s0",-PI,PI);
-    s0i = new RooRealVar("s0i","s0i",-2*PI,2*PI);
+    s0i = new RooRealVar("s0i","s0i",-1*PI,1*PI);
     s0e = new RooRealVar("s0e","s0e",0,20);
     st = new RooRealVar("st","st",-PI,PI);
-    sti = new RooRealVar("sti","sti",-2*PI,2*PI);
+    sti = new RooRealVar("sti","sti",-1*PI,1*PI);
     ste = new RooRealVar("ste","ste",0,20);
 }
 
