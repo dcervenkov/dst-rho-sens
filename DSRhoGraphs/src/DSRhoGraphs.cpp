@@ -57,6 +57,15 @@ int main(int argc, char* argv[]){
     c.AdjustInputSForPeriodicity(dataset);
     c.CreateResidualsAndPulls(dataset);
 
+
+    ObservablesCollection c_all;
+//    RooDataSet* dataset = RooDataSet::read("data/fit7a.res",c.CreateArgList());
+//    RooDataSet* dataset = RooDataSet::read("data/f",c.CreateArgList());
+    RooDataSet* dataset_all = RooDataSet::read("data/fit_gen7all.res",c_all.CreateArgList());
+    c_all.BindToDataset(dataset_all);
+    c_all.AdjustInputSForPeriodicity(dataset_all);
+    c_all.CreateResidualsAndPulls(dataset_all);
+
 //    Int_t plotMap[] = {1,4,2,5,3,6};
 //    RooGaussian* gaus[13];
 //    RooRealVar mean("mean","mean",0,-1,1);
@@ -183,7 +192,22 @@ int main(int argc, char* argv[]){
 //    c_rs_residuals->SaveAs(".gif");
 //    c_rs_errors->SaveAs(".gif");
 
-    Map(dataset);
+    std::vector<TH2D*> maps_ok = Map(dataset);
+    std::vector<TH2D*> maps_all = Map(dataset_all);
+    std::vector<TH2D*> maps_div = Map(dataset);
+
+    TCanvas* canvas = new TCanvas("canvas","canvas",1200,1200);
+    canvas->Divide(3,3);
+    for(int i = 0; i < maps_ok.size(); i++)
+    {
+        canvas->cd(i+1);
+        maps_ok[i]->Draw("TEXT");
+        canvas->cd(i+1+3);
+        maps_all[i]->Draw("TEXT");
+        canvas->cd(i+1+6);
+        maps_div[i]->Divide(maps_all[i]);
+        maps_div[i]->Draw("TEXT");
+    }
 
     #ifdef GRAPHIC
     printf("\nProgram execution has finished.\n");
@@ -192,7 +216,7 @@ int main(int argc, char* argv[]){
     return 0;
 }
 
-int Map(RooDataSet* dataset){
+std::vector<TH2D*> Map(RooDataSet* dataset){
     const RooArgSet* args = dataset->get();
     RooArgList vars(*args->find("spi"),*args->find("s0i"),*args->find("sti"));
     std::vector<TH2D*> maps((vars.getSize()*(vars.getSize()-1))/2);
@@ -217,19 +241,19 @@ int Map(RooDataSet* dataset){
         for (int j = 0; j < vars.getSize(); j++){
             for (int i = 0; i < j; i++){
                 maps[counter++]->Fill((Double_t)((dynamic_cast<RooRealVar*>(&vars[i]))->getValV()),(Double_t)((dynamic_cast<RooRealVar*>(&vars[j]))->getValV()),1);
-                printf("%s: %f, %s: %f, w: %i\n",(dynamic_cast<RooRealVar*>(&vars[i]))->GetName(),(Double_t)((dynamic_cast<RooRealVar*>(&vars[i]))->getValV()),\
-                       (dynamic_cast<RooRealVar*>(&vars[j]))->GetName(),(Double_t)((dynamic_cast<RooRealVar*>(&vars[j]))->getValV()),1);
+//                printf("%s: %f, %s: %f, w: %i\n",(dynamic_cast<RooRealVar*>(&vars[i]))->GetName(),(Double_t)((dynamic_cast<RooRealVar*>(&vars[i]))->getValV()),\
+//                       (dynamic_cast<RooRealVar*>(&vars[j]))->GetName(),(Double_t)((dynamic_cast<RooRealVar*>(&vars[j]))->getValV()),1);
             }
         }
     }
 
-    TCanvas* c1 = new TCanvas("c1","c1",1800,600);
-    c1->Divide(3);
-    for (int i = 0; i < vars.getSize(); i++){
-        c1->cd(i+1);
-        maps[i]->Draw("TEXT");
-    }
-    return 0;
+//    TCanvas* c1 = new TCanvas("c1","c1",1800,600);
+//    c1->Divide(3);
+//    for (int i = 0; i < vars.getSize(); i++){
+//        c1->cd(i+1);
+//        maps[i]->Draw("TEXT");
+//    }
+    return maps;
 
 }
 
