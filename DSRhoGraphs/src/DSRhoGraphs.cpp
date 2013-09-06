@@ -49,6 +49,11 @@ int main(int argc, char* argv[]){
         argv[i] = rootapp->Argv(i);
     }
     #endif
+
+    gStyle->SetOptStat(0);
+    gStyle->SetPaintTextFormat("3.2g");
+    gStyle->SetMarkerSize(2);
+
     ObservablesCollection c;
 //    RooDataSet* dataset = RooDataSet::read("data/fit7a.res",c.CreateArgList());
 //    RooDataSet* dataset = RooDataSet::read("data/f",c.CreateArgList());
@@ -59,8 +64,6 @@ int main(int argc, char* argv[]){
 
 
     ObservablesCollection c_all;
-//    RooDataSet* dataset = RooDataSet::read("data/fit7a.res",c.CreateArgList());
-//    RooDataSet* dataset = RooDataSet::read("data/f",c.CreateArgList());
     RooDataSet* dataset_all = RooDataSet::read("data/fit_gen7all.res",c_all.CreateArgList());
     c_all.BindToDataset(dataset_all);
     c_all.AdjustInputSForPeriodicity(dataset_all);
@@ -220,23 +223,23 @@ std::vector<TH2D*> Map(RooDataSet* dataset){
     const RooArgSet* args = dataset->get();
     RooArgList vars(*args->find("spi"),*args->find("s0i"),*args->find("sti"));
     std::vector<TH2D*> maps((vars.getSize()*(vars.getSize()-1))/2);
-    printf("maps.size = %i\n",maps.size());
     TString name;
     int counter = 0;
     for (int j = 0; j < vars.getSize(); j++){
         for (int i = 0; i < j; i++){
-            name = "h2_err_map_";
+            name = "map_";
             name += vars[i].GetName();
             name += "_";
             name += vars[j].GetName();
-            maps[counter++] = new TH2D(name,name,6,(dynamic_cast<RooRealVar*>(&vars[i]))->getMin(),(dynamic_cast<RooRealVar*>(&vars[i]))->getMax() \
+            maps[counter] = new TH2D(name,name,6,(dynamic_cast<RooRealVar*>(&vars[i]))->getMin(),(dynamic_cast<RooRealVar*>(&vars[i]))->getMax() \
                                        ,6,(dynamic_cast<RooRealVar*>(&vars[j]))->getMin(),(dynamic_cast<RooRealVar*>(&vars[j]))->getMax());
+            maps[counter]->GetXaxis()->SetTitle(vars[i].GetName());
+            maps[counter]->GetYaxis()->SetTitle(vars[j].GetName());
+            counter++;
         }
     }
     for(int i = 0; i < dataset->sumEntries(); i++){
         args = dataset->get(i);
-        //printf("sti = %f\n",args->getRealValue("sti"));
-
         counter = 0;
         for (int j = 0; j < vars.getSize(); j++){
             for (int i = 0; i < j; i++){
