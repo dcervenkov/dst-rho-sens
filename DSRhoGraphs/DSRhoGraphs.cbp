@@ -11,6 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="data/fit_gen10.res data/fit_gen10all.res" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -55,7 +56,7 @@
 			<lib_finder disable_auto="1" />
 			<debugger />
 			<DoxyBlocks>
-				<comment_style block="0" line="0" />
+				<comment_style block="5" line="2" />
 				<doxyfile_project />
 				<doxyfile_build />
 				<doxyfile_warnings />

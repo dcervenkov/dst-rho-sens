@@ -15,7 +15,7 @@
 #include "TIterator.h"
 #include "TLine.h"
 
-#include "DSRhoPDF.h"
+#include "DSRhoPDFRConstraint.h"
 #include "FitterTrans.h"
 
 #include "TH1D.h"
@@ -90,10 +90,15 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     s0 = new RooRealVar("s0","s0",par_input[9],-3*PI,3*PI);
     st = new RooRealVar("st","st",par_input[10],-3*PI,3*PI);
 
-    pdf_a = new DSRhoPDF("pdf_a","pdf_a","a",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
-    pdf_b = new DSRhoPDF("pdf_b","pdf_b","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
-    pdf_ab = new DSRhoPDF("pdf_ab","pdf_ab","ab",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
-    pdf_bb = new DSRhoPDF("pdf_bb","pdf_bb","bb",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+//    pdf_a  = new DSRhoPDF("pdf_a" ,"pdf_a" ,"a" ,*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+//    pdf_b  = new DSRhoPDF("pdf_b" ,"pdf_b" ,"b" ,*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+//    pdf_ab = new DSRhoPDF("pdf_ab","pdf_ab","ab",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+//    pdf_bb = new DSRhoPDF("pdf_bb","pdf_bb","bb",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+
+    pdf_a  = new DSRhoPDFRConstraint("pdf_a" ,"pdf_a" ,"a" ,*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*sp,*s0,*st);
+    pdf_b  = new DSRhoPDFRConstraint("pdf_b" ,"pdf_b" ,"b" ,*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*sp,*s0,*st);
+    pdf_ab = new DSRhoPDFRConstraint("pdf_ab","pdf_ab","ab",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*sp,*s0,*st);
+    pdf_bb = new DSRhoPDFRConstraint("pdf_bb","pdf_bb","bb",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*sp,*s0,*st);
 
     simPdf = new RooSimultaneous("simPdf","simPdf",*decType);
     simPdf->addPdf(*pdf_a,"a");
@@ -153,7 +158,7 @@ FitterTrans::~FitterTrans()
 Int_t FitterTrans::Fit()
 {
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
-    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit"),RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(4));
+    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"),RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(1));
 }
 
 void FitterTrans::GenerateDataSet(Int_t numEvents)
@@ -264,7 +269,7 @@ Double_t FitterTrans::GetChi2(const char* type)
     //if(dataSet_binned == NULL)
         CreateBinnedDataSet(type);
 
-    DSRhoPDF* pdf = 0;
+    DSRhoPDFRConstraint* pdf = 0;
 
     if(strcmp(type,"a") == 0)       pdf = pdf_a;
     else if(strcmp(type,"b") == 0)  pdf = pdf_b;
@@ -328,7 +333,7 @@ Double_t FitterTrans::GetChi2(const char* type)
     return mychi2;
 }
 
-Double_t FitterTrans::GetVPrecise(DSRhoPDF* pdf)
+Double_t FitterTrans::GetVPrecise(DSRhoPDFRConstraint* pdf)
 {
     /// The pdf seems to be varying quite rapidly at some places, so the approximation of constant pdf in a voxel is sometimes bad.
     /// This function gives a better approximation of a pdf value in a voxel by averaging through multiple points inside it.
@@ -380,7 +385,7 @@ Double_t FitterTrans::GetVPrecise(DSRhoPDF* pdf)
     return v;
 }
 
-Double_t FitterTrans::GetVPrecise1D(const int i,DSRhoPDF* pdf,RooDataSet* loc_dataset)
+Double_t FitterTrans::GetVPrecise1D(const int i,DSRhoPDFRConstraint* pdf,RooDataSet* loc_dataset)
 {
     const Double_t num_subbins = 5;
 
@@ -528,7 +533,7 @@ void FitterTrans::SaveResiduals()
         c_residuals->SaveAs(path);
     }
 
-    DSRhoPDF* pdf = 0;
+    DSRhoPDFRConstraint* pdf = 0;
     /// Loop for dt_{a,ab,b,bb}
     for(int i = 3; i < 7; i++)
     {
@@ -683,7 +688,7 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 //    Int_t var3_bins = phit_bins;
 //    Int_t var4_bins = dt_bins;
 //
-//    DSRhoPDF* pdf = 0;
+//    DSRhoPDFRConstraint* pdf = 0;
 //
 //    TFile* file = new TFile("plots/plots.root","RECREATE");
 //    TCanvas* c2 = new TCanvas("c2","c2",800,600);

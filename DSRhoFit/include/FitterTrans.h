@@ -1,7 +1,7 @@
 #ifndef FITTERTRANS_H
 #define FITTERTRANS_H
 
-#include "DSRhoPDF.h"
+#include "DSRhoPDFRConstraint.h"
 
 class FitterTrans
 {
@@ -19,7 +19,7 @@ class FitterTrans
         RooRealVar* GetThb(){return thb;};
         RooRealVar* GetPhit(){return phit;};
         RooRealVar* GetDt(){return dt;};
-        DSRhoPDF* GetPdf(){return pdf_a;};
+        DSRhoPDFRConstraint* GetPdf(){return pdf_a;};
         RooDataHist* GetBinnedDataSet();
         RooDataSet* GetReducedDataSet();
         RooDataSet* GetDataSet(){return dataSet;};
@@ -41,8 +41,8 @@ class FitterTrans
 
         void CreateReducedDataSet(const char* type);
         void CreateBinnedDataSet(const char* type);
-        Double_t GetVPrecise(DSRhoPDF* pdf);
-        Double_t GetVPrecise1D(const int i,DSRhoPDF* pdf,RooDataSet* loc_dataset);
+        Double_t GetVPrecise(DSRhoPDFRConstraint* pdf);
+        Double_t GetVPrecise1D(const int i,DSRhoPDFRConstraint* pdf,RooDataSet* loc_dataset);
         Double_t GetVPrecise1D(const int i,RooSimultaneous* spdf,RooDataSet* loc_dataset);
 
         RooDataSet* dataSet;
@@ -98,10 +98,10 @@ class FitterTrans
         RooRealVar* rp;
         RooRealVar* r0;
 
-        DSRhoPDF* pdf_a;
-        DSRhoPDF* pdf_b;
-        DSRhoPDF* pdf_ab;
-        DSRhoPDF* pdf_bb;
+        DSRhoPDFRConstraint* pdf_a;
+        DSRhoPDFRConstraint* pdf_b;
+        DSRhoPDFRConstraint* pdf_ab;
+        DSRhoPDFRConstraint* pdf_bb;
 
         /// numFitParameters holds # of NON-constant fit parameters
         RooArgSet* fitParameters;
