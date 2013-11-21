@@ -6,7 +6,7 @@
 class FitterTrans
 {
     public:
-        FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input);
+        FitterTrans(Double_t* outer_par_input);
         ~FitterTrans();
         Int_t Fit();
         Int_t ComputeChi2(const char* type);
@@ -30,7 +30,7 @@ class FitterTrans
         void GetHelParameters(Double_t* params);
         void SaveResiduals();
         void GenerateDataSet(Int_t numEvents);
-
+        void ReadDataSet(const char* file);
 
     protected:
     private:
@@ -55,6 +55,7 @@ class FitterTrans
         RooFitResult* result;
         RooSimultaneous* simPdf;
         RooArgSet* parameters;
+        RooArgList* variables;
 
         Int_t tht_bins;
         Int_t thb_bins;

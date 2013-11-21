@@ -24,12 +24,10 @@
 #include "TCanvas.h"
 #include "TFile.h"
 
-FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
+FitterTrans::FitterTrans(Double_t* outer_par_input)
 {
     gPluginMgr = new TPluginManager;
     gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
-
-    dataSet = outer_dataSet;
 
     chi2Var = 0;
     result = 0;
@@ -107,6 +105,8 @@ FitterTrans::FitterTrans(RooDataSet* outer_dataSet, Double_t* outer_par_input)
     parameters->add(*s0);
     parameters->add(*st);
 
+    variables = new RooArgList(*tht,*thb,*phit,*dt,*decType);
+
     /// numFitParameters holds # of NON-constant fit parameters
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
 
@@ -162,6 +162,10 @@ Int_t FitterTrans::Fit()
     //TCanvas c1;
     //result->correlationHist()->Draw("colz");
     //c1.SaveAs("corr.gif");
+}
+
+void FitterTrans::ReadDataSet(const char* file) {
+    dataSet = RooDataSet::read(file,*variables);
 }
 
 void FitterTrans::GenerateDataSet(Int_t numEvents)

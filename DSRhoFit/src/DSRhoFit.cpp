@@ -48,20 +48,12 @@
 #define DEBUG
 //#define VERBOSE
 //#define GRAPHIC
-//#define HELICITY
-#define TRANSVERSITY
-
-const Int_t var1_bins = 30;
-const Int_t var2_bins = 30;
-const Int_t var3_bins = 30;
-const Int_t dt_bins = 50;
 
 char* inputFile = 0;
 char* outputFile = 0;
 
-int main(int argc, char* argv[])
-{
-    #ifdef GRAPHIC
+int main(int argc, char* argv[]) {
+#ifdef GRAPHIC
     TApplication* rootapp = new TApplication("DSRhoSens",&argc,argv); //For graphic-output apps only
     /**
      * When using TApplication it removes arguments it "handles" from
@@ -72,22 +64,15 @@ int main(int argc, char* argv[])
      * they recreate the original argc and argv when using GRAPHIC.
      **/
     argc = rootapp->Argc();
-    for(int i = 0; i < argc; i++)
-    {
+    for(int i = 0; i < argc; i++) {
         argv[i] = rootapp->Argv(i);
     }
-    #endif
+#endif
 
-    if(argc != 16)
-    {
+    if(argc != 16) {
         printf("ERROR: Wrong number of arguments.\n");
-        #ifdef HELICITY
-        printf("Usage: DSRhoFit inputFile outputFile hp hpa h0 hma [doFit] [doPlot]\n");
-        #endif
-        #ifdef TRANSVERSITY
         printf("Usage: DSRhoFit inputFile outputFile ap apa a0 ata phiw rp r0 rt sp s0 st doFit doPlot\n");
-        #endif
-        return 1;
+        return 85;
     }
 
     TStopwatch timer;
@@ -117,47 +102,32 @@ int main(int argc, char* argv[])
     decType.defineType("b",3);
     decType.defineType("bb",4);
 
-    #ifdef HELICITY
-    RooDataSet* dataSet = new RooDataSet("data","data",RooArgList(tha,thb,chi,dt,decType));
-    dataSet = RooDataSet::read(inputFile,RooArgList(tha,thb,chi,dt,decType));
-    ConvertTransToHel(par_input);
-    ProcessHel(dataSet,tha,thb,chi,dt,par_input,doFit,doPlot);
-    #endif
-
-    #ifdef TRANSVERSITY
-    RooDataSet* dataSet = new RooDataSet("data","data",RooArgSet(tht,thb,phit,dt,decType));
-    dataSet = RooDataSet::read(inputFile,RooArgList(tht,thb,phit,dt,decType));
-    if(doFit == 2){
-        ToyProcessTrans(dataSet,par_input,doFit,doPlot);
-    }else if(doFit == 3){
+    if(doFit == 3) {
         ConvertBetweenHelAndTrans(par_input);
-    }else if(doFit == 4){
-        FitterTrans* fitter = new FitterTrans(dataSet,par_input);
+    } else if(doFit == 4) {
+        FitterTrans* fitter = new FitterTrans(par_input);
         fitter->GenerateDataSet(100000);
         fitter->GetDataSet()->write(inputFile);
-    }else{
+    } else {
         //ConvertBetweenHelAndTrans(par_input);
-        ProcessTrans(dataSet,par_input,doFit,doPlot);
+        FitterTrans* fitter = new FitterTrans(par_input);
+        fitter->ReadDataSet(inputFile);
+        ProcessTrans(fitter,doFit,doPlot);
     }
-    #endif
 
     timer.Stop();
     timer.Print();
 
-    #ifdef GRAPHIC
+#ifdef GRAPHIC
     printf("\nProgram execution has finished.\n");
     rootapp->Run();
-    #endif
+#endif
     return 0;
 }
 
 
-int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t doPlot)
-{
-    FitterTrans* fitter = new FitterTrans(dataSet,par_input);
-
-    if(doFit)
-    {
+int ProcessTrans(FitterTrans* fitter, Int_t doFit, Int_t doPlot) {
+    if(doFit) {
         fitter->FixAllParameters();
         fitter->FreeParameter("ap");
         fitter->FreeParameter("apa");
@@ -174,136 +144,28 @@ int ProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t do
         fitter->SaveParameters(outputFile);
     }
 
-    if(doPlot == kTRUE)
-    {
+    if(doPlot == kTRUE) {
         //SaveChi2Maps(fitter->GetBinnedDataSet(),dataSet->numEntries(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
-//        Double_t mychi2 = fitter->SaveChi2Maps("a");
-//        fitter->SaveResiduals();
+        //Double_t mychi2 = fitter->SaveChi2Maps("a");
+        //fitter->SaveResiduals();
         fitter->SaveNllPlot("st");
-//        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
-
+        //printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
         //SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
-        //SavePlotsTIndep(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
     }
 
     return 0;
 }
 
-int ToyProcessTrans(RooDataSet* dataSet, Double_t* par_input, Int_t doFit, Int_t doPlot)
-{
-    const int numSubDataSets = 1000;
-
-    RooRealVar hp("hp","hp",0,1);
-    RooRealVar ehp("ehp","ehp",0,1);
-    RooRealVar hpa("hpa","hpa",-PI,PI);
-    RooRealVar ehpa("ehpa","ehpa",0,2*PI);
-    RooRealVar h0("h0","h0",0,1);
-    RooRealVar eh0("eh0","eh0",0,1);
-    RooRealVar hm("hm","hm",0,1);
-    RooRealVar ehm("ehm","ehm",0,1);
-    RooRealVar hma("hma","hma",-PI,PI);
-    RooRealVar ehma("ehma","ehma",0,2*PI);
-
-    RooRealVar chi2("chi2","chi2",0);
-
-    const int numParams = 11;
-
-    Double_t input[5] = {0.107,1.42,0.941,0.322,0.31};
-    //Double_t input[5] = {0.152,1.47,0.936,0.317,0.19};
-    Double_t parameters[numParams];
-    RooRealVar rooParams[numParams] = {hp,ehp,hpa,ehpa,h0,eh0,hm,ehm,hma,ehma,chi2};
-
-    RooArgSet parameterSet;
-    for(int i = 0; i < numParams; i++)
-        parameterSet.add(rooParams[i]);
-
-    RooDataSet fitsResults("fitsResults","fitsResults",parameterSet);
-
-    RooDataSet* subDataSet;
-    FitterTransTIndep* fitter;
-
-    for(int i = 0; i < numSubDataSets; i++)
-    {
-        int event_lo = i*(dataSet->numEntries()/numSubDataSets);
-        int event_hi = (i+1)*(dataSet->numEntries()/numSubDataSets);
-
-        subDataSet = (RooDataSet*)dataSet->reduce(RooFit::EventRange(event_lo,event_hi));
-
-        fitter = new FitterTransTIndep(subDataSet,par_input);
-        fitter->FixAllParameters();
-        fitter->FreeParameter("ap");
-        fitter->FreeParameter("apa");
-        fitter->FreeParameter("a0");
-        fitter->FreeParameter("ata");
-        fitter->Fit();
-
-        fitter->GetHelParameters(parameters);
-        fitter->ComputeChi2();
-        parameters[10] = fitter->GetChi2();
-
-        for(int j = 0; j < numParams; j++)
-                rooParams[j].setVal(parameters[j]);
-
-        fitsResults.add(parameterSet);
-
-        delete fitter;
-        delete subDataSet;
-    }
-
-    TFile* file = new TFile("plots/toy.root","RECREATE");
-    TCanvas* ctoy = new TCanvas("ctoy","ctoy",800,600);
-
-    TH1* hists[numParams];
-    TH1F* pulls[5];
-    TString name;
-
-    for(int i = 0; i < numParams; i++)
-    {
-        name = "toy_";
-        name += rooParams[i].GetName();
-        hists[i] = fitsResults.createHistogram(name,rooParams[i],RooFit::AutoBinning(40));
-        hists[i]->Draw("HIST");
-        hists[i]->Write();
-        ctoy->SaveAs("plots/" + name + ".png");
-    }
-
-    for(int i = 0; i < 10; i+=2)
-    {
-        name = "toy_pull_";
-        name += rooParams[i].GetName();
-        pulls[i/2] = new TH1F(name,name,40,-5,5);
-    }
-
-    const RooArgSet* argSet;
-    for(int j = 0; j < fitsResults.numEntries(); j++)
-    {
-        argSet = fitsResults.get(j);
-        for(int i = 0; i < 10; i+=2)
-        {
-            //printf("i=%i name=%s\tval=%f\tinput=%f\terr=%f\tpull=%f\n",i,rooParams[i].GetName(),argSet->getRealValue(rooParams[i].GetName()),input[i/2],argSet->getRealValue(rooParams[i+1].GetName()),(argSet->getRealValue(rooParams[i].GetName()) - input[i/2])/argSet->getRealValue(rooParams[i+1].GetName()));
-            pulls[i/2]->Fill((argSet->getRealValue(rooParams[i].GetName()) - input[i/2])/argSet->getRealValue(rooParams[i+1].GetName()));
-        }
-    }
 
 
-    for(int i = 0; i < 10;i+=2)
-    {
-        name = "toy_pull_";
-        name += rooParams[i].GetName();
-        pulls[i/2]->Fit("gaus");
-        pulls[i/2]->Draw();
-        pulls[i/2]->Write();
-        ctoy->SaveAs("plots/" + name + ".png");
-    }
-
-    file->Close();
-    return 0;
-}
-
-Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* pdf, RooRealVar var1, RooRealVar var2, RooRealVar var3)
-{
+Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* pdf, RooRealVar var1, RooRealVar var2, RooRealVar var3) {
     /// Create a histogram from the pdf with the expected number of events with no statistical fluctuation
     RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(var1,var2,var3),numEvents,kTRUE);
+
+    const Int_t var1_bins = 30;
+    const Int_t var2_bins = 30;
+    const Int_t var3_bins = 30;
+    const Int_t dt_bins = 50;
 
     Double_t mychi2 = 0;
     Double_t dchi2 = 0;
@@ -317,12 +179,9 @@ Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* 
 
     /// Cycle through the centers of all bins
     /// I'm getting width of the first bin, because all bins are of equal width
-    for(var1 = var1.getMin()+var1.getBinWidth(0)/2; var1.getVal() < var1.getMax(); var1.setVal(var1.getVal()+var1.getBinWidth(0)))
-    {
-        for(var2 = var2.getMin()+var2.getBinWidth(0)/2; var2.getVal() < var2.getMax(); var2.setVal(var2.getVal()+var2.getBinWidth(0)))
-        {
-            for(var3 = var3.getMin()+var3.getBinWidth(0)/2; var3.getVal() < var3.getMax(); var3.setVal(var3.getVal()+var3.getBinWidth(0)))
-            {
+    for(var1 = var1.getMin()+var1.getBinWidth(0)/2; var1.getVal() < var1.getMax(); var1.setVal(var1.getVal()+var1.getBinWidth(0))) {
+        for(var2 = var2.getMin()+var2.getBinWidth(0)/2; var2.getVal() < var2.getMax(); var2.setVal(var2.getVal()+var2.getBinWidth(0))) {
+            for(var3 = var3.getMin()+var3.getBinWidth(0)/2; var3.getVal() < var3.getMax(); var3.setVal(var3.getVal()+var3.getBinWidth(0))) {
                 /// Weight is actually the bin content
                 n = data_binned->weight(RooArgSet(var1,var2,var3),0);
                 v = pdf_binned->weight(RooArgSet(var1,var2,var3),0);
@@ -407,8 +266,7 @@ Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* 
     return mychi2;
 }
 
-void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3, RooRealVar& dt)
-{
+void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3, RooRealVar& dt) {
     /// Directory and format of the saved plots
     const TString dir = "plots/";
     const TString format = ".png";
@@ -432,14 +290,13 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
     RooRealVar vars[numVars] = {var1,var2,var3};
 
     /// Saving simple projections on each of the variables
-    for(int i = 0; i < numVars; i++)
-    {
+    for(int i = 0; i < numVars; i++) {
         name = "proj_";
         name += vars[i].GetName();
         frame = vars[i].frame();
         dataSet->plotOn(frame,RooFit::Name("data"));
         //if(i == 1)
-            pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3,dt)));
+        pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3,dt)));
         frame->SetName(name);
         frame->Draw();
         frame->Write();
@@ -454,8 +311,7 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
     RooDataSet* datacut;
 
     /// Saving dt plots for all 4 decay types
-    for(int i = 1; i <= 4; i++)
-    {
+    for(int i = 1; i <= 4; i++) {
         frame = dt.frame();
         TString type = (char*)cat->lookupType(i)->GetName();
         TString cut = "decType==decType::" + type;
@@ -519,86 +375,7 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
     file->Close();
 }
 
-void SavePlotsTIndep(RooDataSet* dataSet, DSRhoPDFTIndep* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3)
-{
-    /// Directory and format of the saved plots
-    const TString dir = "plots/";
-    const TString format = ".png";
-    TString path;
-    TString name;
-
-    path = dir + "projections.root";
-    TFile* file = new TFile(path,"RECREATE");
-
-    TCanvas* c1 = new TCanvas("c1","c1",800,600);
-    RooPlot* frame = 0;
-
-    /// Create a binned pdf with the same number of events as the data, so that the 2d plots of pdf
-    /// and data are the same scale
-    //printf("Generation of binned dataset starting...\n");
-    //RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(var1,var2,var3,dt),dataSet->numEntries(),kTRUE);
-    //printf("Generation of binned dataset finished\n");
-
-    /// This is a quick and dirty solution to be able to loop through all variables (except dt, which is treated separetely)
-    const int numVars = 3;
-    RooRealVar vars[numVars] = {var1,var2,var3};
-
-    /// Saving simple projections on each of the variables
-    for(int i = 0; i < numVars; i++)
-    {
-        name = "proj_";
-        name += vars[i].GetName();
-        frame = vars[i].frame();
-        dataSet->plotOn(frame,RooFit::Name("data"));
-        //if(i == 1)
-            pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)));
-        frame->SetName(name);
-        frame->Draw();
-        frame->Write();
-        path = dir + name + format;
-        c1->SaveAs(path);
-        delete frame;
-    }
-
-    TH2* h2_pdf = 0;
-    TH2* h2_data = 0;
-
-    /// Saving projections of both data and pdf on 2 dimensions
-//    for(int i = 0; i < numVars; i++)
-//    {
-//        for(int j = i+1; j < numVars; j++)
-//        {
-//            name = "proj_";
-//            name += vars[i].GetName();
-//            name += "_";
-//            name += vars[j].GetName();
-//            h2_pdf = dynamic_cast<TH2*>(pdf_binned->createHistogram(name + "_pdf",vars[i],RooFit::YVar(vars[j])));
-//            h2_pdf->SetOption("colz");
-//            h2_pdf->SetStats(kFALSE);
-//            h2_pdf->SetMinimum(0);
-//            h2_data = dynamic_cast<TH2*>(dataSet->createHistogram(name + "_data",vars[i],RooFit::YVar(vars[j])));
-//            h2_data->SetOption("colz");
-//            h2_data->SetStats(kFALSE);
-//            h2_data->SetMinimum(0);
-//            h2_data->SetMaximum(h2_pdf->GetMaximum());
-//            h2_pdf->Draw();
-//            h2_pdf->Write();
-//            path = dir + name + "_pdf" + format;
-//            c1->SaveAs(path);
-//            h2_data->Draw();
-//            h2_data->Write();
-//            path = dir + name + "_data" + format;
-//            c1->SaveAs(path);
-//            delete h2_pdf;
-//            delete h2_data;
-//        }
-//    }
-
-    file->Close();
-}
-
-void ConvertBetweenHelAndTrans(Double_t* par_input)
-{
+void ConvertBetweenHelAndTrans(Double_t* par_input) {
     /// The variables are named as if converting parameters from helicity to transversity
     /// but the transformation is symmetric and can be used to convert from transversity
     /// to helicity as well.
@@ -629,7 +406,7 @@ void ConvertBetweenHelAndTrans(Double_t* par_input)
 
     printf("original hel:\t");
     printf("hp = %.3f\thpa = %.2f\th0 = %.3f\thma = %.2f\tphiw = %.4f\trp = %.3f\tr0 = %.3f\trm = %.3f\tsp = %.3f\ts0 = %.3f\tsm = %.3f\n",\
-        par_input[0],par_input[1],par_input[2],par_input[3],par_input[4],par_input[5],par_input[6],par_input[7],par_input[8],par_input[9],par_input[10]);
+           par_input[0],par_input[1],par_input[2],par_input[3],par_input[4],par_input[5],par_input[6],par_input[7],par_input[8],par_input[9],par_input[10]);
 
     par_input[0] = ap.Rho();
     par_input[1] = ap.Theta();
@@ -644,12 +421,11 @@ void ConvertBetweenHelAndTrans(Double_t* par_input)
 
     printf("converted trans:");
     printf("ap = %.3f\tapa = %.2f\ta0 = %.3f\tata = %.2f\tphiw = %.4f\trp = %.3f\tr0 = %.3f\trt = %.3f\tsp = %.3f\ts0 = %.3f\tst = %.3f\n",\
-        par_input[0],par_input[1],par_input[2],par_input[3],par_input[4],par_input[5],par_input[6],par_input[7],par_input[8],par_input[9],par_input[10]);
+           par_input[0],par_input[1],par_input[2],par_input[3],par_input[4],par_input[5],par_input[6],par_input[7],par_input[8],par_input[9],par_input[10]);
 
 }
 
-Double_t Round(Double_t number, Int_t digits)
-{
+Double_t Round(Double_t number, Int_t digits) {
     number = number * pow(10,digits);
     if(fmod(number,1)>0.5)
         number = ceil(number);
