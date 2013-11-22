@@ -9,11 +9,12 @@ import time
 ###############################################
 max_jobs = 22
 root_path = "../"
-data_path = "data_gen3/"
+data_path = "data_gen5/"
 results_path = "results/"
 log_path = "logs/"
 do_fit = 1
 do_plot = 0
+enable_checks = 1 # Disable checks which require user input when running with, e.g., nohup
 ###############################################
 
 # What do_fit values mean what
@@ -53,7 +54,7 @@ def parseMetafile(dataset,pars):
 
 def createCommand(dataset,pars):
     command = 'nice bin/Release/DSRhoFit ' + dataset + ' ' + dataset.replace(data_path,results_path) + \
-              '.res ' + ' '.join(pars) + ' ' + do_fit + ' ' + do_plot +' > ' + dataset.replace(data_path,log_path) + '.log ' + '2>&1 &'
+              '.res ' + ' '.join(pars) + ' ' + str(do_fit) + ' ' + str(do_plot) +' > ' + dataset.replace(data_path,log_path) + '.log ' + '2>&1 &'
     return command
 
 def numberOfJobs():
@@ -105,8 +106,9 @@ datasets = []
 for i in range(beg_dataset,end_dataset+1):
     datasets.append(data_path+"dataset_"+str(i))
 
-initChecks()
+if enable_checks: initChecks()
 
+job_counter = 0
 for dataset in datasets:
     parseMetafile(dataset,pars)
     command = createCommand(dataset,pars)
@@ -115,3 +117,7 @@ for dataset in datasets:
         time.sleep(10)
 
     subprocess.call(command,shell=True)
+    job_counter += 1
+    print("Submitted job %i/%i, %i to go." % (job_counter, len(datasets), len(datasets)-job_counter))
+
+print("All jobs have been submitted.")
