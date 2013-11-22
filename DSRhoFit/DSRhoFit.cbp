@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/temp6k5 results/output 0.275 0.57 0.936 2.84 1.79371 0.01 0.01 0.01 0 0 0 1 1" />
+				<Option parameters="data_gen3/dataset_80 results/dataset_80.res 0.269 0.56 0.941 3.11 1.79371 0.01 0.01 0.01 -3.14 0.285 0.286 1 0" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -120,16 +120,10 @@
 		<Unit filename="include/Constants.h" />
 		<Unit filename="include/DSRhoFit.h" />
 		<Unit filename="include/DSRhoPDF.h" />
-		<Unit filename="include/DSRhoPDFRConstraint.h" />
-		<Unit filename="include/DSRhoPDFTIndep.h" />
 		<Unit filename="include/FitterTrans.h" />
-		<Unit filename="include/FitterTransTIndep.h" />
 		<Unit filename="src/DSRhoFit.cpp" />
 		<Unit filename="src/DSRhoPDF.cpp" />
-		<Unit filename="src/DSRhoPDFRConstraint.cpp" />
-		<Unit filename="src/DSRhoPDFTIndep.cpp" />
 		<Unit filename="src/FitterTrans.cpp" />
-		<Unit filename="src/FitterTransTIndep.cpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />
