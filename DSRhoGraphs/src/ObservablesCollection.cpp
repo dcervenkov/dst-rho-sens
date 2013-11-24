@@ -63,7 +63,6 @@ RooArgList ObservablesCollection::CreateArgList()
     sep->defineType("|",1);
     sep->defineType("||",2);
 
-    RooDataSet* dataset;
     RooArgList argList(*chi2a,*chi2ab,*chi2b,*chi2bb,*sep,*sep);
     argList.add(RooArgList(*api,*ap,*ape,*sep,*apai,*apa,*apae,*sep));
     argList.add(RooArgList(*a0i,*a0,*a0e,*sep,*a0ai,*a0a,*a0ae,*sep));
