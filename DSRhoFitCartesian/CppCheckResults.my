@@ -1,0 +1,49 @@
+[src/DSRhoPDFTIndep.cpp:63]: (style) Variable 'ap0i' is assigned a value that is never used
+[src/DSRhoPDFTIndep.cpp:64]: (style) Variable 'a0tr' is assigned a value that is never used
+[src/DSRhoPDFTIndep.cpp:66]: (style) Variable 'aptr' is assigned a value that is never used
+[src/DSRhoPDFTIndep.cpp:117]: (style) Variable 'ap0i' is assigned a value that is never used
+[src/DSRhoPDFTIndep.cpp:120]: (style) Variable 'aptr' is assigned a value that is never used
+[include/DSRhoPDF.h:19]: (warning) Member variable 'DSRhoPDF::type' is not initialized in the constructor.
+[src/DSRhoFit.cpp:254]: (style) C-style pointer casting
+[src/DSRhoFit.cpp:477]: (style) C-style pointer casting
+[src/DSRhoFit.cpp:487]: (style) C-style pointer casting
+[src/FitterTrans.cpp:179]: (style) C-style pointer casting
+[src/FitterTrans.cpp:212]: (style) C-style pointer casting
+[src/FitterTrans.cpp:227]: (style) C-style pointer casting
+[src/FitterTrans.cpp:962]: (style) C-style pointer casting
+[src/FitterTrans.cpp:975]: (style) C-style pointer casting
+[src/FitterTrans.cpp:1092]: (style) C-style pointer casting
+[src/FitterTrans.cpp:1100]: (style) C-style pointer casting
+[src/FitterTrans.cpp:1108]: (style) C-style pointer casting
+[src/FitterTrans.cpp:1116]: (style) C-style pointer casting
+[src/FitterTrans.cpp:1175]: (style) C-style pointer casting
+[src/FitterTrans.cpp:1186]: (style) C-style pointer casting
+[src/FitterTrans.cpp:1187]: (style) C-style pointer casting
+[src/FitterTrans.cpp:358]: (style) Variable 'numPasses' is assigned a value that is never used
+[src/FitterTrans.cpp:359]: (style) Variable 'pass' is assigned a value that is never used
+[src/FitterTrans.cpp:474]: (style) Unused variable: vr
+[src/FitterTrans.cpp:26]: (warning) Member variable 'FitterTrans::dataSet_reduced' is not initialized in the constructor.
+[src/FitterTrans.cpp:26]: (warning) Member variable 'FitterTrans::dataSet_binned' is not initialized in the constructor.
+[src/FitterTrans.cpp:26]: (warning) Member variable 'FitterTrans::binnedNumEntries' is not initialized in the constructor.
+[src/FitterTrans.cpp:26]: (warning) Member variable 'FitterTrans::doFit' is not initialized in the constructor.
+[src/FitterTrans.cpp:26]: (warning) Member variable 'FitterTrans::fitParameters' is not initialized in the constructor.
+[src/DSRhoFit.cpp:509]: (style) Variable 'h2_pdf' is assigned a value that is never used
+[src/DSRhoFit.cpp:510]: (style) Variable 'h2_data' is assigned a value that is never used
+[src/DSRhoFit.cpp:587]: (style) Variable 'h2_pdf' is assigned a value that is never used
+[src/DSRhoFit.cpp:588]: (style) Variable 'h2_data' is assigned a value that is never used
+[src/FitterTransTIndep.cpp:728]: (style) C-style pointer casting
+[src/FitterTransTIndep.cpp:736]: (style) C-style pointer casting
+[src/FitterTransTIndep.cpp:744]: (style) C-style pointer casting
+[src/FitterTransTIndep.cpp:752]: (style) C-style pointer casting
+[src/FitterTransTIndep.cpp:811]: (style) C-style pointer casting
+[src/FitterTransTIndep.cpp:822]: (style) C-style pointer casting
+[src/FitterTransTIndep.cpp:823]: (style) C-style pointer casting
+[src/FitterTransTIndep.cpp:247]: (style) Variable 'numPasses' is assigned a value that is never used
+[src/FitterTransTIndep.cpp:248]: (style) Variable 'pass' is assigned a value that is never used
+[src/FitterTransTIndep.cpp:335]: (style) Unused variable: vr
+[src/FitterTransTIndep.cpp:287]: (error) Array 'vars[3]' index 3 out of bounds
+[src/FitterTransTIndep.cpp:24]: (warning) Member variable 'FitterTransTIndep::dataSet_reduced' is not initialized in the constructor.
+[src/FitterTransTIndep.cpp:24]: (warning) Member variable 'FitterTransTIndep::dataSet_binned' is not initialized in the constructor.
+[src/FitterTransTIndep.cpp:24]: (warning) Member variable 'FitterTransTIndep::binnedNumEntries' is not initialized in the constructor.
+[src/FitterTransTIndep.cpp:24]: (warning) Member variable 'FitterTransTIndep::doFit' is not initialized in the constructor.
+[src/FitterTransTIndep.cpp:24]: (warning) Member variable 'FitterTransTIndep::fitParameters' is not initialized in the constructor.
