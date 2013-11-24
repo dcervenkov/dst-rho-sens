@@ -22,6 +22,7 @@
 #include "RooCategory.h"
 #include "RooPlot.h"
 #include "RooDataSet.h"
+#include "RooDataHist.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooGaussian.h"
@@ -30,6 +31,8 @@
 #include "DSRhoGraphs.h"
 
 #define GRAPHIC
+
+const int num_cmd_options = 1;
 
 int main(int argc, char* argv[]) {
 
@@ -49,9 +52,10 @@ int main(int argc, char* argv[]) {
     }
 #endif // GRAPHIC
 
-    if(argc != 2 || argc != 3){
+    if(argc < 3){
         printf("ERROR: Wrong number of arguments.\n");
-        printf("Usage: DSRhoGraph successfulResultsFile [allResultsFile]\n");
+        printf("Usage: DSRhoGraph MODE FILE-1 [FILE-2]...\n");
+        return 85;
     }
 
     gStyle->SetOptStat(0);
@@ -59,8 +63,108 @@ int main(int argc, char* argv[]) {
     gStyle->SetMarkerSize(2);
     gEnv->SetValue("Canvas.PrintDirectory","plots");
 
+    if(!strcmp(argv[1],"1")){
+        if(argc == num_cmd_options + 3)
+            CreatePullsAndMaps(argv[2],argv[3]);
+        else
+            CreatePullsAndMaps(argv[2],nullptr);
+    }
+    else if(!strcmp(argv[1],"2"))
+        CreateErrorProgression(argc,argv);
+    else
+        printf("ERROR: Unknown mode '%s'.\n",argv[1]);
+
+
+#ifdef GRAPHIC
+    printf("\nProgram execution has finished.\n");
+    rootapp->Run();
+#endif
+    return 0;
+}
+
+double CalculateMedian(std::vector<double> vals) {
+    double median;
+    size_t size = vals.size();
+    sort(vals.begin(), vals.end());
+    if(size % 2 == 0) {
+        median = (vals[size/2 - 1] + vals[size/2]) / 2;
+    } else {
+        median = vals[size/2];
+    }
+
+    return median;
+}
+
+void CreateErrorProgression(int argc, char* argv[]){
+    if(argc < num_cmd_options + 3){
+        printf("ERROR: Error Progression mode requires at least 2 files.");
+        return;
+    }
+    int num_files = argc-1 - num_cmd_options ;
     ObservablesCollection c;
-    RooDataSet* dataset = RooDataSet::read(argv[1],c.CreateArgList());
+    RooDataSet* dataset;
+
+//    TH1D* h_errors[7];
+//    for(int error_no = 0; error_no < 7; error_no++){
+//        TString name("h_errors");
+//        name += error_no+1;
+//        h_errors = new TH1D(name,name,)
+//    }
+    std::vector<double> mean_errors[num_files];
+
+    for(int file_no = 0; file_no < num_files; file_no++){
+        dataset = RooDataSet::read(argv[file_no + num_cmd_options+1], c.CreateArgList());
+        c.BindToDataset(dataset);
+        c.AdjustInputSForPeriodicity(dataset);
+
+        const RooArgSet* args = dataset->get();
+        RooArgList error_vars(*args->find("phiwe"),*args->find("rpe"),*args->find("r0e"),*args->find("rte"),*args->find("spe"),*args->find("s0e"),*args->find("ste"));
+
+
+        std::vector<double> errors[error_vars.getSize()];
+
+        for(int entry_no = 0; entry_no < dataset->numEntries(); entry_no++){
+            dataset->get(entry_no);
+            for(int error_no = 0; error_no < error_vars.getSize();error_no++){
+                errors[error_no].push_back(dynamic_cast<RooRealVar*>(&error_vars[error_no])->getValV());
+            }
+        }
+
+        for(int error_no = 0; error_no < error_vars.getSize(); error_no++){
+            mean_errors[file_no].push_back(CalculateMedian(errors[error_no]));
+        }
+        //delete dataset;
+    }
+
+    TH2D* h_errors[mean_errors[0].size()];
+    for(int error_no = 0; error_no < mean_errors[0].size(); error_no++){
+        TString name("h_errors_");
+        name += error_no+1;
+        double max_error = 0;
+        for(int file_no = 0; file_no < num_files; file_no++){
+            if(max_error < mean_errors[file_no][error_no])
+                max_error = mean_errors[file_no][error_no];
+        }
+        h_errors[error_no] = new TH2D(name,name,100,0,num_files+1,100,0,max_error*1.1);
+        for(int file_no = 0; file_no < num_files; file_no++){
+            h_errors[error_no]->Fill(file_no+1,mean_errors[file_no][error_no]);
+        }
+    }
+    TCanvas* c_errors = new TCanvas("c_errors","Errors",1200,1000);
+    c_errors->Divide(3,3);
+    for(int error_no = 0; error_no < mean_errors[0].size(); error_no++){
+        c_errors->cd(error_no+1);
+        h_errors[error_no]->SetMarkerStyle(kPlus);
+        h_errors[error_no]->SetMarkerSize(1);
+        h_errors[error_no]->Draw();
+    }
+
+}
+
+
+void CreatePullsAndMaps(char* successful_file, char* all_file) {
+    ObservablesCollection c;
+    RooDataSet* dataset = RooDataSet::read(successful_file,c.CreateArgList());
     c.BindToDataset(dataset);
     c.AdjustInputSForPeriodicity(dataset);
     c.CreateResidualsAndPulls(dataset);
@@ -68,9 +172,9 @@ int main(int argc, char* argv[]) {
     CreateGeneralPlots(dataset,c);
 
     /// If 2 arguments were supplied, create maps as well
-    if(argc == 3){
+    if(all_file != nullptr){
         ObservablesCollection c_all;
-        RooDataSet* dataset_all = RooDataSet::read(argv[2],c_all.CreateArgList());
+        RooDataSet* dataset_all = RooDataSet::read(all_file,c_all.CreateArgList());
         c_all.BindToDataset(dataset_all);
         c_all.AdjustInputSForPeriodicity(dataset_all);
         c_all.CreateResidualsAndPulls(dataset_all);
@@ -92,12 +196,6 @@ int main(int argc, char* argv[]) {
         }
         c_maps->SaveAs(".gif");
     }
-
-#ifdef GRAPHIC
-    printf("\nProgram execution has finished.\n");
-    rootapp->Run();
-#endif
-    return 0;
 }
 
 std::vector<TH2D*> CreateMaps(const RooDataSet* const dataset) {
