@@ -69,9 +69,9 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    if(argc != 16) {
+    if(argc != 21) {
         printf("ERROR: Wrong number of arguments.\n");
-        printf("Usage: DSRhoFit inputFile outputFile ap apa a0 ata phiw xp x0 xt yp y0 yt doFit doPlot\n");
+        printf("Usage: DSRhoFit inputFile outputFile ap apa a0 ata xp x0 xt yp y0 yt xpb x0b xtb ypb y0b ytb doFit doPlot\n");
         return 85;
     }
 
@@ -133,13 +133,18 @@ int ProcessTrans(FitterTrans* fitter, Int_t doFit, Int_t doPlot) {
         fitter->FreeParameter("apa");
         fitter->FreeParameter("a0");
         fitter->FreeParameter("ata");
-        fitter->FreeParameter("phiw");
         fitter->FreeParameter("xp");
         fitter->FreeParameter("x0");
         fitter->FreeParameter("xt");
         fitter->FreeParameter("yp");
         fitter->FreeParameter("y0");
         fitter->FreeParameter("yt");
+        fitter->FreeParameter("xpb");
+        fitter->FreeParameter("x0b");
+        fitter->FreeParameter("xtb");
+        fitter->FreeParameter("ypb");
+        fitter->FreeParameter("y0b");
+        fitter->FreeParameter("ytb");
         fitter->Fit();
         fitter->SaveParameters(outputFile);
     }

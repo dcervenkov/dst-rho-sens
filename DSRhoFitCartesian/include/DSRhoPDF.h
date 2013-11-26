@@ -26,7 +26,6 @@ public:
              RooAbsReal& _apa,
              RooAbsReal& _a0,
              RooAbsReal& _ata,
-             RooAbsReal& _phiw,
              RooAbsReal& _xp,
              RooAbsReal& _x0,
              RooAbsReal& _xt,
@@ -55,7 +54,6 @@ protected:
     RooRealProxy apa ;
     RooRealProxy a0 ;
     RooRealProxy ata ;
-    RooRealProxy phiw ;
     RooRealProxy xp ;
     RooRealProxy x0 ;
     RooRealProxy xt ;

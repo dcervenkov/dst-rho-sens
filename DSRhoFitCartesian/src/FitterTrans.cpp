@@ -58,7 +58,7 @@ FitterTrans::FitterTrans(Double_t* outer_par_input)
     decType->defineType("b",3);
     decType->defineType("bb",4);
 
-    for (Int_t i = 0; i < 11; i++)
+    for (Int_t i = 0; i < 16; i++)
         par_input[i] = outer_par_input[i];
 
     /// apr and other seemingly unnecessary vars are used when calculating/printing e.g. "hp"
@@ -78,20 +78,27 @@ FitterTrans::FitterTrans(Double_t* outer_par_input)
     /// Time-dep additional vars
 
     dm = new RooRealVar("dm","dm",0.507e12);
-    phiw = new RooRealVar("phiw","phiw",par_input[4],0,2*PI);
 
-    xp = new RooRealVar("xp","xp",par_input[5],-0.2,0.2);
-    x0 = new RooRealVar("x0","x0",par_input[6],-0.2,0.2);
-    xt = new RooRealVar("xt","xt",par_input[7],-0.2,0.2);
+    xp = new RooRealVar("xp","xp",par_input[4],-0.2,0.2);
+    x0 = new RooRealVar("x0","x0",par_input[5],-0.2,0.2);
+    xt = new RooRealVar("xt","xt",par_input[6],-0.2,0.2);
 
-    yp = new RooRealVar("yp","yp",par_input[8],-0.2,0.2);
-    y0 = new RooRealVar("y0","y0",par_input[9],-0.2,0.2);
-    yt = new RooRealVar("yt","yt",par_input[10],-0.2,0.2);
+    yp = new RooRealVar("yp","yp",par_input[7],-0.2,0.2);
+    y0 = new RooRealVar("y0","y0",par_input[8],-0.2,0.2);
+    yt = new RooRealVar("yt","yt",par_input[9],-0.2,0.2);
 
-    pdf_a = new DSRhoPDF("pdf_a","pdf_a","a",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*xp,*x0,*xt,*yp,*y0,*yt);
-    pdf_b = new DSRhoPDF("pdf_b","pdf_b","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*xp,*x0,*xt,*yp,*y0,*yt);
-    pdf_ab = new DSRhoPDF("pdf_ab","pdf_ab","ab",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*xp,*x0,*xt,*yp,*y0,*yt);
-    pdf_bb = new DSRhoPDF("pdf_bb","pdf_bb","bb",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*xp,*x0,*xt,*yp,*y0,*yt);
+    xpb = new RooRealVar("xpb","xpb",par_input[10],-0.2,0.2);
+    x0b = new RooRealVar("x0b","x0b",par_input[11],-0.2,0.2);
+    xtb = new RooRealVar("xtb","xtb",par_input[12],-0.2,0.2);
+
+    ypb = new RooRealVar("ypb","ypb",par_input[13],-0.2,0.2);
+    y0b = new RooRealVar("y0b","y0b",par_input[14],-0.2,0.2);
+    ytb = new RooRealVar("ytb","ytb",par_input[15],-0.2,0.2);
+
+    pdf_a = new DSRhoPDF("pdf_a","pdf_a","a",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*xp,*x0,*xt,*yp,*y0,*yt);
+    pdf_b = new DSRhoPDF("pdf_b","pdf_b","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*xpb,*x0b,*xtb,*ypb,*y0b,*ytb);
+    pdf_ab = new DSRhoPDF("pdf_ab","pdf_ab","ab",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*xpb,*x0b,*xtb,*ypb,*y0b,*ytb);
+    pdf_bb = new DSRhoPDF("pdf_bb","pdf_bb","bb",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*xp,*x0,*xt,*yp,*y0,*yt);
 
     simPdf = new RooSimultaneous("simPdf","simPdf",*decType);
     simPdf->addPdf(*pdf_a,"a");
@@ -99,10 +106,16 @@ FitterTrans::FitterTrans(Double_t* outer_par_input)
     simPdf->addPdf(*pdf_b,"b");
     simPdf->addPdf(*pdf_bb,"bb");
 
-    parameters = new RooArgSet(*ap,*apa,*a0,*ata,*phiw,*yp,*y0,*yt);
+    parameters = new RooArgSet(*ap,*apa,*a0,*ata,*xp,*x0,*xt);
     parameters->add(*yp);
     parameters->add(*y0);
     parameters->add(*yt);
+    parameters->add(*xpb);
+    parameters->add(*x0b);
+    parameters->add(*xtb);
+    parameters->add(*ypb);
+    parameters->add(*y0b);
+    parameters->add(*ytb);
 
     variables = new RooArgList(*tht,*thb,*phit,*dt,*decType);
 
@@ -134,13 +147,18 @@ FitterTrans::~FitterTrans()
     delete ati;
 
     delete dm;
-    delete phiw;
     delete xp;
     delete x0;
     delete xt;
     delete yp;
     delete y0;
     delete yt;
+    delete xpb;
+    delete x0b;
+    delete xtb;
+    delete ypb;
+    delete y0b;
+    delete ytb;
     delete pdf_a;
     delete pdf_b;
     delete pdf_ab;
@@ -963,14 +981,15 @@ void FitterTrans::SaveNllPlot(RooRealVar* var1, RooRealVar* var2)
 
 void FitterTrans::SaveParameters(char* file)
 {
-
+    DSRhoPDF* pdf;
+    DSRhoPDF* pdfs[4] = {pdf_a,pdf_ab,pdf_b,pdf_bb};
     /// The next 2 lines enable getting category items' names and therefore reduced datasets in a loop
     const RooArgSet* args = dataSet->get();
     const RooCategory* cat = (RooCategory*)args->find("decType");
     RooDataSet* datacut;
     RooPlot* frame = 0;
 
-    const Int_t numParameters = 43;
+    const Int_t numParameters = 58;
     Double_t* parameters = new Double_t[numParameters];
 
     const Int_t org_pdf_type = pdf_a->getType();
@@ -984,8 +1003,8 @@ void FitterTrans::SaveParameters(char* file)
         datacut = (RooDataSet*)dataSet->reduce(*dt,cut);
         datacut->plotOn(frame,RooFit::Name("data"));
 
-        pdf_a->setType(i);
-        pdf_a->plotOn(frame,RooFit::Project(RooArgSet(*tht,*thb,*phit)));
+        pdf = pdfs[i-1];
+        pdf->plotOn(frame,RooFit::Project(RooArgSet(*tht,*thb,*phit)));
 
         parameters[i-1] = frame->chiSquare(11);
 
@@ -1026,27 +1045,42 @@ void FitterTrans::SaveParameters(char* file)
     parameters[20] = ata->getVal();
     parameters[21] = ata->getError();
     parameters[22] = par_input[4];
-    parameters[23] = phiw->getVal();
-    parameters[24] = phiw->getError();
+    parameters[23] = xp->getVal();
+    parameters[24] = xp->getError();
     parameters[25] = par_input[5];
-    parameters[26] = xp->getVal();
-    parameters[27] = xp->getError();
+    parameters[26] = x0->getVal();
+    parameters[27] = x0->getError();
     parameters[28] = par_input[6];
-    parameters[29] = x0->getVal();
-    parameters[30] = x0->getError();
+    parameters[29] = xt->getVal();
+    parameters[30] = xt->getError();
     parameters[31] = par_input[7];
-    parameters[32] = xt->getVal();
-    parameters[33] = xt->getError();
+    parameters[32] = yp->getVal();
+    parameters[33] = yp->getError();
     parameters[34] = par_input[8];
-    parameters[35] = yp->getVal();
-    parameters[36] = yp->getError();
+    parameters[35] = y0->getVal();
+    parameters[36] = y0->getError();
     parameters[37] = par_input[9];
-    parameters[38] = y0->getVal();
-    parameters[39] = y0->getError();
+    parameters[38] = yt->getVal();
+    parameters[39] = yt->getError();
     parameters[40] = par_input[10];
-    parameters[41] = yt->getVal();
-    parameters[42] = yt->getError();
-    Int_t separators[numParameters] = {0,0,0,2, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,2, 0,0,2, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,0};
+    parameters[41] = xpb->getVal();
+    parameters[42] = xpb->getError();
+    parameters[43] = par_input[11];
+    parameters[44] = x0b->getVal();
+    parameters[45] = x0b->getError();
+    parameters[46] = par_input[12];
+    parameters[47] = xtb->getVal();
+    parameters[48] = xtb->getError();
+    parameters[49] = par_input[13];
+    parameters[50] = ypb->getVal();
+    parameters[51] = ypb->getError();
+    parameters[52] = par_input[14];
+    parameters[53] = y0b->getVal();
+    parameters[54] = y0b->getError();
+    parameters[55] = par_input[15];
+    parameters[56] = ytb->getVal();
+    parameters[57] = ytb->getError();
+    Int_t separators[numParameters] = {0,0,0,2, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,2};
 
     for(Int_t i = 0; i < numParameters; i++)
     {

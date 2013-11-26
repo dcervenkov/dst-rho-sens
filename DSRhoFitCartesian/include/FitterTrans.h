@@ -49,7 +49,7 @@ class FitterTrans
         RooDataSet* dataSet_reduced;
         RooDataHist* dataSet_binned;
         Int_t binnedNumEntries;
-        Double_t par_input[11];
+        Double_t par_input[16];
         Bool_t doFit;
         RooChi2Var* chi2Var;
         RooFitResult* result;
@@ -88,7 +88,6 @@ class FitterTrans
         /// Time-dep additional vars
 
         RooRealVar* dm;
-        RooRealVar* phiw;
 
         RooRealVar* xt;
         RooRealVar* xp;
@@ -97,6 +96,14 @@ class FitterTrans
         RooRealVar* yt;
         RooRealVar* yp;
         RooRealVar* y0;
+
+        RooRealVar* xtb;
+        RooRealVar* xpb;
+        RooRealVar* x0b;
+
+        RooRealVar* ytb;
+        RooRealVar* ypb;
+        RooRealVar* y0b;
 
         DSRhoPDF* pdf_a;
         DSRhoPDF* pdf_b;
