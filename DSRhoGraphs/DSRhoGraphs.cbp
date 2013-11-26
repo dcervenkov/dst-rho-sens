@@ -47,9 +47,9 @@
 			<Add directory="/usr/local/lib/root" />
 		</Linker>
 		<Unit filename="include/DSRhoGraphs.h" />
-		<Unit filename="include/ObservablesCollection.h" />
+		<Unit filename="include/ObservablesCollectionCartesian.h" />
 		<Unit filename="src/DSRhoGraphs.cpp" />
-		<Unit filename="src/ObservablesCollection.cpp" />
+		<Unit filename="src/ObservablesCollectionCartesian.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

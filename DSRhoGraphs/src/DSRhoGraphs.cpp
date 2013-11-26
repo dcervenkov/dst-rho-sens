@@ -27,7 +27,8 @@
 #include "RooArgList.h"
 #include "RooGaussian.h"
 
-#include "ObservablesCollection.h"
+//#include "ObservablesCollection.h"
+#include "ObservablesCollectionCartesian.h"
 #include "DSRhoGraphs.h"
 
 #define GRAPHIC
@@ -115,7 +116,7 @@ void CreateErrorProgression(int argc, char* argv[]){
     for(int file_no = 0; file_no < num_files; file_no++){
         dataset = RooDataSet::read(argv[file_no + num_cmd_options+1], c.CreateArgList());
         c.BindToDataset(dataset);
-        c.AdjustInputSForPeriodicity(dataset);
+        //c.AdjustInputSForPeriodicity(dataset);
 
         const RooArgSet* args = dataset->get();
         RooArgList error_vars(*args->find("phiwe"),*args->find("rpe"),*args->find("r0e"),*args->find("rte"),*args->find("spe"),*args->find("s0e"),*args->find("ste"));
@@ -166,7 +167,7 @@ void CreatePullsAndMaps(char* successful_file, char* all_file) {
     ObservablesCollection c;
     RooDataSet* dataset = RooDataSet::read(successful_file,c.CreateArgList());
     c.BindToDataset(dataset);
-    c.AdjustInputSForPeriodicity(dataset);
+    //c.AdjustInputSForPeriodicity(dataset);
     c.CreateResidualsAndPulls(dataset);
 
     CreateGeneralPlots(dataset,c);
@@ -176,7 +177,7 @@ void CreatePullsAndMaps(char* successful_file, char* all_file) {
         ObservablesCollection c_all;
         RooDataSet* dataset_all = RooDataSet::read(all_file,c_all.CreateArgList());
         c_all.BindToDataset(dataset_all);
-        c_all.AdjustInputSForPeriodicity(dataset_all);
+        //c_all.AdjustInputSForPeriodicity(dataset_all);
         c_all.CreateResidualsAndPulls(dataset_all);
 
         std::vector<TH2D*> maps_ok = CreateMaps(dataset);

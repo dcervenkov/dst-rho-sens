@@ -1,4 +1,4 @@
-#include "ObservablesCollection.h"
+#include "ObservablesCollectionCartesian.h"
 #include "DSRhoGraphs.h"
 
 ObservablesCollection::ObservablesCollection()
@@ -31,25 +31,25 @@ ObservablesCollection::ObservablesCollection()
     phiwi= new RooRealVar("phiwi","phiwi",0,2*PI);
     phiwe= new RooRealVar("phiwe","phiwe",0,2*PI);
 
-    rp = new RooRealVar("rp","rp",-1,1);
-    rpi = new RooRealVar("rpi","rpi",-1,1);
-    rpe = new RooRealVar("rpe","rpe",0,1);
-    r0 = new RooRealVar("r0","r0",-1,1);
-    r0i = new RooRealVar("r0i","r0i",-1,1);
-    r0e = new RooRealVar("r0e","r0e",0,1);
-    rt = new RooRealVar("rt","rt",-1,1);
-    rti = new RooRealVar("rti","rti",-1,1);
-    rte = new RooRealVar("rte","rte",0,1);
+    xp = new RooRealVar("xp","xp",-1,1);
+    xpi = new RooRealVar("xpi","xpi",-1,1);
+    xpe = new RooRealVar("xpe","xpe",0,1);
+    x0 = new RooRealVar("x0","x0",-1,1);
+    x0i = new RooRealVar("x0i","x0i",-1,1);
+    x0e = new RooRealVar("x0e","x0e",0,1);
+    xt = new RooRealVar("xt","xt",-1,1);
+    xti = new RooRealVar("xti","xti",-1,1);
+    xte = new RooRealVar("xte","xte",0,1);
 
-    sp = new RooRealVar("sp","sp",-PI,PI);
-    spi = new RooRealVar("spi","spi",-1*PI,1*PI);
-    spe = new RooRealVar("spe","spe",0,20);
-    s0 = new RooRealVar("s0","s0",-PI,PI);
-    s0i = new RooRealVar("s0i","s0i",-1*PI,1*PI);
-    s0e = new RooRealVar("s0e","s0e",0,20);
-    st = new RooRealVar("st","st",-PI,PI);
-    sti = new RooRealVar("sti","sti",-1*PI,1*PI);
-    ste = new RooRealVar("ste","ste",0,20);
+    yp = new RooRealVar("yp","yp",-PI,PI);
+    ypi = new RooRealVar("ypi","ypi",-1*PI,1*PI);
+    ype = new RooRealVar("ype","ype",0,20);
+    y0 = new RooRealVar("y0","y0",-PI,PI);
+    y0i = new RooRealVar("y0i","y0i",-1*PI,1*PI);
+    y0e = new RooRealVar("y0e","y0e",0,20);
+    yt = new RooRealVar("yt","yt",-PI,PI);
+    yti = new RooRealVar("yti","yti",-1*PI,1*PI);
+    yte = new RooRealVar("yte","yte",0,20);
 }
 
 ObservablesCollection::~ObservablesCollection()
@@ -68,12 +68,12 @@ RooArgList ObservablesCollection::CreateArgList()
     argList.add(RooArgList(*a0i,*a0,*a0e,*sep,*a0ai,*a0a,*a0ae,*sep));
     argList.add(RooArgList(*ati,*at,*ate,*sep,*atai,*ata,*atae,*sep));
     argList.add(RooArgList(*sep,*phiwi,*phiw,*phiwe,*sep,*sep));
-    argList.add(RooArgList(*rpi,*rp,*rpe,*sep));
-    argList.add(RooArgList(*r0i,*r0,*r0e,*sep));
-    argList.add(RooArgList(*rti,*rt,*rte,*sep,*sep));
-    argList.add(RooArgList(*spi,*sp,*spe,*sep));
-    argList.add(RooArgList(*s0i,*s0,*s0e,*sep));
-    argList.add(RooArgList(*sti,*st,*ste));
+    argList.add(RooArgList(*xpi,*xp,*xpe,*sep));
+    argList.add(RooArgList(*x0i,*x0,*x0e,*sep));
+    argList.add(RooArgList(*xti,*xt,*xte,*sep,*sep));
+    argList.add(RooArgList(*ypi,*yp,*ype,*sep));
+    argList.add(RooArgList(*y0i,*y0,*y0e,*sep));
+    argList.add(RooArgList(*yti,*yt,*yte));
     return argList;
 }
 
@@ -107,25 +107,25 @@ void ObservablesCollection::BindToDataset(RooDataSet* dataset){
     phiwi= static_cast<RooRealVar*>(vars->find(phiwi->GetName()));
     phiwe= static_cast<RooRealVar*>(vars->find(phiwe->GetName()));
 
-    rp = static_cast<RooRealVar*>(vars->find(rp->GetName()));
-    rpi = static_cast<RooRealVar*>(vars->find(rpi->GetName()));
-    rpe = static_cast<RooRealVar*>(vars->find(rpe->GetName()));
-    r0 = static_cast<RooRealVar*>(vars->find(r0->GetName()));
-    r0i = static_cast<RooRealVar*>(vars->find(r0i->GetName()));
-    r0e = static_cast<RooRealVar*>(vars->find(r0e->GetName()));
-    rt = static_cast<RooRealVar*>(vars->find(rt->GetName()));
-    rti = static_cast<RooRealVar*>(vars->find(rti->GetName()));
-    rte = static_cast<RooRealVar*>(vars->find(rte->GetName()));
+    xp = static_cast<RooRealVar*>(vars->find(xp->GetName()));
+    xpi = static_cast<RooRealVar*>(vars->find(xpi->GetName()));
+    xpe = static_cast<RooRealVar*>(vars->find(xpe->GetName()));
+    x0 = static_cast<RooRealVar*>(vars->find(x0->GetName()));
+    x0i = static_cast<RooRealVar*>(vars->find(x0i->GetName()));
+    x0e = static_cast<RooRealVar*>(vars->find(x0e->GetName()));
+    xt = static_cast<RooRealVar*>(vars->find(xt->GetName()));
+    xti = static_cast<RooRealVar*>(vars->find(xti->GetName()));
+    xte = static_cast<RooRealVar*>(vars->find(xte->GetName()));
 
-    sp = static_cast<RooRealVar*>(vars->find(sp->GetName()));
-    spi = static_cast<RooRealVar*>(vars->find(spi->GetName()));
-    spe = static_cast<RooRealVar*>(vars->find(spe->GetName()));
-    s0 = static_cast<RooRealVar*>(vars->find(s0->GetName()));
-    s0i = static_cast<RooRealVar*>(vars->find(s0i->GetName()));
-    s0e = static_cast<RooRealVar*>(vars->find(s0e->GetName()));
-    st = static_cast<RooRealVar*>(vars->find(st->GetName()));
-    sti = static_cast<RooRealVar*>(vars->find(sti->GetName()));
-    ste = static_cast<RooRealVar*>(vars->find(ste->GetName()));
+    yp = static_cast<RooRealVar*>(vars->find(yp->GetName()));
+    ypi = static_cast<RooRealVar*>(vars->find(ypi->GetName()));
+    ype = static_cast<RooRealVar*>(vars->find(ype->GetName()));
+    y0 = static_cast<RooRealVar*>(vars->find(y0->GetName()));
+    y0i = static_cast<RooRealVar*>(vars->find(y0i->GetName()));
+    y0e = static_cast<RooRealVar*>(vars->find(y0e->GetName()));
+    yt = static_cast<RooRealVar*>(vars->find(yt->GetName()));
+    yti = static_cast<RooRealVar*>(vars->find(yti->GetName()));
+    yte = static_cast<RooRealVar*>(vars->find(yte->GetName()));
 
     errors[0] = ape;
     errors[1] = apae;
@@ -136,12 +136,12 @@ void ObservablesCollection::BindToDataset(RooDataSet* dataset){
 
     errors[6] = phiwe;
 
-    errors[7] = rpe;
-    errors[8] = r0e;
-    errors[9] = rte;
-    errors[10] = spe;
-    errors[11] = s0e;
-    errors[12] = ste;
+    errors[7] = xpe;
+    errors[8] = x0e;
+    errors[9] = xte;
+    errors[10] = ype;
+    errors[11] = y0e;
+    errors[12] = yte;
 
 }
 
@@ -155,13 +155,13 @@ void ObservablesCollection::CreateResidualsAndPulls(RooDataSet* dataset){
 
     RooFormulaVar f_residual_phiw("residual_phiw","(phiw-phiwi)",RooArgSet(*phiw,*phiwi,*phiwe));
 
-    RooFormulaVar f_residual_rp("residual_rp","(rp-rpi)",RooArgSet(*rp,*rpi,*rpe));
-    RooFormulaVar f_residual_r0("residual_r0","(r0-r0i)",RooArgSet(*r0,*r0i,*r0e));
-    RooFormulaVar f_residual_rt("residual_rt","(rt-rti)",RooArgSet(*rt,*rti,*rte));
+    RooFormulaVar f_residual_xp("residual_xp","(xp-xpi)",RooArgSet(*xp,*xpi,*xpe));
+    RooFormulaVar f_residual_x0("residual_x0","(x0-x0i)",RooArgSet(*x0,*x0i,*x0e));
+    RooFormulaVar f_residual_xt("residual_xt","(xt-xti)",RooArgSet(*xt,*xti,*xte));
 
-    RooFormulaVar f_residual_sp("residual_sp","(sp-spi)",RooArgSet(*sp,*spi,*spe));
-    RooFormulaVar f_residual_s0("residual_s0","(s0-s0i)",RooArgSet(*s0,*s0i,*s0e));
-    RooFormulaVar f_residual_st("residual_st","(st-sti)",RooArgSet(*st,*sti,*ste));
+    RooFormulaVar f_residual_yp("residual_yp","(yp-ypi)",RooArgSet(*yp,*ypi,*ype));
+    RooFormulaVar f_residual_y0("residual_y0","(y0-y0i)",RooArgSet(*y0,*y0i,*y0e));
+    RooFormulaVar f_residual_yt("residual_yt","(yt-yti)",RooArgSet(*yt,*yti,*yte));
 
     residual_ap = static_cast<RooRealVar*>(dataset->addColumn(f_residual_ap));
     residual_apa = static_cast<RooRealVar*>(dataset->addColumn(f_residual_apa));
@@ -172,13 +172,13 @@ void ObservablesCollection::CreateResidualsAndPulls(RooDataSet* dataset){
 
     residual_phiw = static_cast<RooRealVar*>(dataset->addColumn(f_residual_phiw));
 
-    residual_rp = static_cast<RooRealVar*>(dataset->addColumn(f_residual_rp));
-    residual_r0 = static_cast<RooRealVar*>(dataset->addColumn(f_residual_r0));
-    residual_rt = static_cast<RooRealVar*>(dataset->addColumn(f_residual_rt));
+    residual_xp = static_cast<RooRealVar*>(dataset->addColumn(f_residual_xp));
+    residual_x0 = static_cast<RooRealVar*>(dataset->addColumn(f_residual_x0));
+    residual_xt = static_cast<RooRealVar*>(dataset->addColumn(f_residual_xt));
 
-    residual_sp = static_cast<RooRealVar*>(dataset->addColumn(f_residual_sp));
-    residual_s0 = static_cast<RooRealVar*>(dataset->addColumn(f_residual_s0));
-    residual_st = static_cast<RooRealVar*>(dataset->addColumn(f_residual_st));
+    residual_yp = static_cast<RooRealVar*>(dataset->addColumn(f_residual_yp));
+    residual_y0 = static_cast<RooRealVar*>(dataset->addColumn(f_residual_y0));
+    residual_yt = static_cast<RooRealVar*>(dataset->addColumn(f_residual_yt));
 
     residuals[0] = residual_ap;
     residuals[1] = residual_apa;
@@ -189,12 +189,12 @@ void ObservablesCollection::CreateResidualsAndPulls(RooDataSet* dataset){
 
     residuals[6] = residual_phiw;
 
-    residuals[7] = residual_rp;
-    residuals[8] = residual_r0;
-    residuals[9] = residual_rt;
-    residuals[10] = residual_sp;
-    residuals[11] = residual_s0;
-    residuals[12] = residual_st;
+    residuals[7] = residual_xp;
+    residuals[8] = residual_x0;
+    residuals[9] = residual_xt;
+    residuals[10] = residual_yp;
+    residuals[11] = residual_y0;
+    residuals[12] = residual_yt;
 
 
     RooFormulaVar f_pull_ap("pull_ap","(ap-api)/ape",RooArgSet(*ap,*api,*ape));
@@ -206,13 +206,13 @@ void ObservablesCollection::CreateResidualsAndPulls(RooDataSet* dataset){
 
     RooFormulaVar f_pull_phiw("pull_phiw","(phiw-phiwi)/phiwe",RooArgSet(*phiw,*phiwi,*phiwe));
 
-    RooFormulaVar f_pull_rp("pull_rp","(rp-rpi)/rpe",RooArgSet(*rp,*rpi,*rpe));
-    RooFormulaVar f_pull_r0("pull_r0","(r0-r0i)/r0e",RooArgSet(*r0,*r0i,*r0e));
-    RooFormulaVar f_pull_rt("pull_rt","(rt-rti)/rte",RooArgSet(*rt,*rti,*rte));
+    RooFormulaVar f_pull_xp("pull_xp","(xp-xpi)/xpe",RooArgSet(*xp,*xpi,*xpe));
+    RooFormulaVar f_pull_x0("pull_x0","(x0-x0i)/x0e",RooArgSet(*x0,*x0i,*x0e));
+    RooFormulaVar f_pull_xt("pull_xt","(xt-xti)/xte",RooArgSet(*xt,*xti,*xte));
 
-    RooFormulaVar f_pull_sp("pull_sp","(sp-spi)/spe",RooArgSet(*sp,*spi,*spe));
-    RooFormulaVar f_pull_s0("pull_s0","(s0-s0i)/s0e",RooArgSet(*s0,*s0i,*s0e));
-    RooFormulaVar f_pull_st("pull_st","(st-sti)/ste",RooArgSet(*st,*sti,*ste));
+    RooFormulaVar f_pull_yp("pull_yp","(yp-ypi)/ype",RooArgSet(*yp,*ypi,*ype));
+    RooFormulaVar f_pull_y0("pull_y0","(y0-y0i)/y0e",RooArgSet(*y0,*y0i,*y0e));
+    RooFormulaVar f_pull_yt("pull_yt","(yt-yti)/yte",RooArgSet(*yt,*yti,*yte));
 
     pull_ap = static_cast<RooRealVar*>(dataset->addColumn(f_pull_ap));
     pull_apa = static_cast<RooRealVar*>(dataset->addColumn(f_pull_apa));
@@ -223,13 +223,13 @@ void ObservablesCollection::CreateResidualsAndPulls(RooDataSet* dataset){
 
     pull_phiw = static_cast<RooRealVar*>(dataset->addColumn(f_pull_phiw));
 
-    pull_rp = static_cast<RooRealVar*>(dataset->addColumn(f_pull_rp));
-    pull_r0 = static_cast<RooRealVar*>(dataset->addColumn(f_pull_r0));
-    pull_rt = static_cast<RooRealVar*>(dataset->addColumn(f_pull_rt));
+    pull_xp = static_cast<RooRealVar*>(dataset->addColumn(f_pull_xp));
+    pull_x0 = static_cast<RooRealVar*>(dataset->addColumn(f_pull_x0));
+    pull_xt = static_cast<RooRealVar*>(dataset->addColumn(f_pull_xt));
 
-    pull_sp = static_cast<RooRealVar*>(dataset->addColumn(f_pull_sp));
-    pull_s0 = static_cast<RooRealVar*>(dataset->addColumn(f_pull_s0));
-    pull_st = static_cast<RooRealVar*>(dataset->addColumn(f_pull_st));
+    pull_yp = static_cast<RooRealVar*>(dataset->addColumn(f_pull_yp));
+    pull_y0 = static_cast<RooRealVar*>(dataset->addColumn(f_pull_y0));
+    pull_yt = static_cast<RooRealVar*>(dataset->addColumn(f_pull_yt));
 
     pulls[0] = pull_ap;
     pulls[1] = pull_apa;
@@ -240,36 +240,10 @@ void ObservablesCollection::CreateResidualsAndPulls(RooDataSet* dataset){
 
     pulls[6] = pull_phiw;
 
-    pulls[7] = pull_rp;
-    pulls[8] = pull_r0;
-    pulls[9] = pull_rt;
-    pulls[10] = pull_sp;
-    pulls[11] = pull_s0;
-    pulls[12] = pull_st;
-}
-
-void ObservablesCollection::AdjustInputSForPeriodicity(RooDataSet*& old_dataset){
-    RooDataSet* dataset = static_cast<RooDataSet*>(old_dataset->emptyClone());
-    for(int i = 0; i < old_dataset->sumEntries(); i++){
-        old_dataset->get(i);
-        if((sp->getVal()-spi->getVal()) > PI){
-            spi->setVal(spi->getVal() +2*PI);
-        } else if ((sp->getVal()-spi->getVal()) < -PI) {
-            spi->setVal(spi->getVal() -2*PI);
-        }
-        if((s0->getVal()-s0i->getVal()) > PI){
-            s0i->setVal(s0i->getVal() +2*PI);
-        } else if ((s0->getVal()-s0i->getVal()) < -PI) {
-            s0i->setVal(s0i->getVal() -2*PI);
-        }
-        if((st->getVal()-sti->getVal()) > PI){
-            sti->setVal(sti->getVal() +2*PI);
-        } else if ((st->getVal()-sti->getVal()) < -PI) {
-            sti->setVal(sti->getVal() -2*PI);
-        }
-        dataset->add(*(old_dataset->get()));
-    }
-    this->BindToDataset(dataset);
-    delete old_dataset;
-    old_dataset = dataset;
+    pulls[7] = pull_xp;
+    pulls[8] = pull_x0;
+    pulls[9] = pull_xt;
+    pulls[10] = pull_yp;
+    pulls[11] = pull_y0;
+    pulls[12] = pull_yt;
 }
