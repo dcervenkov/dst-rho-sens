@@ -166,6 +166,7 @@ void CreateErrorProgression(int argc, char* argv[]){
 void CreatePullsAndMaps(char* successful_file, char* all_file) {
     ObservablesCollection c;
     RooDataSet* dataset = RooDataSet::read(successful_file,c.CreateArgList());
+    dataset = static_cast<RooDataSet*> (dataset->reduce("phiwe < 1"));
     c.BindToDataset(dataset);
     //c.AdjustInputSForPeriodicity(dataset);
     c.CreateResidualsAndPulls(dataset);
@@ -240,6 +241,7 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
     RooRealVar sigma("sigma","sigma",1,-10,10);;
     RooPlot* frame;
 
+
     TCanvas* c_amp_pulls = new TCanvas("c_amp_pulls","Amplitude pulls",1280,800);
     c_amp_pulls->Divide(3,2);
     for(int i = 0; i < 6; i++) {
@@ -253,7 +255,7 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
             gaus[i] = new RooGaussian((TString("gaus") + TString(i)).Data(),(TString("gaus") + TString(i)).Data(),*(c.pulls[i]),mean,sigma);
             gaus[i]->fitTo(*dataset);
             gaus[i]->paramOn(frame);
-            gaus[i]->plotOn(frame);
+            gaus[i]->plotOn(frame,RooFit::LineWidth(2));
         }
         frame->Draw();
     }
@@ -292,7 +294,7 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         gaus[6] = new RooGaussian("gaus_phiw","gaus_phiw",*(c.pull_phiw),mean,sigma);
         gaus[6]->fitTo(*dataset);
         gaus[6]->paramOn(frame);
-        gaus[6]->plotOn(frame);
+        gaus[6]->plotOn(frame,RooFit::LineWidth(2));
     }
     frame->Draw();
 
@@ -325,7 +327,7 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
             gaus[i] = new RooGaussian((TString("gaus") + TString(i)).Data(),(TString("gaus") + TString(i)).Data(),*(c.pulls[i]),mean,sigma);
             gaus[i]->fitTo(*dataset);
             gaus[i]->paramOn(frame);
-            gaus[i]->plotOn(frame);
+            gaus[i]->plotOn(frame,RooFit::LineWidth(2));
         }
         frame->Draw();
     }
