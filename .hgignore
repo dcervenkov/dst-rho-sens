@@ -16,3 +16,4 @@ DSRho*/log*
 nohup.out
 old_eclipse_stuff
 DSRhoFit/scripts/hist_add
+DSRhoFit/scripts/errors/
