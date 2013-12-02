@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 
     gStyle->SetOptStat(0);
     gStyle->SetPaintTextFormat("3.2g");
-    gStyle->SetMarkerSize(2);
+    gStyle->SetMarkerSize(1);
     gEnv->SetValue("Canvas.PrintDirectory","plots");
 
     if(!strcmp(argv[1],"1")){
@@ -166,7 +166,8 @@ void CreateErrorProgression(int argc, char* argv[]){
 void CreatePullsAndMaps(char* successful_file, char* all_file) {
     ObservablesCollection c;
     RooDataSet* dataset = RooDataSet::read(successful_file,c.CreateArgList());
-    dataset = static_cast<RooDataSet*> (dataset->reduce("phiwe < 1"));
+    dataset = static_cast<RooDataSet*> (dataset->reduce("xpe < 0.06"));
+    dataset = static_cast<RooDataSet*> (dataset->reduce("xbpe < 0.06"));
     c.BindToDataset(dataset);
     //c.AdjustInputSForPeriodicity(dataset);
     c.CreateResidualsAndPulls(dataset);
@@ -236,9 +237,10 @@ std::vector<TH2D*> CreateMaps(const RooDataSet* const dataset) {
 
 void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c) {
     Int_t plotMap[] = {1,4,2,5,3,6};
+    RooCmdArg drawoption = RooFit::DrawOption("BOX");
     RooGaussian* gaus[13];
     RooRealVar mean("mean","mean",0,-1,1);
-    RooRealVar sigma("sigma","sigma",1,-10,10);;
+    RooRealVar sigma("sigma","sigma",1,-10,10);
     RooPlot* frame;
 
 
@@ -249,9 +251,9 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         frame = c.pulls[i]->frame(RooFit::AutoRange(*dataset));
         if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
             frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
-            dataset->plotOn(frame,RooFit::DrawOption("BX"));
+            dataset->plotOn(frame,drawoption);
         } else {
-            dataset->plotOn(frame,RooFit::DrawOption("BX"));
+            dataset->plotOn(frame,drawoption);
             gaus[i] = new RooGaussian((TString("gaus") + TString(i)).Data(),(TString("gaus") + TString(i)).Data(),*(c.pulls[i]),mean,sigma);
             gaus[i]->fitTo(*dataset);
             gaus[i]->paramOn(frame);
@@ -267,7 +269,7 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
             frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
         }
-        dataset->plotOn(frame,RooFit::DrawOption("BX"));
+        dataset->plotOn(frame,drawoption);
         frame->Draw("BX");
     }
     TCanvas* c_amp_errors = new TCanvas("c_amp_errors","Amplitude errors",1280,800);
@@ -278,52 +280,20 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
             frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
         }
-        dataset->plotOn(frame,RooFit::DrawOption("BX"));
+        dataset->plotOn(frame,drawoption);
         frame->Draw("BX");
     }
 
-    TCanvas* c_phiw = new TCanvas("c_phiw","Weak phase",1280,400);
-    c_phiw->Divide(3);
-    c_phiw->cd(1);
-    frame = c.pull_phiw->frame(RooFit::AutoRange(*dataset));
-    if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
-        frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
-        dataset->plotOn(frame,RooFit::DrawOption("BX"));
-    } else {
-        dataset->plotOn(frame,RooFit::DrawOption("BX"));
-        gaus[6] = new RooGaussian("gaus_phiw","gaus_phiw",*(c.pull_phiw),mean,sigma);
-        gaus[6]->fitTo(*dataset);
-        gaus[6]->paramOn(frame);
-        gaus[6]->plotOn(frame,RooFit::LineWidth(2));
-    }
-    frame->Draw();
-
-    c_phiw->cd(2);
-    frame = c.residual_phiw->frame(RooFit::AutoRange(*dataset));
-    if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
-        frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
-    }
-    dataset->plotOn(frame,RooFit::DrawOption("BX"));
-    frame->Draw();
-
-    c_phiw->cd(3);
-    frame = c.phiwe->frame(RooFit::AutoRange(*dataset));
-    if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
-        frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
-    }
-    dataset->plotOn(frame,RooFit::DrawOption("BX"));
-    frame->Draw();
-//
-    TCanvas* c_rs_pulls = new TCanvas("c_rs_pulls","r and strong phase pulls",1280,800);
-    c_rs_pulls->Divide(3,2);
-    for(int i = 7; i < 13; i++) {
-        c_rs_pulls->cd(i-6);
+    TCanvas* c_xy_pulls = new TCanvas("c_xy_pulls","x and y pulls",1280,800);
+    c_xy_pulls->Divide(3,2);
+    for(int i = 6; i < 12; i++) {
+        c_xy_pulls->cd(i-5);
         frame = c.pulls[i]->frame(RooFit::AutoRange(*dataset));
         if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
             frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
-            dataset->plotOn(frame,RooFit::DrawOption("BX"));
+            dataset->plotOn(frame,drawoption);
         } else {
-            dataset->plotOn(frame,RooFit::DrawOption("BX"));
+            dataset->plotOn(frame,drawoption);
             gaus[i] = new RooGaussian((TString("gaus") + TString(i)).Data(),(TString("gaus") + TString(i)).Data(),*(c.pulls[i]),mean,sigma);
             gaus[i]->fitTo(*dataset);
             gaus[i]->paramOn(frame);
@@ -331,36 +301,78 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         }
         frame->Draw();
     }
-    TCanvas* c_rs_residuals = new TCanvas("c_rs_residuals","r and strong phase residuals",1280,800);
-    c_rs_residuals->Divide(3,2);
-    for(int i = 7; i < 13; i++) {
-        c_rs_residuals->cd(i-6);
+    TCanvas* c_xy_residuals = new TCanvas("c_xy_residuals","x and y residuals",1280,800);
+    c_xy_residuals->Divide(3,2);
+    for(int i = 6; i < 12; i++) {
+        c_xy_residuals->cd(i-5);
         frame = c.residuals[i]->frame(RooFit::AutoRange(*dataset));
         if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
             frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
         }
-        dataset->plotOn(frame,RooFit::DrawOption("BX"));
-        frame->Draw("BX");
+        dataset->plotOn(frame,drawoption);
+        frame->Draw();
     }
-    TCanvas* c_rs_errors = new TCanvas("c_rs_errors","r and strong phase errors",1280,800);
-    c_rs_errors->Divide(3,2);
-    for(int i = 7; i < 13; i++) {
-        c_rs_errors->cd(i-6);
+    TCanvas* c_xy_errors = new TCanvas("c_xy_errors","x and y errors",1280,800);
+    c_xy_errors->Divide(3,2);
+    for(int i = 6; i < 12; i++) {
+        c_xy_errors->cd(i-5);
         frame = c.errors[i]->frame(RooFit::AutoRange(*dataset));
         if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
             frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
         }
-        dataset->plotOn(frame,RooFit::DrawOption("BX"));
-        frame->Draw("BX");
+        dataset->plotOn(frame,drawoption);
+        frame->Draw();
+    }
+
+    TCanvas* c_xbyb_pulls = new TCanvas("c_xbyb_pulls","xb and yb pulls",1280,800);
+    c_xbyb_pulls->Divide(3,2);
+    for(int i = 12; i < 18; i++) {
+        c_xbyb_pulls->cd(i-11);
+        frame = c.pulls[i]->frame(RooFit::AutoRange(*dataset));
+        if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
+            frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
+            dataset->plotOn(frame,drawoption);
+        } else {
+            dataset->plotOn(frame,drawoption);
+            gaus[i] = new RooGaussian((TString("gaus") + TString(i)).Data(),(TString("gaus") + TString(i)).Data(),*(c.pulls[i]),mean,sigma);
+            gaus[i]->fitTo(*dataset);
+            gaus[i]->paramOn(frame);
+            gaus[i]->plotOn(frame,RooFit::LineWidth(2));
+        }
+        frame->Draw();
+    }
+    TCanvas* c_xbyb_residuals = new TCanvas("c_xbyb_residuals","xb and yb residuals",1280,800);
+    c_xbyb_residuals->Divide(3,2);
+    for(int i = 12; i < 18; i++) {
+        c_xbyb_residuals->cd(i-11);
+        frame = c.residuals[i]->frame(RooFit::AutoRange(*dataset));
+        if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
+            frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
+        }
+        dataset->plotOn(frame,drawoption);
+        frame->Draw();
+    }
+    TCanvas* c_xbyb_errors = new TCanvas("c_xbyb_errors","xb and yb errors",1280,800);
+    c_xbyb_errors->Divide(3,2);
+    for(int i = 12; i < 18; i++) {
+        c_xbyb_errors->cd(i-11);
+        frame = c.errors[i]->frame(RooFit::AutoRange(*dataset));
+        if(frame->GetXaxis()->GetXmin() == frame->GetXaxis()->GetXmax()) {
+            frame->GetXaxis()->SetLimits(frame->GetXaxis()->GetXmax()-1,frame->GetXaxis()->GetXmax()+1);
+        }
+        dataset->plotOn(frame,drawoption);
+        frame->Draw();
     }
 
     c_amp_pulls->SaveAs(".gif");
     c_amp_residuals->SaveAs(".gif");
     c_amp_errors->SaveAs(".gif");
-    c_phiw->SaveAs(".gif");
-    c_rs_pulls->SaveAs(".gif");
-    c_rs_residuals->SaveAs(".gif");
-    c_rs_errors->SaveAs(".gif");
+    c_xy_pulls->SaveAs(".gif");
+    c_xy_residuals->SaveAs(".gif");
+    c_xy_errors->SaveAs(".gif");
+    c_xbyb_pulls->SaveAs(".gif");
+    c_xbyb_residuals->SaveAs(".gif");
+    c_xbyb_errors->SaveAs(".gif");
 
     return;
 }

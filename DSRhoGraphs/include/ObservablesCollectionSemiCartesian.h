@@ -45,6 +45,10 @@ class ObservablesCollection
         RooRealVar* atai;
         RooRealVar* atae;
 
+        RooRealVar* phiw;
+        RooRealVar* phiwi;
+        RooRealVar* phiwe;
+
         RooRealVar* xp;
         RooRealVar* xpi;
         RooRealVar* xpe;
@@ -65,32 +69,14 @@ class ObservablesCollection
         RooRealVar* yti;
         RooRealVar* yte;
 
-        RooRealVar* xbp;
-        RooRealVar* xbpi;
-        RooRealVar* xbpe;
-        RooRealVar* xb0;
-        RooRealVar* xb0i;
-        RooRealVar* xb0e;
-        RooRealVar* xbt;
-        RooRealVar* xbti;
-        RooRealVar* xbte;
-
-        RooRealVar* ybp;
-        RooRealVar* ybpi;
-        RooRealVar* ybpe;
-        RooRealVar* yb0;
-        RooRealVar* yb0i;
-        RooRealVar* yb0e;
-        RooRealVar* ybt;
-        RooRealVar* ybti;
-        RooRealVar* ybte;
-
         RooRealVar* residual_ap;
         RooRealVar* residual_apa;
         RooRealVar* residual_a0;
         RooRealVar* residual_a0a;
         RooRealVar* residual_at;
         RooRealVar* residual_ata;
+
+        RooRealVar* residual_phiw;
 
         RooRealVar* residual_xp;
         RooRealVar* residual_x0;
@@ -100,20 +86,14 @@ class ObservablesCollection
         RooRealVar* residual_y0;
         RooRealVar* residual_yt;
 
-        RooRealVar* residual_xbp;
-        RooRealVar* residual_xb0;
-        RooRealVar* residual_xbt;
-
-        RooRealVar* residual_ybp;
-        RooRealVar* residual_yb0;
-        RooRealVar* residual_ybt;
-
         RooRealVar* pull_ap;
         RooRealVar* pull_apa;
         RooRealVar* pull_a0;
         RooRealVar* pull_a0a;
         RooRealVar* pull_at;
         RooRealVar* pull_ata;
+
+        RooRealVar* pull_phiw;
 
         RooRealVar* pull_xp;
         RooRealVar* pull_x0;
@@ -123,17 +103,9 @@ class ObservablesCollection
         RooRealVar* pull_y0;
         RooRealVar* pull_yt;
 
-        RooRealVar* pull_xbp;
-        RooRealVar* pull_xb0;
-        RooRealVar* pull_xbt;
-
-        RooRealVar* pull_ybp;
-        RooRealVar* pull_yb0;
-        RooRealVar* pull_ybt;
-
-        RooRealVar* residuals[18];
-        RooRealVar* pulls[18];
-        RooRealVar* errors[18];
+        RooRealVar* residuals[13];
+        RooRealVar* pulls[13];
+        RooRealVar* errors[13];
 
 
     protected:
