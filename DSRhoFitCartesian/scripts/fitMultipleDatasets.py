@@ -4,6 +4,11 @@ import sys
 import os
 import subprocess
 import time
+import cmath
+
+# What do_fit values mean what
+optFit = 1
+optGenerate = 4
 
 # Change these settings to configure the script
 ###############################################
@@ -12,16 +17,11 @@ root_path = "../"
 data_path = "data_gen5/"
 results_path = "results/"
 log_path = "logs/"
-do_fit = 1
+do_fit = optFit
 do_plot = 0
 enable_checks = 1 # Disable checks which require user input when running with, e.g., nohup
 ###############################################
 
-# What do_fit values mean what
-optFit = 1
-optGenerate = 4
-
-pars = ['','','','','','','','','','','']
 
 def parseMetafile(dataset,pars):
     with open(dataset+".meta") as f:
@@ -52,6 +52,73 @@ def parseMetafile(dataset,pars):
             elif tag == 's0':  pars[9] = val
             elif tag == 'st':  pars[10] = val
 
+def convertToSemiCartesian(pars):
+    rp = float(pars[5])
+    r0 = float(pars[6])
+    rt = float(pars[7])
+    sp = float(pars[8])
+    s0 = float(pars[9])
+    st = float(pars[10])
+    crp = cmath.rect(rp,sp)
+    cr0 = cmath.rect(r0,s0)
+    crt = cmath.rect(rt,st)
+    xp = crp.real
+    yp = crp.imag
+    x0 = cr0.real
+    y0 = cr0.imag
+    xt = crt.real
+    yt = crt.imag
+    pars[5] = "%.3f" % round(xp,3)
+    pars[6] = "%.3f" % round(x0,3)
+    pars[7] = "%.3f" % round(xt,3)
+    pars[8] = "%.3f" % round(yp,3)
+    pars[9] = "%.3f" % round(y0,3)
+    pars[10]= "%.3f" % round(yt,3)
+    
+def convertToCartesian(pars):
+    phiw = float(pars[4])
+    rp = float(pars[5])
+    r0 = float(pars[6])
+    rt = float(pars[7])
+    sp = float(pars[8])
+    s0 = float(pars[9])
+    st = float(pars[10])
+
+    crp = cmath.rect(rp,-phiw+sp)
+    cr0 = cmath.rect(r0,-phiw+s0)
+    crt = cmath.rect(rt,-phiw+st)
+    
+    xp = crp.real
+    yp = crp.imag
+    x0 = cr0.real
+    y0 = cr0.imag
+    xt = crt.real
+    yt = crt.imag
+    
+    crpb = cmath.rect(rp,+phiw+sp)
+    cr0b = cmath.rect(r0,+phiw+s0)
+    crtb = cmath.rect(rt,+phiw+st)
+    
+    xpb = crpb.real
+    ypb = crpb.imag
+    x0b = cr0b.real
+    y0b = cr0b.imag
+    xtb = crtb.real
+    ytb = crtb.imag
+
+    pars[4] = "%.3f" % round(xp,3)
+    pars[5] = "%.3f" % round(x0,3)
+    pars[6] = "%.3f" % round(xt,3)
+    pars[7] = "%.3f" % round(yp,3)
+    pars[8] = "%.3f" % round(y0,3)
+    pars[9] = "%.3f" % round(yt,3)
+    pars[10]= "%.3f" % round(xpb,3)
+    pars[11]= "%.3f" % round(x0b,3)
+    pars[12]= "%.3f" % round(xtb,3)
+    pars[13]= "%.3f" % round(ypb,3)
+    pars[14]= "%.3f" % round(y0b,3)
+    pars[15]= "%.3f" % round(ytb,3)
+
 def createCommand(dataset,pars):
     command = 'nice bin/Release/DSRhoFitCartesian ' + dataset + ' ' + dataset.replace(data_path,results_path) + \
               '.res ' + ' '.join(pars) + ' ' + str(do_fit) + ' ' + str(do_plot) +' > ' + dataset.replace(data_path,log_path) + '.log ' + '2>&1 &'
@@ -70,7 +137,11 @@ def checkIfEmpty(path):
 def initChecks():
     if do_fit == optGenerate :
         checkIfEmpty(log_path)
-        checkIfEmpty(data_path)
+        checkIfEmpty(data_path) #TODO Should check only for data files
+        for dataset in datasets:
+            if not os.path.isfile(dataset + ".meta"):
+                print("ERROR: Not all metafiles exist in " + data_path)
+                quit(2)
     elif do_fit == optFit :
         checkIfEmpty(results_path)
         checkIfEmpty(log_path)
@@ -102,6 +173,7 @@ end_dataset = int(sys.argv[2])
 
 os.chdir(root_path)
 datasets = []
+pars = [None]*16
 
 for i in range(beg_dataset,end_dataset+1):
     datasets.append(data_path+"dataset_"+str(i))
@@ -111,6 +183,7 @@ if enable_checks: initChecks()
 job_counter = 0
 for dataset in datasets:
     parseMetafile(dataset,pars)
+    convertToCartesian(pars)
     command = createCommand(dataset,pars)
     
     while(numberOfJobs() >= max_jobs):
