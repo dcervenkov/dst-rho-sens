@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="DSRhoRecover" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/DSRhoRecover" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="2 data/fit_same2_r0.01.res data/fit_same2_r0.04.res" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/DSRhoRecover" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add directory="include" />
+			<Add directory="/usr/local/include/root" />
+		</Compiler>
+		<Linker>
+			<Add library="/usr/local/lib/root/libCore.so" />
+			<Add library="/usr/local/lib/root/libGpad.so" />
+			<Add library="/usr/local/lib/root/libHist.so" />
+			<Add library="/usr/local/lib/root/libMathCore.so" />
+			<Add library="/usr/local/lib/root/libMinuit.so" />
+			<Add library="/usr/local/lib/root/libMinuit2.so" />
+			<Add library="/usr/local/lib/root/libRooFit.so" />
+			<Add library="/usr/local/lib/root/libRooFitCore.so" />
+			<Add library="/usr/local/lib/root/libTree.so" />
+			<Add directory="/usr/local/lib/root" />
+		</Linker>
+		<Unit filename="include/DSRhoGraphs.h" />
+		<Unit filename="include/ObservablesCollectionCartesian.h" />
+		<Unit filename="src/DSRhoGraphs.cpp" />
+		<Unit filename="src/ObservablesCollectionCartesian.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<lib_finder disable_auto="1" />
+			<debugger />
+			<DoxyBlocks>
+				<comment_style block="5" line="2" />
+				<doxyfile_project />
+				<doxyfile_build />
+				<doxyfile_warnings />
+				<doxyfile_output />
+				<doxyfile_dot />
+				<general />
+			</DoxyBlocks>
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
