@@ -167,6 +167,20 @@ Int_t MyPDF::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, cons
     intSet.add(yb0.arg());
     intSet.add(ybt.arg());
 
+    intSet.add(xpe.arg());
+    intSet.add(x0e.arg());
+    intSet.add(xte.arg());
+    intSet.add(ype.arg());
+    intSet.add(y0e.arg());
+    intSet.add(yte.arg());
+
+    intSet.add(xbpe.arg());
+    intSet.add(xb0e.arg());
+    intSet.add(xbte.arg());
+    intSet.add(ybpe.arg());
+    intSet.add(yb0e.arg());
+    intSet.add(ybte.arg());
+
     if (matchArgs(allVars,analVars,intSet)) return 1 ;
 
     return 0;

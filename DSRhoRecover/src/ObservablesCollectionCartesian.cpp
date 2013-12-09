@@ -1,5 +1,6 @@
 #include "ObservablesCollectionCartesian.h"
 #include "DSRhoRecover.h"
+#include <cmath>
 
 ObservablesCollection::ObservablesCollection()
 {
@@ -66,6 +67,25 @@ ObservablesCollection::ObservablesCollection()
     ybt = new RooRealVar("ybt","ybt",-1,1);
     ybti = new RooRealVar("ybti","ybti",-1,1);
     ybte = new RooRealVar("ybte","ybte",0,1);
+
+    /// Polar variables
+
+    rpi = new RooRealVar("rpi","rpi",0,1);
+    rp = new RooRealVar("rp","rp",0,1);
+    r0i = new RooRealVar("r0i","r0i",0,1);
+    r0 = new RooRealVar("r0","r0",0,1);
+    rti = new RooRealVar("rti","rti",0,1);
+    rt = new RooRealVar("rt","rt",0,1);
+
+    spi = new RooRealVar("spi","spi",-2*PI,2*PI);
+    sp = new RooRealVar("sp","sp",-2*PI,2*PI);
+    s0i = new RooRealVar("s0i","s0i",-2*PI,2*PI);
+    s0 = new RooRealVar("s0","s0",-2*PI,2*PI);
+    sti = new RooRealVar("sti","sti",-2*PI,2*PI);
+    st = new RooRealVar("st","st",-2*PI,2*PI);
+
+    phiwi = new RooRealVar("phiwi","phiwi",1.79371,0,2*PI);
+    phiw = new RooRealVar("phiw","phiw",1.79371,0,2*PI);
 }
 
 ObservablesCollection::~ObservablesCollection()
@@ -325,6 +345,139 @@ void ObservablesCollection::CreateResidualsAndPulls(RooDataSet* dataset){
     pulls[17] = pull_ybt;
 }
 
-void ObservablesCollection::AssignErrors(){
-    //xp->setError(xpe->get);
+void ObservablesCollection::CalculateInitialPolarVals() {
+
+    Double_t sx = 0;
+    rpi->setVal(sqrt(xpi->getVal()*xpi->getVal()+ypi->getVal()*ypi->getVal()));
+    r0i->setVal(sqrt(x0i->getVal()*x0i->getVal()+y0i->getVal()*y0i->getVal()));
+    rti->setVal(sqrt(xti->getVal()*xti->getVal()+yti->getVal()*yti->getVal()));
+
+    if(asin(ypi->getVal()/rpi->getVal()) >= 0){
+        sx = acos(xpi->getVal()/rpi->getVal())+phiwi->getVal();
+    } else {
+        sx = 2*PI + phiwi->getVal() - acos(xpi->getVal()/rpi->getVal());
+    }
+    if(sx > PI) {
+        sx += -2*PI;
+    } else if(sx < -PI) {
+        sx += 2*PI;
+    }
+    spi->setVal(sx);
+
+    if(asin(y0i->getVal()/r0i->getVal()) >= 0){
+        sx = acos(x0i->getVal()/r0i->getVal())+phiwi->getVal();
+    } else {
+        sx = 2*PI + phiwi->getVal() - acos(x0i->getVal()/r0i->getVal());
+    }
+    if(sx > PI) {
+        sx += -2*PI;
+    } else if(sx < -PI) {
+        sx += 2*PI;
+    }
+    s0i->setVal(sx);
+
+    if(asin(yti->getVal()/rti->getVal()) >= 0){
+        sx = acos(xti->getVal()/rti->getVal())+phiwi->getVal();
+    } else {
+        sx = 2*PI + phiwi->getVal() - acos(xti->getVal()/rti->getVal());
+    }
+    if(sx > PI) {
+        sx += -2*PI;
+    } else if(sx < -PI) {
+        sx += 2*PI;
+    }
+    sti->setVal(sx);
+
+//    printf("rpi = %f, r0i = %f, rti = %f\n",rpi->getVal(),r0i->getVal(),rti->getVal());
+//    printf("spi = %f, s0i = %f, sti = %f\n\n",spi->getVal(),s0i->getVal(),sti->getVal());
+
+
+//    printf("ypi = %f, rpi = %f\n",ypi->getVal(),rpi->getVal());
+//    printf("xpi = %f\n",xpi->getVal());
+//    printf("asin arg = %f\n",(ypi->getVal()/rpi->getVal()));
+//    printf("asin = %f\n",asin(ypi->getVal()/rpi->getVal()));
+//    printf("acos = %f\n",acos(xpi->getVal()/rpi->getVal()));
+//    printf("spi no lim = %f\n",2*PI + phiwi->getVal() - acos(xpi->getVal()/rpi->getVal()));
+//    printf("spi = %f\n",spi->getVal());
+//    printf("xpi calc = %f\n",rpi->getVal()*cos(-phiwi->getVal()+spi->getVal()));
+//    printf("ypi calc = %f\n\n",rpi->getVal()*sin(-phiwi->getVal()+spi->getVal()));
+
 }
+
+void ObservablesCollection::InitializePolarVals() {
+    phiw->setVal(phiwi->getVal());
+    rp->setVal(rpi->getVal());
+    r0->setVal(r0i->getVal());
+    rt->setVal(rti->getVal());
+    sp->setVal(spi->getVal());
+    s0->setVal(s0i->getVal());
+    st->setVal(sti->getVal());
+}
+
+void ObservablesCollection::SaveParameters(FILE* pFile){
+    const Int_t numParameters = 43;
+    Double_t* parameters = new Double_t[numParameters];
+
+    parameters[0] = chi2a->getValV();
+    parameters[1] = chi2ab->getValV();
+    parameters[2] = chi2b->getValV();
+    parameters[3] = chi2bb->getValV();
+
+    parameters[4] = api->getValV();
+    parameters[5] = ap->getValV();
+    parameters[6] = ape->getValV();
+    parameters[7] = apai->getValV();
+    parameters[8] = apa->getValV();
+    parameters[9] = apae->getValV();
+    parameters[10] = a0i->getValV();
+    parameters[11] = a0->getValV();
+    parameters[12] = a0e->getValV();
+    parameters[13] = a0ai->getValV();
+    parameters[14] = a0a->getValV();
+    parameters[15] = a0ae->getValV();
+    parameters[16] = ati->getValV();
+    parameters[17] = at->getValV();
+    parameters[18] = ate->getValV();
+    parameters[19] = atai->getValV();
+    parameters[20] = ata->getValV();
+    parameters[21] = atae->getValV();
+    parameters[22] = phiwi->getVal();
+    parameters[23] = phiw->getVal();
+    parameters[24] = phiw->getError();
+    parameters[25] = rpi->getVal();
+    parameters[26] = rp->getVal();
+    parameters[27] = rp->getError();
+    parameters[28] = r0i->getVal();
+    parameters[29] = r0->getVal();
+    parameters[30] = r0->getError();
+    parameters[31] = rti->getVal();
+    parameters[32] = rt->getVal();
+    parameters[33] = rt->getError();
+    parameters[34] = spi->getVal();
+    parameters[35] = sp->getVal();
+    parameters[36] = sp->getError();
+    parameters[37] = s0i->getVal();
+    parameters[38] = s0->getVal();
+    parameters[39] = s0->getError();
+    parameters[40] = sti->getVal();
+    parameters[41] = st->getVal();
+    parameters[42] = st->getError();
+    Int_t separators[numParameters] = {0,0,0,2, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,2, 0,0,2, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,0};
+
+    for(Int_t i = 0; i < numParameters; i++) {
+        /// These parameters can be both positive and negative therefore the
+        /// added + in front of positive numbers keeps the columns aligned
+        if(i==34||i==35||i==37||i==38||i==40||i==41) {
+            fprintf(pFile,"%+.5f ",parameters[i]);
+        } else {
+            fprintf(pFile,"%.5f ",parameters[i]);
+        }
+        if(separators[i] == 1)
+            fprintf(pFile,"| ");
+        else if(separators[i] == 2)
+            fprintf(pFile,"|| ");
+    }
+    fprintf(pFile,"\n");
+    delete[] parameters;
+}
+

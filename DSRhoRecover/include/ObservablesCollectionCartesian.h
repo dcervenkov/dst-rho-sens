@@ -19,8 +19,9 @@ class ObservablesCollection
         void BindToDataset(RooDataSet*);
         void CreateResidualsAndPulls(RooDataSet* dataset);
         void AdjustInputSForPeriodicity(RooDataSet*& dataset);
-        void AssignErrors();
-
+        void CalculateInitialPolarVals();
+        void InitializePolarVals();
+        void SaveParameters(FILE* pFile);
 
         RooRealVar* chi2a;
         RooRealVar* chi2ab;
@@ -135,6 +136,21 @@ class ObservablesCollection
         RooRealVar* residuals[18];
         RooRealVar* pulls[18];
         RooRealVar* errors[18];
+
+        RooRealVar* phiwi;
+        RooRealVar* phiw;
+        RooRealVar* rpi;
+        RooRealVar* rp;
+        RooRealVar* r0i;
+        RooRealVar* r0;
+        RooRealVar* rti;
+        RooRealVar* rt;
+        RooRealVar* spi;
+        RooRealVar* sp;
+        RooRealVar* s0i;
+        RooRealVar* s0;
+        RooRealVar* sti;
+        RooRealVar* st;
 
 
     protected:

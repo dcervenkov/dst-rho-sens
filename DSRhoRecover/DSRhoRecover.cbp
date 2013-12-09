@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="2 data/fit_same2_r0.01.res data/fit_same2_r0.04.res" />
+				<Option parameters="results/polar_fit_cart1.res data/fit_cart1.res" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -46,9 +46,12 @@
 			<Add library="/usr/local/lib/root/libTree.so" />
 			<Add directory="/usr/local/lib/root" />
 		</Linker>
-		<Unit filename="include/DSRhoGraphs.h" />
+		<Unit filename="include/Constants.h" />
+		<Unit filename="include/DSRhoRecover.h" />
+		<Unit filename="include/MyPDF.h" />
 		<Unit filename="include/ObservablesCollectionCartesian.h" />
-		<Unit filename="src/DSRhoGraphs.cpp" />
+		<Unit filename="src/DSRhoRecover.cpp" />
+		<Unit filename="src/MyPDF.cpp" />
 		<Unit filename="src/ObservablesCollectionCartesian.cpp" />
 		<Extensions>
 			<code_completion />
