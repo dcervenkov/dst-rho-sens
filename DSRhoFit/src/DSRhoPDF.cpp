@@ -121,7 +121,7 @@ Double_t DSRhoPDF::evaluate() const
 
     if(type == 1 || type == 2)
     {
-        At2 = at*at*((1+rt*rt)+(1-rt*rt)*cos(Bfreq*dt)+2*rt*sin(phiw_sign*phiw-st)*sin(Bfreq*dt));
+        At2 = at*at*((1+rt*rt)+(1-rt*rt)*cos(Bfreq*dt)-2*rt*sin(phiw_sign*phiw-st)*sin(Bfreq*dt));
         Ap2 = ap*ap*((1+rp*rp)+(1-rp*rp)*cos(Bfreq*dt)-2*rp*sin(phiw_sign*phiw-sp)*sin(Bfreq*dt));
         A02 = a0*a0*((1+r0*r0)+(1-r0*r0)*cos(Bfreq*dt)-2*r0*sin(phiw_sign*phiw-s0)*sin(Bfreq*dt));
 
@@ -130,22 +130,22 @@ Double_t DSRhoPDF::evaluate() const
                           (ap0r*(rp*sin(phiw_sign*phiw-sp)+r0*sin(phiw_sign*phiw-s0))+\
                            ap0i*(rp*cos(phiw_sign*phiw-sp)-r0*cos(phiw_sign*phiw-s0)))*sin(Bfreq*dt);
 
-        A0ti =    a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st)+\
-                      (a0ti*(1+r0*rt*cos(s0-st))-a0tr*r0*rt*sin(s0-st))*cos(Bfreq*dt)-\
-                      (a0ti*(r0*sin(phiw_sign*phiw-s0)-rt*sin(phiw_sign*phiw-st))-\
-                       a0tr*(r0*cos(phiw_sign*phiw-s0)+rt*cos(phiw_sign*phiw-st)))*sin(Bfreq*dt);
+        A0ti =    a0ti*(1+r0*rt*cos(s0-st))-a0tr*r0*rt*sin(s0-st)+\
+                      (a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st))*cos(Bfreq*dt)-\
+                      (a0ti*(r0*sin(phiw_sign*phiw-s0)+rt*sin(phiw_sign*phiw-st))-\
+                       a0tr*(r0*cos(phiw_sign*phiw-s0)-rt*cos(phiw_sign*phiw-st)))*sin(Bfreq*dt);
 
-        Apti =    apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
-                          (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*cos(Bfreq*dt)-\
-                          (apti*(rp*sin(phiw_sign*phiw-sp)-rt*sin(phiw_sign*phiw-st))-\
-                           aptr*(rp*cos(phiw_sign*phiw-sp)+rt*cos(phiw_sign*phiw-st)))*sin(Bfreq*dt);
+        Apti =    apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st)+\
+                          (apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st))*cos(Bfreq*dt)-\
+                          (apti*(rp*sin(phiw_sign*phiw-sp)+rt*sin(phiw_sign*phiw-st))-\
+                           aptr*(rp*cos(phiw_sign*phiw-sp)-rt*cos(phiw_sign*phiw-st)))*sin(Bfreq*dt);
     }
 
     /// Writing this again explicitly with the changed sign of sin(Bfreq*dt) and cos(Bfreq*dt) is safer than changing
     /// Bfreq or dt to exploit sin(Bfreq*dt + PI) = -sin(Bfreq*dt) because of numerical problems that can cause.
     if(type == 3 || type == 4)
     {
-        At2 = at*at*((1+rt*rt)+(1-rt*rt)*(-1)*cos(Bfreq*dt)+2*rt*sin(phiw_sign*phiw-st)*(-1)*sin(Bfreq*dt));
+        At2 = at*at*((1+rt*rt)+(1-rt*rt)*(-1)*cos(Bfreq*dt)-2*rt*sin(phiw_sign*phiw-st)*(-1)*sin(Bfreq*dt));
         Ap2 = ap*ap*((1+rp*rp)+(1-rp*rp)*(-1)*cos(Bfreq*dt)-2*rp*sin(phiw_sign*phiw-sp)*(-1)*sin(Bfreq*dt));
         A02 = a0*a0*((1+r0*r0)+(1-r0*r0)*(-1)*cos(Bfreq*dt)-2*r0*sin(phiw_sign*phiw-s0)*(-1)*sin(Bfreq*dt));
 
@@ -154,15 +154,15 @@ Double_t DSRhoPDF::evaluate() const
                           (ap0r*(rp*sin(phiw_sign*phiw-sp)+r0*sin(phiw_sign*phiw-s0))+\
                            ap0i*(rp*cos(phiw_sign*phiw-sp)-r0*cos(phiw_sign*phiw-s0)))*(-1)*sin(Bfreq*dt);
 
-        A0ti =    a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st)+\
-                      (a0ti*(1+r0*rt*cos(s0-st))-a0tr*r0*rt*sin(s0-st))*(-1)*cos(Bfreq*dt)-\
-                      (a0ti*(r0*sin(phiw_sign*phiw-s0)-rt*sin(phiw_sign*phiw-st))-\
-                       a0tr*(r0*cos(phiw_sign*phiw-s0)+rt*cos(phiw_sign*phiw-st)))*(-1)*sin(Bfreq*dt);
+        A0ti =    a0ti*(1+r0*rt*cos(s0-st))-a0tr*r0*rt*sin(s0-st)+\
+                      (a0ti*(1-r0*rt*cos(s0-st))+a0tr*r0*rt*sin(s0-st))*(-1)*cos(Bfreq*dt)-\
+                      (a0ti*(r0*sin(phiw_sign*phiw-s0)+rt*sin(phiw_sign*phiw-st))-\
+                       a0tr*(r0*cos(phiw_sign*phiw-s0)-rt*cos(phiw_sign*phiw-st)))*(-1)*sin(Bfreq*dt);
 
-        Apti =    apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
-                          (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*(-1)*cos(Bfreq*dt)-\
-                          (apti*(rp*sin(phiw_sign*phiw-sp)-rt*sin(phiw_sign*phiw-st))-\
-                           aptr*(rp*cos(phiw_sign*phiw-sp)+rt*cos(phiw_sign*phiw-st)))*(-1)*sin(Bfreq*dt);
+        Apti =    apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st)+\
+                          (apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st))*(-1)*cos(Bfreq*dt)-\
+                          (apti*(rp*sin(phiw_sign*phiw-sp)+rt*sin(phiw_sign*phiw-st))-\
+                           aptr*(rp*cos(phiw_sign*phiw-sp)-rt*cos(phiw_sign*phiw-st)))*(-1)*sin(Bfreq*dt);
     }
 
 
@@ -241,7 +241,7 @@ Double_t DSRhoPDF::analyticalIntegral(Int_t code, const char* rangeName) const
 
     if(type == 1 || type == 2)
     {
-        At2 = at*at*((1+rt*rt)+(1-rt*rt)*cos(Bfreq*dt)+2*rt*sin(phiw_sign*phiw-st)*sin(Bfreq*dt));
+        At2 = at*at*((1+rt*rt)+(1-rt*rt)*cos(Bfreq*dt)-2*rt*sin(phiw_sign*phiw-st)*sin(Bfreq*dt));
         Ap2 = ap*ap*((1+rp*rp)+(1-rp*rp)*cos(Bfreq*dt)-2*rp*sin(phiw_sign*phiw-sp)*sin(Bfreq*dt));
         A02 = a0*a0*((1+r0*r0)+(1-r0*r0)*cos(Bfreq*dt)-2*r0*sin(phiw_sign*phiw-s0)*sin(Bfreq*dt));
 
@@ -250,17 +250,17 @@ Double_t DSRhoPDF::analyticalIntegral(Int_t code, const char* rangeName) const
                           (ap0r*(rp*sin(phiw_sign*phiw-sp)+r0*sin(phiw_sign*phiw-s0))+\
                            ap0i*(rp*cos(phiw_sign*phiw-sp)-r0*cos(phiw_sign*phiw-s0)))*sin(Bfreq*dt);
 
-        Apti =    apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
-                          (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*cos(Bfreq*dt)-\
-                          (apti*(rp*sin(phiw_sign*phiw-sp)-rt*sin(phiw_sign*phiw-st))-\
-                           aptr*(rp*cos(phiw_sign*phiw-sp)+rt*cos(phiw_sign*phiw-st)))*sin(Bfreq*dt);
+        Apti =    apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st)+\
+                          (apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st))*cos(Bfreq*dt)-\
+                          (apti*(rp*sin(phiw_sign*phiw-sp)+rt*sin(phiw_sign*phiw-st))-\
+                           aptr*(rp*cos(phiw_sign*phiw-sp)-rt*cos(phiw_sign*phiw-st)))*sin(Bfreq*dt);
     }
 
     /// Writing this again explicitly with the changed sign of sin(Bfreq*dt) and cos(Bfreq*dt) is safer than changing
     /// Bfreq or dt to exploit sin(Bfreq*dt + PI) = -sin(Bfreq*dt) because of numerical problems that can cause.
     if(type == 3 || type == 4)
     {
-        At2 = at*at*((1+rt*rt)+(1-rt*rt)*(-1)*cos(Bfreq*dt)+2*rt*sin(phiw_sign*phiw-st)*(-1)*sin(Bfreq*dt));
+        At2 = at*at*((1+rt*rt)+(1-rt*rt)*(-1)*cos(Bfreq*dt)-2*rt*sin(phiw_sign*phiw-st)*(-1)*sin(Bfreq*dt));
         Ap2 = ap*ap*((1+rp*rp)+(1-rp*rp)*(-1)*cos(Bfreq*dt)-2*rp*sin(phiw_sign*phiw-sp)*(-1)*sin(Bfreq*dt));
         A02 = a0*a0*((1+r0*r0)+(1-r0*r0)*(-1)*cos(Bfreq*dt)-2*r0*sin(phiw_sign*phiw-s0)*(-1)*sin(Bfreq*dt));
 
@@ -269,10 +269,10 @@ Double_t DSRhoPDF::analyticalIntegral(Int_t code, const char* rangeName) const
                           (ap0r*(rp*sin(phiw_sign*phiw-sp)+r0*sin(phiw_sign*phiw-s0))+\
                            ap0i*(rp*cos(phiw_sign*phiw-sp)-r0*cos(phiw_sign*phiw-s0)))*(-1)*sin(Bfreq*dt);
 
-        Apti =    apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st)+\
-                          (apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st))*(-1)*cos(Bfreq*dt)-\
-                          (apti*(rp*sin(phiw_sign*phiw-sp)-rt*sin(phiw_sign*phiw-st))-\
-                           aptr*(rp*cos(phiw_sign*phiw-sp)+rt*cos(phiw_sign*phiw-st)))*(-1)*sin(Bfreq*dt);
+        Apti =    apti*(1+rp*rt*cos(sp-st))-aptr*rp*rt*sin(sp-st)+\
+                          (apti*(1-rp*rt*cos(sp-st))+aptr*rp*rt*sin(sp-st))*(-1)*cos(Bfreq*dt)-\
+                          (apti*(rp*sin(phiw_sign*phiw-sp)+rt*sin(phiw_sign*phiw-st))-\
+                           aptr*(rp*cos(phiw_sign*phiw-sp)-rt*cos(phiw_sign*phiw-st)))*(-1)*sin(Bfreq*dt);
     }
 
 
