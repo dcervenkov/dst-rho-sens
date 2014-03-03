@@ -481,3 +481,14 @@ void ObservablesCollection::SaveParameters(FILE* pFile){
     delete[] parameters;
 }
 
+void ObservablesCollection::AdjustResultsForPeriodicity(){
+    if(sp->getVal() > PI) sp->setVal(sp->getVal()-2*PI);
+    else if(sp->getVal() < -PI) sp->setVal(sp->getVal()+2*PI);
+
+    if(s0->getVal() > PI) s0->setVal(s0->getVal()-2*PI);
+    else if(s0->getVal() < -PI) s0->setVal(s0->getVal()+2*PI);
+
+    if(st->getVal() > PI) st->setVal(st->getVal()-2*PI);
+    else if(st->getVal() < -PI) st->setVal(st->getVal()+2*PI);
+}
+

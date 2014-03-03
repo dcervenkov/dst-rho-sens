@@ -75,16 +75,6 @@ int main(int argc, char* argv[]) {
     dataset = static_cast<RooDataSet*> (dataset->reduce("xbpe < 0.06"));
     c.BindToDataset(dataset);
 
-    RooRealVar rp("rp","rp",0.01,0,1);
-    RooRealVar r0("r0","r0",0.01,0,1);
-    RooRealVar rt("rt","rt",0.01,0,1);
-
-    RooRealVar sp("sp","sp",-PI,-2*PI,2*PI);
-    RooRealVar s0("s0","s0",-PI,-2*PI,2*PI);
-    RooRealVar st("st","st",-PI,-2*PI,2*PI);
-
-    RooRealVar phiw("phiw","phiw",1.79371,0,2*PI);
-
     MyPDF pdf("pdf","pdf",*c.xp,*c.x0,*c.xt,*c.yp,*c.y0,*c.yt,*c.xbp,*c.xb0,*c.xbt,*c.ybp,*c.yb0,*c.ybt,\
               *c.xpe,*c.x0e,*c.xte,*c.ype,*c.y0e,*c.yte,*c.xbpe,*c.xb0e,*c.xbte,*c.ybpe,*c.yb0e,*c.ybte,\
               *c.rp,*c.r0,*c.rt,*c.sp,*c.s0,*c.st,*c.phiw);
@@ -105,6 +95,7 @@ int main(int argc, char* argv[]) {
         c.InitializePolarVals();
         result = pdf.fitTo(*datasetLine,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"),\
                            RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(1));
+        c.AdjustResultsForPeriodicity();
         datasetLine->reset();
         c.SaveParameters(pFile);
     }

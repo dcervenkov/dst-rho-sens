@@ -1,8 +1,7 @@
 #include "ObservablesCollection.h"
 #include "DSRhoGraphs.h"
 
-ObservablesCollection::ObservablesCollection()
-{
+ObservablesCollection::ObservablesCollection() {
     chi2a = new RooRealVar("chi2a","chi2a",0,10);
     chi2ab = new RooRealVar("chi2ab","chi2ab",0,10);
     chi2b = new RooRealVar("chi2b","chi2b",0,10);
@@ -52,13 +51,11 @@ ObservablesCollection::ObservablesCollection()
     ste = new RooRealVar("ste","ste",0,20);
 }
 
-ObservablesCollection::~ObservablesCollection()
-{
+ObservablesCollection::~ObservablesCollection() {
     //dtor
 }
 
-RooArgList ObservablesCollection::CreateArgList()
-{
+RooArgList ObservablesCollection::CreateArgList() {
     RooCategory* sep = new RooCategory("sep","sep");
     sep->defineType("|",1);
     sep->defineType("||",2);
@@ -77,7 +74,7 @@ RooArgList ObservablesCollection::CreateArgList()
     return argList;
 }
 
-void ObservablesCollection::BindToDataset(RooDataSet* dataset){
+void ObservablesCollection::BindToDataset(RooDataSet* dataset) {
     const RooArgSet* vars = dataset->get();
     chi2a = static_cast<RooRealVar*>(vars->find(chi2a->GetName()));
     chi2ab = static_cast<RooRealVar*>(vars->find(chi2ab->GetName()));
@@ -145,7 +142,7 @@ void ObservablesCollection::BindToDataset(RooDataSet* dataset){
 
 }
 
-void ObservablesCollection::CreateResidualsAndPulls(RooDataSet* dataset){
+void ObservablesCollection::CreateResidualsAndPulls(RooDataSet* dataset) {
     RooFormulaVar f_residual_ap("residual_ap","(ap-api)",RooArgSet(*ap,*api,*ape));
     RooFormulaVar f_residual_apa("residual_apa","(apa-apai)",RooArgSet(*apa,*apai,*apae));
     RooFormulaVar f_residual_a0("residual_a0","(a0-a0i)",RooArgSet(*a0,*a0i,*a0e));
@@ -248,23 +245,23 @@ void ObservablesCollection::CreateResidualsAndPulls(RooDataSet* dataset){
     pulls[12] = pull_st;
 }
 
-void ObservablesCollection::AdjustInputSForPeriodicity(RooDataSet*& old_dataset){
+void ObservablesCollection::AdjustInputSForPeriodicity(RooDataSet*& old_dataset) {
     RooDataSet* dataset = static_cast<RooDataSet*>(old_dataset->emptyClone());
-    for(int i = 0; i < old_dataset->sumEntries(); i++){
+    for(int i = 0; i < old_dataset->sumEntries(); i++) {
         old_dataset->get(i);
-        if((sp->getVal()-spi->getVal()) > PI){
+        if((sp->getVal()-spi->getVal()) > PI) {
             spi->setVal(spi->getVal() +2*PI);
-        } else if ((sp->getVal()-spi->getVal()) < -PI) {
+        } else if((sp->getVal()-spi->getVal()) < -PI) {
             spi->setVal(spi->getVal() -2*PI);
         }
-        if((s0->getVal()-s0i->getVal()) > PI){
+        if((s0->getVal()-s0i->getVal()) > PI) {
             s0i->setVal(s0i->getVal() +2*PI);
-        } else if ((s0->getVal()-s0i->getVal()) < -PI) {
+        } else if((s0->getVal()-s0i->getVal()) < -PI) {
             s0i->setVal(s0i->getVal() -2*PI);
         }
-        if((st->getVal()-sti->getVal()) > PI){
+        if((st->getVal()-sti->getVal()) > PI) {
             sti->setVal(sti->getVal() +2*PI);
-        } else if ((st->getVal()-sti->getVal()) < -PI) {
+        } else if((st->getVal()-sti->getVal()) < -PI) {
             sti->setVal(sti->getVal() -2*PI);
         }
         dataset->add(*(old_dataset->get()));

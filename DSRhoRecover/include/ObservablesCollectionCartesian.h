@@ -19,6 +19,7 @@ class ObservablesCollection
         void BindToDataset(RooDataSet*);
         void CreateResidualsAndPulls(RooDataSet* dataset);
         void AdjustInputSForPeriodicity(RooDataSet*& dataset);
+        void AdjustResultsForPeriodicity();
         void CalculateInitialPolarVals();
         void InitializePolarVals();
         void SaveParameters(FILE* pFile);

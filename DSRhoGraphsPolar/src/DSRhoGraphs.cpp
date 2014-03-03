@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     }
 #endif // GRAPHIC
 
-    if(argc < 3){
+    if(argc < 3) {
         printf("ERROR: Wrong number of arguments.\n");
         printf("Usage: DSRhoGraph MODE FILE-1 [FILE-2]...\n");
         return 85;
@@ -63,13 +63,12 @@ int main(int argc, char* argv[]) {
     gStyle->SetMarkerSize(2);
     gEnv->SetValue("Canvas.PrintDirectory","plots");
 
-    if(!strcmp(argv[1],"1")){
+    if(!strcmp(argv[1],"1")) {
         if(argc == num_cmd_options + 3)
             CreatePullsAndMaps(argv[2],argv[3]);
         else
             CreatePullsAndMaps(argv[2],nullptr);
-    }
-    else if(!strcmp(argv[1],"2"))
+    } else if(!strcmp(argv[1],"2"))
         CreateErrorProgression(argc,argv);
     else
         printf("ERROR: Unknown mode '%s'.\n",argv[1]);
@@ -95,8 +94,8 @@ double CalculateMedian(std::vector<double> vals) {
     return median;
 }
 
-void CreateErrorProgression(int argc, char* argv[]){
-    if(argc < num_cmd_options + 3){
+void CreateErrorProgression(int argc, char* argv[]) {
+    if(argc < num_cmd_options + 3) {
         printf("ERROR: Error Progression mode requires at least 2 files.");
         return;
     }
@@ -112,7 +111,7 @@ void CreateErrorProgression(int argc, char* argv[]){
 //    }
     std::vector<double> mean_errors[num_files];
 
-    for(int file_no = 0; file_no < num_files; file_no++){
+    for(int file_no = 0; file_no < num_files; file_no++) {
         dataset = RooDataSet::read(argv[file_no + num_cmd_options+1], c.CreateArgList());
         c.BindToDataset(dataset);
         c.AdjustInputSForPeriodicity(dataset);
@@ -123,36 +122,36 @@ void CreateErrorProgression(int argc, char* argv[]){
 
         std::vector<double> errors[error_vars.getSize()];
 
-        for(int entry_no = 0; entry_no < dataset->numEntries(); entry_no++){
+        for(int entry_no = 0; entry_no < dataset->numEntries(); entry_no++) {
             dataset->get(entry_no);
-            for(int error_no = 0; error_no < error_vars.getSize();error_no++){
+            for(int error_no = 0; error_no < error_vars.getSize(); error_no++) {
                 errors[error_no].push_back(dynamic_cast<RooRealVar*>(&error_vars[error_no])->getValV());
             }
         }
 
-        for(int error_no = 0; error_no < error_vars.getSize(); error_no++){
+        for(int error_no = 0; error_no < error_vars.getSize(); error_no++) {
             mean_errors[file_no].push_back(CalculateMedian(errors[error_no]));
         }
         //delete dataset;
     }
 
     TH2D* h_errors[mean_errors[0].size()];
-    for(int error_no = 0; error_no < mean_errors[0].size(); error_no++){
+    for(int error_no = 0; error_no < mean_errors[0].size(); error_no++) {
         TString name("h_errors_");
         name += error_no+1;
         double max_error = 0;
-        for(int file_no = 0; file_no < num_files; file_no++){
+        for(int file_no = 0; file_no < num_files; file_no++) {
             if(max_error < mean_errors[file_no][error_no])
                 max_error = mean_errors[file_no][error_no];
         }
         h_errors[error_no] = new TH2D(name,name,100,0,num_files+1,100,0,max_error*1.1);
-        for(int file_no = 0; file_no < num_files; file_no++){
+        for(int file_no = 0; file_no < num_files; file_no++) {
             h_errors[error_no]->Fill(file_no+1,mean_errors[file_no][error_no]);
         }
     }
     TCanvas* c_errors = new TCanvas("c_errors","Errors",1200,1000);
     c_errors->Divide(3,3);
-    for(int error_no = 0; error_no < mean_errors[0].size(); error_no++){
+    for(int error_no = 0; error_no < mean_errors[0].size(); error_no++) {
         c_errors->cd(error_no+1);
         h_errors[error_no]->SetMarkerStyle(kPlus);
         h_errors[error_no]->SetMarkerSize(1);
@@ -165,6 +164,13 @@ void CreateErrorProgression(int argc, char* argv[]){
 void CreatePullsAndMaps(char* successful_file, char* all_file) {
     ObservablesCollection c;
     RooDataSet* dataset = RooDataSet::read(successful_file,c.CreateArgList());
+    printf("*** dataset entries before cuts = %i\n",dataset->numEntries());
+    dataset = static_cast<RooDataSet*> (dataset->reduce("phiwe < 1"));
+    dataset = static_cast<RooDataSet*> (dataset->reduce("s0e < 2"));
+    dataset = static_cast<RooDataSet*> (dataset->reduce("spe < 4"));
+    dataset = static_cast<RooDataSet*> (dataset->reduce("ste < 4"));
+    dataset = static_cast<RooDataSet*> (dataset->reduce("rpe < 0.1"));
+    printf("*** dataset entries after cuts = %i\n",dataset->numEntries());
     c.BindToDataset(dataset);
     c.AdjustInputSForPeriodicity(dataset);
     c.CreateResidualsAndPulls(dataset);
@@ -172,7 +178,7 @@ void CreatePullsAndMaps(char* successful_file, char* all_file) {
     CreateGeneralPlots(dataset,c);
 
     /// If 2 arguments were supplied, create maps as well
-    if(all_file != nullptr){
+    if(all_file != nullptr) {
         ObservablesCollection c_all;
         RooDataSet* dataset_all = RooDataSet::read(all_file,c_all.CreateArgList());
         c_all.BindToDataset(dataset_all);
