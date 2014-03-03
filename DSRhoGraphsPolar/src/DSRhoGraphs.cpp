@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 
     gStyle->SetOptStat(0);
     gStyle->SetPaintTextFormat("3.2g");
-    gStyle->SetMarkerSize(2);
+    gStyle->SetMarkerSize(1);
     gEnv->SetValue("Canvas.PrintDirectory","plots");
 
     if(!strcmp(argv[1],"1")) {
@@ -258,7 +258,7 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
             gaus[i] = new RooGaussian((TString("gaus") + TString(i)).Data(),(TString("gaus") + TString(i)).Data(),*(c.pulls[i]),mean,sigma);
             gaus[i]->fitTo(*dataset);
             gaus[i]->paramOn(frame);
-            gaus[i]->plotOn(frame);
+            gaus[i]->plotOn(frame,RooFit::LineWidth(2));
         }
         frame->Draw();
     }
@@ -297,7 +297,7 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         gaus[6] = new RooGaussian("gaus_phiw","gaus_phiw",*(c.pull_phiw),mean,sigma);
         gaus[6]->fitTo(*dataset);
         gaus[6]->paramOn(frame);
-        gaus[6]->plotOn(frame);
+        gaus[6]->plotOn(frame,RooFit::LineWidth(2));
     }
     frame->Draw();
 
@@ -330,7 +330,7 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
             gaus[i] = new RooGaussian((TString("gaus") + TString(i)).Data(),(TString("gaus") + TString(i)).Data(),*(c.pulls[i]),mean,sigma);
             gaus[i]->fitTo(*dataset);
             gaus[i]->paramOn(frame);
-            gaus[i]->plotOn(frame);
+            gaus[i]->plotOn(frame,RooFit::LineWidth(2));
         }
         frame->Draw();
     }
