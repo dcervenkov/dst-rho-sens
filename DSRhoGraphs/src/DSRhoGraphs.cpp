@@ -261,6 +261,8 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         }
         frame->Draw();
     }
+    c_amp_pulls->SaveAs(".gif");
+
     TCanvas* c_amp_residuals = new TCanvas("c_amp_residuals","Amplitude residuals",1280,800);
     c_amp_residuals->Divide(3,2);
     for(int i = 0; i < 6; i++) {
@@ -272,6 +274,8 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         dataset->plotOn(frame,drawoption);
         frame->Draw("BX");
     }
+    c_amp_residuals->SaveAs(".gif");
+
     TCanvas* c_amp_errors = new TCanvas("c_amp_errors","Amplitude errors",1280,800);
     c_amp_errors->Divide(3,2);
     for(int i = 0; i < 6; i++) {
@@ -283,6 +287,7 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         dataset->plotOn(frame,drawoption);
         frame->Draw("BX");
     }
+    c_amp_errors->SaveAs(".gif");
 
     TCanvas* c_xy_pulls = new TCanvas("c_xy_pulls","x and y pulls",1280,800);
     c_xy_pulls->Divide(3,2);
@@ -301,6 +306,8 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         }
         frame->Draw();
     }
+    c_xy_pulls->SaveAs(".gif");
+
     TCanvas* c_xy_residuals = new TCanvas("c_xy_residuals","x and y residuals",1280,800);
     c_xy_residuals->Divide(3,2);
     for(int i = 6; i < 12; i++) {
@@ -312,6 +319,8 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         dataset->plotOn(frame,drawoption);
         frame->Draw();
     }
+    c_xy_residuals->SaveAs(".gif");
+
     TCanvas* c_xy_errors = new TCanvas("c_xy_errors","x and y errors",1280,800);
     c_xy_errors->Divide(3,2);
     for(int i = 6; i < 12; i++) {
@@ -323,6 +332,7 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         dataset->plotOn(frame,drawoption);
         frame->Draw();
     }
+    c_xy_errors->SaveAs(".gif");
 
     TCanvas* c_xbyb_pulls = new TCanvas("c_xbyb_pulls","xb and yb pulls",1280,800);
     c_xbyb_pulls->Divide(3,2);
@@ -341,6 +351,8 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         }
         frame->Draw();
     }
+    c_xbyb_pulls->SaveAs(".gif");
+
     TCanvas* c_xbyb_residuals = new TCanvas("c_xbyb_residuals","xb and yb residuals",1280,800);
     c_xbyb_residuals->Divide(3,2);
     for(int i = 12; i < 18; i++) {
@@ -352,6 +364,8 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         dataset->plotOn(frame,drawoption);
         frame->Draw();
     }
+    c_xbyb_residuals->SaveAs(".gif");
+
     TCanvas* c_xbyb_errors = new TCanvas("c_xbyb_errors","xb and yb errors",1280,800);
     c_xbyb_errors->Divide(3,2);
     for(int i = 12; i < 18; i++) {
@@ -363,15 +377,6 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         dataset->plotOn(frame,drawoption);
         frame->Draw();
     }
-
-    c_amp_pulls->SaveAs(".gif");
-    c_amp_residuals->SaveAs(".gif");
-    c_amp_errors->SaveAs(".gif");
-    c_xy_pulls->SaveAs(".gif");
-    c_xy_residuals->SaveAs(".gif");
-    c_xy_errors->SaveAs(".gif");
-    c_xbyb_pulls->SaveAs(".gif");
-    c_xbyb_residuals->SaveAs(".gif");
     c_xbyb_errors->SaveAs(".gif");
 
     return;
