@@ -5,21 +5,22 @@ import os
 import subprocess
 import time
 
+# What do_fit values mean what
+optFit = 1
+optGenerate = 4
+
 # Change these settings to configure the script
 ###############################################
 max_jobs = 22
 root_path = "../"
-data_path = "data_gen5/"
+data_path = "data/"
 results_path = "results/"
 log_path = "logs/"
-do_fit = 1
-do_plot = 0
+do_fit = optFit
+do_plot = 1
 enable_checks = 1 # Disable checks which require user input when running with, e.g., nohup
 ###############################################
 
-# What do_fit values mean what
-optFit = 1
-optGenerate = 4
 
 pars = ['','','','','','','','','','','']
 

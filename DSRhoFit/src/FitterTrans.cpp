@@ -154,7 +154,7 @@ FitterTrans::~FitterTrans()
 Int_t FitterTrans::Fit()
 {
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
-    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"),RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(1));
+    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"),RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(4));
 
     const TMatrixDSym& cor = result->correlationMatrix();
     result->Print();
@@ -172,7 +172,7 @@ void FitterTrans::GenerateDataSet(Int_t numEvents)
 {
     RooRandom::randomGenerator()->SetSeed(0);
 
-    /// For some reason this is the generated fraction of favored decays, have to check why
+    /// TODO: For some reason this is the generated fraction of favored decays, have to check why
     const Double_t fracFav = 0.812;
     const Double_t fracSup = 1 - fracFav;
 
@@ -677,193 +677,186 @@ void FitterTrans::SaveResiduals()
 
 }
 
-Double_t FitterTrans::SaveChi2Maps(const char* type)
-{
+Double_t FitterTrans::SaveChi2Maps(const char* type) {
 
+    Double_t mychi2 = 0;
+    Double_t dchi2 = 0;
+    Double_t n = 0;
+    Double_t v = 0;
 
-//    Double_t mychi2 = 0;
-//    Double_t dchi2 = 0;
-//    Double_t n = 0;
-//    Double_t v = 0;
-//
-//    RooRealVar* var1 = tht;
-//    RooRealVar* var2 = thb;
-//    RooRealVar* var3 = phit;
-//    RooRealVar* var4 = dt;
-//    Int_t var1_bins = tht_bins;
-//    Int_t var2_bins = thb_bins;
-//    Int_t var3_bins = phit_bins;
-//    Int_t var4_bins = dt_bins;
-//
-//    DSRhoPDF* pdf = 0;
-//
-//    TFile* file = new TFile("plots/plots.root","RECREATE");
-//    TCanvas* c2 = new TCanvas("c2","c2",800,600);
-//    TString path;
-//
-//    if(strcmp(type,"a") == 0)       pdf = pdf_a;
-//    else if(strcmp(type,"b") == 0)  pdf = pdf_b;
-//    else if(strcmp(type,"ab") == 0) pdf = pdf_ab;
-//    else if(strcmp(type,"bb") == 0) pdf = pdf_bb;
+    RooRealVar* var1 = tht;
+    RooRealVar* var2 = thb;
+    RooRealVar* var3 = phit;
+    RooRealVar* var4 = dt;
+    Int_t var1_bins = tht_bins;
+    Int_t var2_bins = thb_bins;
+    Int_t var3_bins = phit_bins;
+    Int_t var4_bins = dt_bins;
 
-//    //if(dataSet_binned == NULL)
-//        CreateBinnedDataSet(type);
-//
-//    Double_t binVolume = tht->getBinWidth(0)*thb->getBinWidth(0)*phit->getBinWidth(0)*dt->getBinWidth(0);
-//
-//    TH1F* h1_chi2 = new TH1F("h1_chi2","h1_chi2",100,0,10);
-//    TH2F* h2_chi2_1 = new TH2F("h2_chi2_1","h2_chi2_1",var1_bins,var1->getMin(),var1->getMax(),var2_bins,var2->getMin(),var2->getMax());
-//    TH2F* h2_chi2_2 = new TH2F("h2_chi2_2","h2_chi2_2",var1_bins,var1->getMin(),var1->getMax(),var3_bins,var3->getMin(),var3->getMax());
-//    TH2F* h2_chi2_3 = new TH2F("h2_chi2_3","h2_chi2_3",var1_bins,var1->getMin(),var1->getMax(),var4_bins,var4->getMin(),var4->getMax());
-//    TH2F* h2_chi2_4 = new TH2F("h2_chi2_4","h2_chi2_4",var2_bins,var2->getMin(),var2->getMax(),var3_bins,var3->getMin(),var3->getMax());
-//    TH2F* h2_chi2_5 = new TH2F("h2_chi2_5","h2_chi2_5",var2_bins,var2->getMin(),var2->getMax(),var4_bins,var4->getMin(),var4->getMax());
-//    TH2F* h2_chi2_6 = new TH2F("h2_chi2_6","h2_chi2_6",var3_bins,var3->getMin(),var3->getMax(),var4_bins,var4->getMin(),var4->getMax());
+    DSRhoPDF* pdf = 0;
+
+    TFile* file = new TFile("plots/plots.root","RECREATE");
+    TCanvas* c2 = new TCanvas("c2","c2",800,600);
+    TString path;
+
+    if(strcmp(type,"a") == 0)       pdf = pdf_a;
+    else if(strcmp(type,"b") == 0)  pdf = pdf_b;
+    else if(strcmp(type,"ab") == 0) pdf = pdf_ab;
+    else if(strcmp(type,"bb") == 0) pdf = pdf_bb;
+
+    //if(dataSet_binned == NULL)
+    CreateBinnedDataSet(type);
+
+    Double_t binVolume = tht->getBinWidth(0)*thb->getBinWidth(0)*phit->getBinWidth(0)*dt->getBinWidth(0);
+
+    TH1F* h1_chi2 = new TH1F("h1_chi2","h1_chi2",100,0,10);
+    TH2F* h2_chi2_1 = new TH2F("h2_chi2_1","h2_chi2_1",var1_bins,var1->getMin(),var1->getMax(),var2_bins,var2->getMin(),var2->getMax());
+    TH2F* h2_chi2_2 = new TH2F("h2_chi2_2","h2_chi2_2",var1_bins,var1->getMin(),var1->getMax(),var3_bins,var3->getMin(),var3->getMax());
+    TH2F* h2_chi2_3 = new TH2F("h2_chi2_3","h2_chi2_3",var1_bins,var1->getMin(),var1->getMax(),var4_bins,var4->getMin(),var4->getMax());
+    TH2F* h2_chi2_4 = new TH2F("h2_chi2_4","h2_chi2_4",var2_bins,var2->getMin(),var2->getMax(),var3_bins,var3->getMin(),var3->getMax());
+    TH2F* h2_chi2_5 = new TH2F("h2_chi2_5","h2_chi2_5",var2_bins,var2->getMin(),var2->getMax(),var4_bins,var4->getMin(),var4->getMax());
+    TH2F* h2_chi2_6 = new TH2F("h2_chi2_6","h2_chi2_6",var3_bins,var3->getMin(),var3->getMax(),var4_bins,var4->getMin(),var4->getMax());
 
 
     /// Cycle through the centers of all bins
     /// I'm getting width of the first bin, because all bins are of equal width
-//    for(*var1 = var1->getMin()+var1->getBinWidth(0)/2; var1->getVal() < var1->getMax(); var1->setVal(var1->getVal()+var1->getBinWidth(0)))
-//    {
-//        for(*var2 = var2->getMin()+var2->getBinWidth(0)/2; var2->getVal() < var2->getMax(); var2->setVal(var2->getVal()+var2->getBinWidth(0)))
-//        {
-//            for(*var3 = var3->getMin()+var3->getBinWidth(0)/2; var3->getVal() < var3->getMax(); var3->setVal(var3->getVal()+var3->getBinWidth(0)))
-//            {
-//                for(*var4 = var4->getMin()+var4->getBinWidth(0)/2; var4->getVal() < var4->getMax(); var4->setVal(var4->getVal()+var4->getBinWidth(0)))
-//                {
-//
-//                    /// Weight is actually the bin content
-//                    n = dataSet_binned->weight(RooArgSet(*var1,*var2,*var3,*var4),0);
-//                    //if(n == 0) continue;
-//                    if(n == 0) continue;
-//                    v = pdf->getVal(RooArgSet(*var1,*var2,*var3,*var4))*binVolume*binnedNumEntries;
-//
-//                    if(((n-v)*(n-v)/v) > 1)
-//                    {
-//                        v = GetVPrecise(pdf);
-//                    }
-//
-//                    dchi2 = (n-v)*(n-v)/v;
-//
-//                    //h1_chi2->Fill(dchi2);
-//                    h2_chi2_1->Fill(var1->getVal(),var2->getVal(),dchi2);
-//                    h2_chi2_2->Fill(var1->getVal(),var3->getVal(),dchi2);
-//                    h2_chi2_3->Fill(var1->getVal(),var4->getVal(),dchi2);
-//                    h2_chi2_4->Fill(var2->getVal(),var3->getVal(),dchi2);
-//                    h2_chi2_5->Fill(var2->getVal(),var4->getVal(),dchi2);
-//                    h2_chi2_6->Fill(var3->getVal(),var4->getVal(),dchi2);
-//                    mychi2 += dchi2;
-//
+    for(*var1 = var1->getMin()+var1->getBinWidth(0)/2; var1->getVal() < var1->getMax(); var1->setVal(var1->getVal()+var1->getBinWidth(0))) {
+        for(*var2 = var2->getMin()+var2->getBinWidth(0)/2; var2->getVal() < var2->getMax(); var2->setVal(var2->getVal()+var2->getBinWidth(0))) {
+            for(*var3 = var3->getMin()+var3->getBinWidth(0)/2; var3->getVal() < var3->getMax(); var3->setVal(var3->getVal()+var3->getBinWidth(0))) {
+                for(*var4 = var4->getMin()+var4->getBinWidth(0)/2; var4->getVal() < var4->getMax(); var4->setVal(var4->getVal()+var4->getBinWidth(0))) {
+
+                    /// Weight is actually the bin content
+                    n = dataSet_binned->weight(RooArgSet(*var1,*var2,*var3,*var4),0);
+                    //if(n == 0) continue;
+                    if(n == 0) continue;
+                    v = pdf->getVal(RooArgSet(*var1,*var2,*var3,*var4))*binVolume*binnedNumEntries;
+
+                    if(((n-v)*(n-v)/v) > 1) {
+                        v = GetVPrecise(pdf);
+                    }
+
+                    dchi2 = (n-v)*(n-v)/v;
+
+                    h1_chi2->Fill(dchi2);
+                    h2_chi2_1->Fill(var1->getVal(),var2->getVal(),dchi2);
+                    h2_chi2_2->Fill(var1->getVal(),var3->getVal(),dchi2);
+                    h2_chi2_3->Fill(var1->getVal(),var4->getVal(),dchi2);
+                    h2_chi2_4->Fill(var2->getVal(),var3->getVal(),dchi2);
+                    h2_chi2_5->Fill(var2->getVal(),var4->getVal(),dchi2);
+                    h2_chi2_6->Fill(var3->getVal(),var4->getVal(),dchi2);
+                    mychi2 += dchi2;
+
 //                    for(int i = 0; i < 4; i++)
 //                        h1_resid[i]->Fill(vars[i]->getVal(),(n-v)/v);
-//                }
-//            }
-//        }
-//    }
+                }
+            }
+        }
+    }
 
-//    delete dataSet_binned;
+    delete dataSet_binned;
 
 
 
-    //c2->SetLogy(kTRUE);
-//    h1_chi2->GetXaxis()->SetTitle("dchi");
-//    h1_chi2->GetYaxis()->SetTitle("num bins");
-//    h1_chi2->Draw();
-//    h1_chi2->Write();
-//    c2->SaveAs("plots/chi2_delta.png");
-//
-//    c2->SetLogy(kFALSE);
+    c2->SetLogy(kTRUE);
+    h1_chi2->GetXaxis()->SetTitle("dchi");
+    h1_chi2->GetYaxis()->SetTitle("num bins");
+    h1_chi2->Draw();
+    h1_chi2->Write();
+    c2->SaveAs("plots/chi2_delta.png");
 
-//    h2_chi2_1->SetOption("colz");
-//    //hdchi2->SetMinimum(0);
-//    //hdchi2->SetMaximum(100);
-//    h2_chi2_1->SetStats(kFALSE);
-//    h2_chi2_1->GetXaxis()->SetTitle(var1->GetName());
-//    h2_chi2_1->GetYaxis()->SetTitle(var2->GetName());
-//    h2_chi2_1->Draw();
-//    h2_chi2_1->Write();
-//    path = "plots/chi2map_";
-//    path += var1->GetName();
-//    path += "_";
-//    path += var2->GetName();
-//    path += ".png";
-//    c2->SaveAs(path);
-//
-//    h2_chi2_2->SetOption("colz");
-//    //hdchi2->SetMinimum(0);
-//    //hdchi2->SetMaximum(100);
-//    h2_chi2_2->SetStats(kFALSE);
-//    h2_chi2_2->GetXaxis()->SetTitle(var1->GetName());
-//    h2_chi2_2->GetYaxis()->SetTitle(var3->GetName());
-//    h2_chi2_2->Draw();
-//    h2_chi2_2->Write();
-//    path = "plots/chi2map_";
-//    path += var1->GetName();
-//    path += "_";
-//    path += var3->GetName();
-//    path += ".png";
-//    c2->SaveAs(path);
-//
-//    h2_chi2_3->SetOption("colz");
-//    //hdchi2->SetMinimum(0);
-//    //hdchi2->SetMaximum(100);
-//    h2_chi2_3->SetStats(kFALSE);
-//    h2_chi2_3->GetXaxis()->SetTitle(var1->GetName());
-//    h2_chi2_3->GetYaxis()->SetTitle(var4->GetName());
-//    h2_chi2_3->Draw();
-//    h2_chi2_3->Write();
-//    path = "plots/chi2map_";
-//    path += var1->GetName();
-//    path += "_";
-//    path += var4->GetName();
-//    path += ".png";
-//    c2->SaveAs(path);
-//
-//    h2_chi2_4->SetOption("colz");
-//    //hdchi2->SetMinimum(0);
-//    //hdchi2->SetMaximum(100);
-//    h2_chi2_4->SetStats(kFALSE);
-//    h2_chi2_4->GetXaxis()->SetTitle(var2->GetName());
-//    h2_chi2_4->GetYaxis()->SetTitle(var3->GetName());
-//    h2_chi2_4->Draw();
-//    h2_chi2_4->Write();
-//    path = "plots/chi2map_";
-//    path += var2->GetName();
-//    path += "_";
-//    path += var3->GetName();
-//    path += ".png";
-//    c2->SaveAs(path);
-//
-//    h2_chi2_5->SetOption("colz");
-//    //hdchi2->SetMinimum(0);
-//    //hdchi2->SetMaximum(100);
-//    h2_chi2_5->SetStats(kFALSE);
-//    h2_chi2_5->GetXaxis()->SetTitle(var2->GetName());
-//    h2_chi2_5->GetYaxis()->SetTitle(var4->GetName());
-//    h2_chi2_5->Draw();
-//    h2_chi2_5->Write();
-//    path = "plots/chi2map_";
-//    path += var2->GetName();
-//    path += "_";
-//    path += var4->GetName();
-//    path += ".png";
-//    c2->SaveAs(path);
-//
-//    h2_chi2_6->SetOption("colz");
-//    //h2_chi2_6->SetMinimum(0);
-//    //h2_chi2_6->SetMaximum(100000);
-//    h2_chi2_6->SetStats(kFALSE);
-//    h2_chi2_6->GetXaxis()->SetTitle(var3->GetName());
-//    h2_chi2_6->GetYaxis()->SetTitle(var4->GetName());
-//    h2_chi2_6->Draw();
-//    h2_chi2_6->Write();
-//    path = "plots/chi2map_";
-//    path += var3->GetName();
-//    path += "_";
-//    path += var4->GetName();
-//    path += ".png";
-//    c2->SaveAs(path);
+    c2->SetLogy(kFALSE);
 
-//    file->Close();
+    h2_chi2_1->SetOption("colz");
+    //hdchi2->SetMinimum(0);
+    //hdchi2->SetMaximum(100);
+    h2_chi2_1->SetStats(kFALSE);
+    h2_chi2_1->GetXaxis()->SetTitle(var1->GetName());
+    h2_chi2_1->GetYaxis()->SetTitle(var2->GetName());
+    h2_chi2_1->Draw();
+    h2_chi2_1->Write();
+    path = "plots/chi2map_";
+    path += var1->GetName();
+    path += "_";
+    path += var2->GetName();
+    path += ".png";
+    c2->SaveAs(path);
+
+    h2_chi2_2->SetOption("colz");
+    //hdchi2->SetMinimum(0);
+    //hdchi2->SetMaximum(100);
+    h2_chi2_2->SetStats(kFALSE);
+    h2_chi2_2->GetXaxis()->SetTitle(var1->GetName());
+    h2_chi2_2->GetYaxis()->SetTitle(var3->GetName());
+    h2_chi2_2->Draw();
+    h2_chi2_2->Write();
+    path = "plots/chi2map_";
+    path += var1->GetName();
+    path += "_";
+    path += var3->GetName();
+    path += ".png";
+    c2->SaveAs(path);
+
+    h2_chi2_3->SetOption("colz");
+    //hdchi2->SetMinimum(0);
+    //hdchi2->SetMaximum(100);
+    h2_chi2_3->SetStats(kFALSE);
+    h2_chi2_3->GetXaxis()->SetTitle(var1->GetName());
+    h2_chi2_3->GetYaxis()->SetTitle(var4->GetName());
+    h2_chi2_3->Draw();
+    h2_chi2_3->Write();
+    path = "plots/chi2map_";
+    path += var1->GetName();
+    path += "_";
+    path += var4->GetName();
+    path += ".png";
+    c2->SaveAs(path);
+
+    h2_chi2_4->SetOption("colz");
+    //hdchi2->SetMinimum(0);
+    //hdchi2->SetMaximum(100);
+    h2_chi2_4->SetStats(kFALSE);
+    h2_chi2_4->GetXaxis()->SetTitle(var2->GetName());
+    h2_chi2_4->GetYaxis()->SetTitle(var3->GetName());
+    h2_chi2_4->Draw();
+    h2_chi2_4->Write();
+    path = "plots/chi2map_";
+    path += var2->GetName();
+    path += "_";
+    path += var3->GetName();
+    path += ".png";
+    c2->SaveAs(path);
+
+    h2_chi2_5->SetOption("colz");
+    //hdchi2->SetMinimum(0);
+    //hdchi2->SetMaximum(100);
+    h2_chi2_5->SetStats(kFALSE);
+    h2_chi2_5->GetXaxis()->SetTitle(var2->GetName());
+    h2_chi2_5->GetYaxis()->SetTitle(var4->GetName());
+    h2_chi2_5->Draw();
+    h2_chi2_5->Write();
+    path = "plots/chi2map_";
+    path += var2->GetName();
+    path += "_";
+    path += var4->GetName();
+    path += ".png";
+    c2->SaveAs(path);
+
+    h2_chi2_6->SetOption("colz");
+    //h2_chi2_6->SetMinimum(0);
+    //h2_chi2_6->SetMaximum(100000);
+    h2_chi2_6->SetStats(kFALSE);
+    h2_chi2_6->GetXaxis()->SetTitle(var3->GetName());
+    h2_chi2_6->GetYaxis()->SetTitle(var4->GetName());
+    h2_chi2_6->Draw();
+    h2_chi2_6->Write();
+    path = "plots/chi2map_";
+    path += var3->GetName();
+    path += "_";
+    path += var4->GetName();
+    path += ".png";
+    c2->SaveAs(path);
+
+    file->Close();
 
 //    delete h1_chi2;
 //    delete h2_chi2_1;
@@ -873,8 +866,8 @@ Double_t FitterTrans::SaveChi2Maps(const char* type)
 //    delete h2_chi2_5;
 //    delete h2_chi2_6;
 //    delete c2;
-//
-//    return mychi2;
+
+    return mychi2;
 }
 
 void FitterTrans::SaveNllPlot(RooRealVar* var)
