@@ -16,12 +16,14 @@
 #include "TStopwatch.h"
 #include "TMath.h"
 #include "TComplex.h"
+#include "TLine.h"
 
 #include "RooFit.h"
 #include "RooGlobalFunc.h"
 #include "RooRealVar.h"
 #include "RooCategory.h"
 #include "RooPlot.h"
+#include "RooHist.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "RooArgSet.h"
@@ -146,11 +148,11 @@ int ProcessTrans(FitterTrans* fitter, Int_t doFit, Int_t doPlot) {
 
     if(doPlot == kTRUE) {
         //SaveChi2Maps(fitter->GetBinnedDataSet(),dataSet->numEntries(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
-        Double_t mychi2 = fitter->SaveChi2Maps("a");
+        //Double_t mychi2 = fitter->SaveChi2Maps("a");
         //fitter->SaveResiduals();
-        //fitter->SaveNllPlot("rt");
-        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
-        //SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
+        fitter->SaveNllPlot("rt");
+        //printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
+        SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
     }
 
     return 0;
@@ -276,7 +278,10 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
     path = dir + "projections.root";
     TFile* file = new TFile(path,"RECREATE");
 
-    TCanvas* c1 = new TCanvas("c1","c1",800,600);
+    TCanvas* c1 = new TCanvas("c1","c1",800,800);
+    c1->Divide(0,2);
+    c1->cd(1)->SetPad(0., 0.15, 1, 1);
+    c1->cd(2)->SetPad(0., 0., 1, 0.2 );
     RooPlot* frame = 0;
 
     /// Create a binned pdf with the same number of events as the data, so that the 2d plots of pdf
@@ -298,8 +303,12 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
         //if(i == 1)
         pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3,dt)));
         frame->SetName(name);
+        c1->cd(1);
         frame->Draw();
         frame->Write();
+
+        DrawResidualFrame(frame,vars[i],c1,2);
+
         path = dir + name + format;
         c1->SaveAs(path);
         delete frame;
@@ -331,10 +340,15 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
 
         pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)));
         frame->SetName(name);
+        c1->cd(1);
         frame->Draw();
         frame->Write();
+
+        DrawResidualFrame(frame,dt,c1,2);
+
         path = dir + name + format;
         c1->SaveAs(path);
+
         delete frame;
     }
 
@@ -373,6 +387,29 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
 //    }
 
     file->Close();
+}
+
+void DrawResidualFrame(RooPlot* frame, RooRealVar var, TCanvas* canvas, Int_t padNumber) {
+        RooHist* hpull = frame->pullHist();
+        RooPlot* residual_frame = var.frame();
+        residual_frame->addPlotable(hpull,"P") ;
+        residual_frame->SetTitle("");
+        residual_frame->SetMinimum(-5) ;
+        residual_frame->SetMaximum(+5) ;
+        residual_frame->GetYaxis()->SetNdivisions(5,kFALSE);
+        residual_frame->GetYaxis()->SetLabelSize(0.1);
+        residual_frame->GetXaxis()->SetLabelSize(0);
+        residual_frame->GetXaxis()->SetTitleSize(0);
+        canvas->cd(padNumber);
+        residual_frame->Draw();
+        residual_frame->Write();
+
+        TLine* midLine;
+        double xMin = residual_frame->GetXaxis()->GetXmin();
+        double xMax = residual_frame->GetXaxis()->GetXmax();
+        midLine = new TLine( xMin,  0., xMax,  0. );
+        midLine->SetLineColor( kRed );
+        midLine->Draw("same");
 }
 
 void ConvertBetweenHelAndTrans(Double_t* par_input) {
