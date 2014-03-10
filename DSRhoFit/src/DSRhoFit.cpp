@@ -139,19 +139,19 @@ int ProcessTrans(FitterTrans* fitter, Int_t doFit, Int_t doPlot) {
         fitter->FreeParameter("rp");
         fitter->FreeParameter("r0");
         fitter->FreeParameter("rt");
-//        fitter->FreeParameter("sp");
-//        fitter->FreeParameter("s0");
-//        fitter->FreeParameter("st");
+        fitter->FreeParameter("sp");
+        fitter->FreeParameter("s0");
+        fitter->FreeParameter("st");
         fitter->Fit();
         fitter->SaveParameters(outputFile);
     }
 
     if(doPlot == kTRUE) {
         //SaveChi2Maps(fitter->GetBinnedDataSet(),dataSet->numEntries(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
-        //Double_t mychi2 = fitter->SaveChi2Maps("a");
+        Double_t mychi2 = fitter->SaveChi2Maps("a");
         //fitter->SaveResiduals();
-        fitter->SaveNllPlot("rt");
-        //printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
+        //fitter->SaveNllPlot("r0");
+        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
         SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
     }
 

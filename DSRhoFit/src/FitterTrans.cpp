@@ -709,7 +709,7 @@ Double_t FitterTrans::SaveChi2Maps(const char* type) {
 
     Double_t binVolume = tht->getBinWidth(0)*thb->getBinWidth(0)*phit->getBinWidth(0)*dt->getBinWidth(0);
 
-    TH1F* h1_chi2 = new TH1F("h1_chi2","h1_chi2",100,0,10);
+    TH1F* h1_chi2 = new TH1F("h1_chi2","h1_chi2",100,0,1000000);
     TH2F* h2_chi2_1 = new TH2F("h2_chi2_1","h2_chi2_1",var1_bins,var1->getMin(),var1->getMax(),var2_bins,var2->getMin(),var2->getMax());
     TH2F* h2_chi2_2 = new TH2F("h2_chi2_2","h2_chi2_2",var1_bins,var1->getMin(),var1->getMax(),var3_bins,var3->getMin(),var3->getMax());
     TH2F* h2_chi2_3 = new TH2F("h2_chi2_3","h2_chi2_3",var1_bins,var1->getMin(),var1->getMax(),var4_bins,var4->getMin(),var4->getMax());
@@ -754,8 +754,6 @@ Double_t FitterTrans::SaveChi2Maps(const char* type) {
     }
 
     delete dataSet_binned;
-
-
 
     c2->SetLogy(kTRUE);
     h1_chi2->GetXaxis()->SetTitle("dchi");

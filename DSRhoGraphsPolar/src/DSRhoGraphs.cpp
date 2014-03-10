@@ -262,6 +262,8 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         }
         frame->Draw();
     }
+    c_amp_pulls->SaveAs(".gif");
+
     TCanvas* c_amp_residuals = new TCanvas("c_amp_residuals","Amplitude residuals",1280,800);
     c_amp_residuals->Divide(3,2);
     for(int i = 0; i < 6; i++) {
@@ -273,6 +275,8 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         dataset->plotOn(frame,RooFit::DrawOption("BX"));
         frame->Draw("BX");
     }
+    c_amp_residuals->SaveAs(".gif");
+
     TCanvas* c_amp_errors = new TCanvas("c_amp_errors","Amplitude errors",1280,800);
     c_amp_errors->Divide(3,2);
     for(int i = 0; i < 6; i++) {
@@ -284,6 +288,7 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         dataset->plotOn(frame,RooFit::DrawOption("BX"));
         frame->Draw("BX");
     }
+    c_amp_errors->SaveAs(".gif");
 
     TCanvas* c_phiw = new TCanvas("c_phiw","Weak phase",1280,400);
     c_phiw->Divide(3);
@@ -316,7 +321,8 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
     }
     dataset->plotOn(frame,RooFit::DrawOption("BX"));
     frame->Draw();
-//
+    c_phiw->SaveAs(".gif");
+
     TCanvas* c_rs_pulls = new TCanvas("c_rs_pulls","r and strong phase pulls",1280,800);
     c_rs_pulls->Divide(3,2);
     for(int i = 7; i < 13; i++) {
@@ -334,6 +340,8 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         }
         frame->Draw();
     }
+    c_rs_pulls->SaveAs(".gif");
+
     TCanvas* c_rs_residuals = new TCanvas("c_rs_residuals","r and strong phase residuals",1280,800);
     c_rs_residuals->Divide(3,2);
     for(int i = 7; i < 13; i++) {
@@ -345,6 +353,8 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         dataset->plotOn(frame,RooFit::DrawOption("BX"));
         frame->Draw("BX");
     }
+    c_rs_residuals->SaveAs(".gif");
+
     TCanvas* c_rs_errors = new TCanvas("c_rs_errors","r and strong phase errors",1280,800);
     c_rs_errors->Divide(3,2);
     for(int i = 7; i < 13; i++) {
@@ -356,13 +366,6 @@ void CreateGeneralPlots(RooDataSet* const dataset, const ObservablesCollection c
         dataset->plotOn(frame,RooFit::DrawOption("BX"));
         frame->Draw("BX");
     }
-
-    c_amp_pulls->SaveAs(".gif");
-    c_amp_residuals->SaveAs(".gif");
-    c_amp_errors->SaveAs(".gif");
-    c_phiw->SaveAs(".gif");
-    c_rs_pulls->SaveAs(".gif");
-    c_rs_residuals->SaveAs(".gif");
     c_rs_errors->SaveAs(".gif");
 
     return;
