@@ -148,10 +148,10 @@ int ProcessTrans(FitterTrans* fitter, Int_t doFit, Int_t doPlot) {
 
     if(doPlot == kTRUE) {
         //SaveChi2Maps(fitter->GetBinnedDataSet(),dataSet->numEntries(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()));
-        Double_t mychi2 = fitter->SaveChi2Maps("a");
+        //Double_t mychi2 = fitter->SaveChi2Maps("a");
         //fitter->SaveResiduals();
         //fitter->SaveNllPlot("r0");
-        printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
+        //printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
         SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
     }
 

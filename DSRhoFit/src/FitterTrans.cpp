@@ -154,7 +154,8 @@ FitterTrans::~FitterTrans()
 Int_t FitterTrans::Fit()
 {
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
-    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"),RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(4));
+    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"),\
+                           RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(4));
 
     const TMatrixDSym& cor = result->correlationMatrix();
     result->Print();
