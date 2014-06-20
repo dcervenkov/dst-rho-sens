@@ -119,16 +119,16 @@ Double_t DSRhoPDF::evaluate() const
 
     Ap2 = ap*ap*((1 + xp*xp + yp*yp) + (1 - xp*xp - yp*yp)*trig_sign*cos(Bfreq*dt) + 2*yp*trig_sign*sin(Bfreq*dt));
     A02 = a0*a0*((1 + x0*x0 + y0*y0) + (1 - x0*x0 - y0*y0)*trig_sign*cos(Bfreq*dt) + 2*y0*trig_sign*sin(Bfreq*dt));
-    At2 = at*at*((1 + xt*xt + yt*yt) + (1 - xt*xt - yt*yt)*trig_sign*cos(Bfreq*dt) - 2*yt*trig_sign*sin(Bfreq*dt));
+    At2 = at*at*((1 + xt*xt + yt*yt) + (1 - xt*xt - yt*yt)*trig_sign*cos(Bfreq*dt) + 2*yt*trig_sign*sin(Bfreq*dt));
 
     Ap0r = ap0r*((1 + xp*x0 + yp*y0) + (1 - xp*x0 - yp*y0)*trig_sign*cos(Bfreq*dt) + (yp + y0)*trig_sign*sin(Bfreq*dt)) -\
            ap0i*((xp*y0 - x0*yp)*(1 - trig_sign*cos(Bfreq*dt)) + (xp - x0)*trig_sign*sin(Bfreq*dt));
 
-    A0ti = a0ti*((1 - x0*xt - y0*yt) + (1 + x0*xt + y0*yt)*trig_sign*cos(Bfreq*dt) + (y0 - yt)*trig_sign*sin(Bfreq*dt)) +\
-           a0tr*((- x0*yt + xt*y0)*(1 - trig_sign*cos(Bfreq*dt)) + (x0 + xt)*trig_sign*sin(Bfreq*dt));
+    A0ti = a0ti*((1 + x0*xt + y0*yt) + (1 - x0*xt - y0*yt)*trig_sign*cos(Bfreq*dt) + (y0 + yt)*trig_sign*sin(Bfreq*dt)) +\
+           a0tr*((x0*yt - xt*y0)*(1 - trig_sign*cos(Bfreq*dt)) + (x0 - xt)*trig_sign*sin(Bfreq*dt));
 
-    Apti = apti*((1 - xp*xt - yp*yt) + (1 + xp*xt + yp*yt)*trig_sign*cos(Bfreq*dt) + (yp - yt)*trig_sign*sin(Bfreq*dt)) +\
-           aptr*((- xp*yt + xt*yp)*(1 - trig_sign*cos(Bfreq*dt)) + (xp + xt)*trig_sign*sin(Bfreq*dt));
+    Apti = apti*((1 + xp*xt + yp*yt) + (1 - xp*xt - yp*yt)*trig_sign*cos(Bfreq*dt) + (yp + yt)*trig_sign*sin(Bfreq*dt)) +\
+           aptr*((xp*yt - xt*yp)*(1 - trig_sign*cos(Bfreq*dt)) + (xp - xt)*trig_sign*sin(Bfreq*dt));
 
 
 
@@ -216,13 +216,13 @@ Double_t DSRhoPDF::analyticalIntegral(Int_t code, const char* rangeName) const
 
     Ap2 = ap*ap*((1 + xp*xp + yp*yp) + (1 - xp*xp - yp*yp)*trig_sign*cos(Bfreq*dt) + 2*yp*trig_sign*sin(Bfreq*dt));
     A02 = a0*a0*((1 + x0*x0 + y0*y0) + (1 - x0*x0 - y0*y0)*trig_sign*cos(Bfreq*dt) + 2*y0*trig_sign*sin(Bfreq*dt));
-    At2 = at*at*((1 + xt*xt + yt*yt) + (1 - xt*xt - yt*yt)*trig_sign*cos(Bfreq*dt) - 2*yt*trig_sign*sin(Bfreq*dt));
+    At2 = at*at*((1 + xt*xt + yt*yt) + (1 - xt*xt - yt*yt)*trig_sign*cos(Bfreq*dt) + 2*yt*trig_sign*sin(Bfreq*dt));
 
     Ap0r = ap0r*((1 + xp*x0 + yp*y0) + (1 - xp*x0 - yp*y0)*trig_sign*cos(Bfreq*dt) + (yp + y0)*trig_sign*sin(Bfreq*dt)) -\
            ap0i*((xp*y0 - x0*yp)*(1 - trig_sign*cos(Bfreq*dt)) + (xp - x0)*trig_sign*sin(Bfreq*dt));
 
-    Apti = apti*((1 - xp*xt - yp*yt) + (1 + xp*xt + yp*yt)*trig_sign*cos(Bfreq*dt) + (yp - yt)*trig_sign*sin(Bfreq*dt)) +\
-           aptr*((- xp*yt + xt*yp)*(1 - trig_sign*cos(Bfreq*dt)) + (xp + xt)*trig_sign*sin(Bfreq*dt));
+    Apti = apti*((1 + xp*xt + yp*yt) + (1 - xp*xt - yp*yt)*trig_sign*cos(Bfreq*dt) + (yp + yt)*trig_sign*sin(Bfreq*dt)) +\
+           aptr*((xp*yt - xt*yp)*(1 - trig_sign*cos(Bfreq*dt)) + (xp - xt)*trig_sign*sin(Bfreq*dt));
 
 
     switch(code)
