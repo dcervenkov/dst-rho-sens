@@ -3,7 +3,7 @@
 This is a collection of programs used for a generator-level time-dependent angular CP violation sensitivity study of the B → D* + ρ decay. See my [diploma thesis](http://www-ucjf.troja.mff.cuni.cz/~cervenkov/diploma_thesis/dip_thesis.pdf) for more information.
 
 ### DSRhoDataMining
-This program reads a ROOT file created by translating a gen/mdst file created by EvtGen (using a ***) and calculates the transversity basis angular variables θ<sub>t</sub>, θ<sub>b</sub>, φ<sub>t</sub>, Δt and decay type. It then saves these variables in a plain text file (I know).
+This program reads a ROOT file created by translating a gen/mdst file (panther table) created by EvtGen to a ROOT file (using panther2root) and calculates the transversity basis angular variables θ<sub>t</sub>, θ<sub>b</sub>, φ<sub>t</sub>, Δt and decay type. It then saves these variables in a plain text file (I know).
 
 ### DSRhoFit
 Does the actual time-dependent angular fit. The following parameters are fitted:
