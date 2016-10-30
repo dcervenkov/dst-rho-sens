@@ -8,4 +8,3 @@ DSRhoFit : src/DSRhoFit.cpp src/FitterTrans.cpp src/DSRhoPDF.cpp
 
 clean : 
 	rm -f bin/Release/DSRhoFit
-
