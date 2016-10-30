@@ -109,7 +109,6 @@ FitterTrans::FitterTrans(Double_t* outer_par_input)
 
 FitterTrans::~FitterTrans()
 {
-    delete gPluginMgr;
     delete thb;
     delete tht;
     delete phit;
