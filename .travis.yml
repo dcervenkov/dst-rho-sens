@@ -39,8 +39,6 @@ install:
   - root -b -q
 
 script:
-  - ls -la ${CONDA_ENV_PATH}
-  - ls -la ${CONDA_ENV_PATH}/include
-  - ls -la ${CONDA_ENV_PATH}/lib
+  - cd DSRhoFit && make
   #- python tests/test_root.py
   #- python tests/test_stl.py
