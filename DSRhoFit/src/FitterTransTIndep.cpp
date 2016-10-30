@@ -7,8 +7,7 @@
 #include "RooRandom.h"
 #include "RooChi2Var.h"
 #include "RooSimultaneous.h"
-#include "Minuit2/Minuit2Minimizer.h"
-#include "TPluginManager.h"
+
 #include "TMath.h"
 #include "TIterator.h"
 #include "TLine.h"
@@ -23,9 +22,6 @@
 
 FitterTransTIndep::FitterTransTIndep(RooDataSet* outer_dataSet, Double_t* outer_par_input)
 {
-    gPluginMgr = new TPluginManager;
-    gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
-
     dataSet = outer_dataSet;
     for(int i = 0; i < 11; i++)
         par_input[i] = outer_par_input[i];
@@ -107,10 +103,8 @@ FitterTransTIndep::~FitterTransTIndep()
 Int_t FitterTransTIndep::Fit()
 {
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
-    //TPluginManager* gPluginMgr = new TPluginManager;
-    //gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
-    //result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"));//,RooFit::NumCPU(2));
-    result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit"),RooFit::Minos(),RooFit::Hesse(),RooFit::Strategy(1));//,RooFit::NumCPU(2));
+    //result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true));//,RooFit::NumCPU(2));
+    result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minos(),RooFit::Hesse(),RooFit::Strategy(1));//,RooFit::NumCPU(2));
     //result->Print();
 }
 
