@@ -4,10 +4,14 @@ language: cpp
 
 matrix:
     include:
-        - python: 2.7
-          env: PYTHON=2.7 ROOT=5.34.32
-        - python: 3.4
-          env: PYTHON=3.4 ROOT=6.04
+        - python: 2
+          env: PYTHON=2 ROOT=5
+        - python: 2
+          env: PYTHON=2 ROOT=6
+        - python: 3
+          env: PYTHON=3 ROOT=5
+        - python: 3
+          env: PYTHON=3 ROOT=6
 
 install:
   # Conda
