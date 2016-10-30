@@ -32,8 +32,6 @@ class FitterTransTIndep
 
     protected:
     private:
-        TPluginManager* gPluginMgr;
-
         void SaveNllPlot(RooRealVar* var);
         void SaveNllPlot(RooRealVar* var1, RooRealVar* var2);
 
