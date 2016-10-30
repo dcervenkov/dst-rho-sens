@@ -16,6 +16,7 @@ matrix:
 
 install:
   # Conda
+  - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then curl --silent http://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh -o miniconda.sh; fi
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then wget -nv http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
   
   - bash miniconda.sh -b -p $HOME/miniconda
@@ -28,10 +29,12 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a # Useful for debugging any issues with conda
-  #- conda create -q -n testenv python=${PYTHON} root=${ROOT} numpy rootpy
+  - conda config --add channels http://conda.anaconda.org/NLeSC  
+  - conda config --set show_channel_urls yes
   - conda install root
+  #- conda create -q -n testenv python=${PYTHON} root=${ROOT} numpy rootpy
   #- source activate testenv
-  #- conda uninstall -q sqlite libpng libx11 jpeg libtiff
+  ##- conda uninstall -q sqlite libpng libx11 jpeg libtiff
   #- conda uninstall --force --yes -q sqlite libpng libx11 jpeg libtiff
   - root -b -q
 
