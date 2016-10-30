@@ -31,9 +31,9 @@ install:
   - conda info -a # Useful for debugging any issues with conda
   - conda config --add channels http://conda.anaconda.org/NLeSC  
   - conda config --set show_channel_urls yes
-  - conda install root
-  #- conda create -q -n testenv python=${PYTHON} root=${ROOT} numpy rootpy
-  #- source activate testenv
+  #- conda install root
+  - conda create -q -n testenv python=${PYTHON} root=${ROOT}
+  - source activate testenv
   ##- conda uninstall -q sqlite libpng libx11 jpeg libtiff
   #- conda uninstall --force --yes -q sqlite libpng libx11 jpeg libtiff
   - root -b -q
