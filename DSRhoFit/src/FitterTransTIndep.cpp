@@ -79,7 +79,6 @@ FitterTransTIndep::FitterTransTIndep(RooDataSet* outer_dataSet, Double_t* outer_
 
 FitterTransTIndep::~FitterTransTIndep()
 {
-    delete gPluginMgr;
     delete thb;
     delete tht;
     delete phit;
