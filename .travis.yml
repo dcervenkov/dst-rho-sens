@@ -1,0 +1,40 @@
+sudo: false
+
+language: generic
+
+matrix:
+    include:
+        - python: 2.7
+          env: PYTHON=2.7 ROOT=5.34.32
+
+#before_script:
+#    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then  
+#          export DISPLAY=:99.0; 
+#          sh -e /etc/init.d/xvfb start; 
+#          sleep 3; 
+#      fi
+
+install:
+  # Conda
+  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then wget -nv http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
+  
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - which gcc
+  - gcc --version
+  - which clang
+  - clang --version
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda info -a # Useful for debugging any issues with conda
+  #- conda create -q -n testenv python=${PYTHON} root=${ROOT} numpy rootpy
+  - conda install root
+  #- source activate testenv
+  #- conda uninstall -q sqlite libpng libx11 jpeg libtiff
+  #- conda uninstall --force --yes -q sqlite libpng libx11 jpeg libtiff
+  - root -b -q
+
+script:
+  #- python tests/test_root.py
+  #- python tests/test_stl.py
