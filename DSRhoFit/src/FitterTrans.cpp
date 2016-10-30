@@ -10,8 +10,6 @@
 #include "RooPlot.h"
 #include "RooFitResult.h"
 
-#include "Minuit2/Minuit2Minimizer.h"
-#include "TPluginManager.h"
 #include "TMath.h"
 #include "TIterator.h"
 #include "TLine.h"
@@ -26,9 +24,6 @@
 
 FitterTrans::FitterTrans(Double_t* outer_par_input)
 {
-    gPluginMgr = new TPluginManager;
-    gPluginMgr->AddHandler("ROOT::Math::Minimizer", "Minuit2", "Minuit2Minimizer", "Minuit2", "Minuit2Minimizer(const char *)");
-
     chi2Var = 0;
     result = 0;
 
@@ -114,7 +109,6 @@ FitterTrans::FitterTrans(Double_t* outer_par_input)
 
 FitterTrans::~FitterTrans()
 {
-    delete gPluginMgr;
     delete thb;
     delete tht;
     delete phit;
@@ -154,7 +148,7 @@ FitterTrans::~FitterTrans()
 Int_t FitterTrans::Fit()
 {
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
-    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minimizer("Minuit2"),\
+    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),\
                            RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(4));
 
     const TMatrixDSym& cor = result->correlationMatrix();
