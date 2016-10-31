@@ -1,5 +1,6 @@
-[![Build Status](https://travis-ci.org/dcervenkov/dst-rho-sens.svg?branch=master)](https://travis-ci.org/dcervenkov/dst-rho-sens)
 # dst-rho-sens 
+
+[![Build Status](https://travis-ci.org/dcervenkov/dst-rho-sens.svg?branch=master)](https://travis-ci.org/dcervenkov/dst-rho-sens)
 
 This is a collection of programs used for a generator-level time-dependent angular CP violation sensitivity study of the B → D* + ρ decay. See my [diploma thesis](http://www-ucjf.troja.mff.cuni.cz/~cervenkov/diploma_thesis/dip_thesis.pdf) for more information.
 

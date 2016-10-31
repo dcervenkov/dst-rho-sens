@@ -29,18 +29,24 @@ install:
   - conda info -a # Useful for debugging any issues with conda
   - conda config --add channels http://conda.anaconda.org/NLeSC  
   - conda config --set show_channel_urls yes
-  #- conda install root
   - conda create -q -n testenv python=${PYTHON} root=${ROOT}
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
-  ##- conda uninstall -q sqlite libpng libx11 jpeg libtiff
   #- conda uninstall --force --yes -q sqlite libpng libx11 jpeg libtiff
   - root -b -q
 
 before_script:
+  - mkdir -p DSRhoDataMining/obj
   - mkdir -p DSRhoFit/bin/Release
+  - mkdir -p DSRhoFitCartesian/bin/Release
+  - mkdir -p DSRhoGraphs/bin/Release
+  - mkdir -p DSRhoGraphsPolar/bin/Release
 
 script:
-  - cd DSRhoFit && make
+  - cd ${TRAVIS_BUILD_DIR}/DSRhoDataMining && make
+  - cd ${TRAVIS_BUILD_DIR}/DSRhoFit && make
+  - cd ${TRAVIS_BUILD_DIR}/DSRhoFitCartesian && make
+  - cd ${TRAVIS_BUILD_DIR}/DSRhoGraphs && make
+  - cd ${TRAVIS_BUILD_DIR}/DSRhoGraphsPolar && make
   #- python tests/test_root.py
   #- python tests/test_stl.py
