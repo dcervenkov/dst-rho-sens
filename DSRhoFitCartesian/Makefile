@@ -1,4 +1,4 @@
-TARGET := DSRhoDataMining
+TARGET := DSRhoFitCartesian
 
 CXX_FILES := $(wildcard src/*.cpp)
 OBJ_FILES := $(addprefix obj/,$(notdir $(CXX_FILES:.cpp=.o)))
