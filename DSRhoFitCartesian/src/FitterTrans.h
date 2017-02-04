@@ -20,6 +20,7 @@ class FitterTrans
         RooRealVar* GetPhit(){return phit;};
         RooRealVar* GetDt(){return dt;};
         DSRhoPDF* GetPdf(){return pdf_a;};
+        DSRhoPDF* GetPdfBar(){return pdf_ab;};
         RooDataHist* GetBinnedDataSet();
         RooDataSet* GetReducedDataSet();
         RooDataSet* GetDataSet(){return dataSet;};

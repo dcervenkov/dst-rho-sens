@@ -155,7 +155,7 @@ int ProcessTrans(FitterTrans* fitter, Int_t doFit, Int_t doPlot) {
         //fitter->SaveResiduals();
         //fitter->SaveNllPlot("yt");
         //printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
-        SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
+        SavePlots(fitter->GetDataSet(),fitter->GetPdf(),fitter->GetPdfBar(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
     }
 
     return 0;
@@ -271,7 +271,7 @@ Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* 
     return mychi2;
 }
 
-void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3, RooRealVar& dt) {
+void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, DSRhoPDF* pdf_bar, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3, RooRealVar& dt) {
     /// Directory and format of the saved plots
     const TString dir = "plots/";
     const TString format = ".png";
@@ -325,6 +325,7 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
         datacut->plotOn(frame,RooFit::Name("data"));
 
         pdf->setType(i);
+        pdf_bar->setType(i);
 //        if(i == 3)
 //            pdf->setType(4);
 //        else if(i == 4)
@@ -334,7 +335,11 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
 //        else if(i == 2)
 //            pdf->setType(1);
 
-        pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)));
+        if (i == 1 || i == 4) {
+        	pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)));
+        } else {
+        	pdf_bar->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)));
+        }
         frame->SetName(name);
         frame->Draw();
         frame->Write();

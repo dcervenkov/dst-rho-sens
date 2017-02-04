@@ -167,9 +167,9 @@ Int_t FitterTrans::Fit()
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
     result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(1));
 
-    const TMatrixDSym& cor = result->correlationMatrix();
     result->Print();
-    cor.Print();
+    //const TMatrixDSym& cor = result->correlationMatrix();
+    //cor.Print();
     //TCanvas c1;
     //result->correlationHist()->Draw("colz");
     //c1.SaveAs("corr.gif");
