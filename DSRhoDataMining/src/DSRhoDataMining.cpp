@@ -110,11 +110,11 @@ int main(int argc, char* argv[])
 
 void Analyze(RooDataSet* dataSet)
 {
-    printf("# Events = %i\n",events->size());
+    printf("# Events = %lu\n",events->size());
 
     int not_found = 0;
 
-    for(int i = 0; i < events->size(); i++)
+    for(unsigned int i = 0; i < events->size(); i++)
     //for(int i = 0; i < 40; i++)
     {
         //printf("\n\nEvent %i # particles = %i\n",i,(*events)[i].size());
@@ -313,7 +313,7 @@ void PrintEvent(int evtNo)
     std::vector<Particle> particles = (*events)[evtNo];
     printf("\nEvent %i\n",evtNo);
     printf("ID\tIDHEP\t P1\t P2\t P3\tE\tM\n");
-    for(int i = 0; i < particles.size(); i++)
+    for(unsigned int i = 0; i < particles.size(); i++)
     {
         printf("%i\t%6i\t%5.2f\t%5.2f\t%5.2f\t%4.2f\t%5.3f\n",i+1,particles[i].GetIdhep(),\
                particles[i].GetP(0),particles[i].GetP(1),particles[i].GetP(2),particles[i].GetP(3),particles[i].GetM());
@@ -390,7 +390,7 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
     double t_sig = 0;
 
     /// This cycles through all particles in an event
-    for(int i = 0; i < (*events)[eventNo].size(); i++)
+    for(unsigned int i = 0; i < (*events)[eventNo].size(); i++)
     {
         bool found_sig_this_iter = 0;
 
