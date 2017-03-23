@@ -37,7 +37,6 @@
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 
-
 #include "DSRhoDataMining.h"
 #include "Particle.h"
 #include "Constants.h"
@@ -474,25 +473,30 @@ bool GetRelevantParticles(int eventNo, Particle** B0 ,Particle** DS, Particle** 
 //            ///             3:  B0      -> D*+ + rho-   (b  - suppressed)
 //            ///             4:  B0Bar   -> D*- + rho+   (bb - suppressed)
 
-            if((B0s == 1) && (B0Bars == 1))
+            if (B0s == 2) 
             {
-                if((*DS)->GetIdhep() > 0)
-                    dec_type = 3;
-                else
-                    dec_type = 1;
+                dec_type = 4;
+            } 
+            else if (B0s == 0) 
+            {
+                dec_type = 3;
             }
-
-            if((B0s == 2) && (B0Bars == 0))
+            else 
             {
-                if((*DS)->GetIdhep() > 0)
+                if ((*DS)->GetIdhep() > 0)
+                {
                     dec_type = 2;
-                else
-                    dec_type = 4;
+                }
+                else 
+                {
+                    dec_type = 1;
+                }
             }
 
             delta_t = t_sig - t_tag;
             return 1;
         }
+
     } // For cycle going through all particles in an event
 
     return 0;
