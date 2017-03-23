@@ -1,6 +1,10 @@
 #ifndef PARTICLE_H_INCLUDED
 #define PARTICLE_H_INCLUDED
 
+#include "TRotation.h"
+#include "TVector3.h"
+#include "TLorentzVector.h"
+
 static const int maxDaughters = 20;
 
 class Particle
