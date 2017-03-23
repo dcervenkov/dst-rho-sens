@@ -3,26 +3,48 @@
 #include <string>
 #include <vector>
 
-#include  "Particle.h"
+#include "Particle.h"
 
 namespace printTree {
 
-void printEvent(std::vector<Particle> list) {
-    printParticle(list[0], 0);
+void printDecayTree(std::vector<Particle> list) {
+    printParticle(list[0], "");
     printf("\n");
 }
 
-void printParticle(const Particle& particle, int level) {
-    if (level != 0) {
-        for (int i = 0; i < level - 1; i++) {
-            printf("|   ");
-        }
-        printf("+-> ");
+void printParticle(const Particle& particle, std::string leader) {
+    std::string marker = "";
+    if (!particle.GetMother()) {
+        marker = "";
+    } else if (isParticleLastDaughter(particle)) {
+        marker = "└-> ";
+    } else {
+        marker = "├-> ";
     }
-    printf("%s\n", getRealName(particle.GetIdhep()).c_str());
+    printf("%s%s%s\n", leader.c_str(), marker.c_str(), getRealName(particle.GetIdhep()).c_str());
+    std::string newLeader = "";
     for (int i = 0; i < particle.GetNumDaughters(); i++) {
-        printParticle(*particle.GetDaughter(i), level + 1);
+        newLeader = leader;
+        if (particle.GetMother()) {
+            if (isParticleLastDaughter(particle)) {
+                newLeader += "    ";
+            } else {
+                newLeader += "|   ";
+            }
+        }
+        printParticle(*particle.GetDaughter(i), newLeader);
     }
+}
+
+bool isParticleLastDaughter(const Particle& particle) {
+    bool lastDaughter = true;
+    if (particle.GetMother()) {
+        Particle& mother = *particle.GetMother();
+        if (mother.GetDaughter(mother.GetNumDaughters() - 1) != &particle) {
+            lastDaughter = false;
+        }
+    }
+    return lastDaughter;
 }
 
 std::string getRealName(int idhep) {
