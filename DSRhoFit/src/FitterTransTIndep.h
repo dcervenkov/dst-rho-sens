@@ -6,7 +6,7 @@
 class FitterTransTIndep
 {
     public:
-        FitterTransTIndep(RooDataSet* outer_dataSet, Double_t* outer_par_input);
+        FitterTransTIndep(Double_t* outer_par_input);
         ~FitterTransTIndep();
         Int_t Fit();
         Int_t ComputeChi2();
@@ -15,6 +15,7 @@ class FitterTransTIndep
         void SaveNllPlot(const char* par);
         void SaveNllPlot(const char* par1, const char* par2);
         void GetRecoveredParameters(Int_t& numParameters, Double_t** recoveredParameters);
+        void SaveParameters(char* file);
         RooRealVar* GetTht(){return tht;};
         RooRealVar* GetThb(){return thb;};
         RooRealVar* GetPhit(){return phit;};
@@ -28,6 +29,7 @@ class FitterTransTIndep
         void PrintParameter(const char* par);
         void GetHelParameters(Double_t* params);
         void SaveResiduals();
+        void ReadDataSet(const char* file);
 
 
     protected:
@@ -48,6 +50,7 @@ class FitterTransTIndep
         RooChi2Var* chi2Var;
         RooFitResult* result;
         RooArgSet* parameters;
+        RooArgList* variables;
 
         Int_t tht_bins;
         Int_t thb_bins;

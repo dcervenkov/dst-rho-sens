@@ -1,12 +1,18 @@
 #ifndef FITTERTRANS_H
 #define FITTERTRANS_H
 
+// ROOT includes
+#include "RooSimultaneous.h"
+#include "RooChi2Var.h"
+
+// Local includes
 #include "DSRhoPDF.h"
+#include "DSRhoPDFTIndep.h"
 
 class FitterTrans
 {
     public:
-        FitterTrans(Double_t* outer_par_input);
+        FitterTrans(Double_t* outer_par_input, bool time_dependent = true);
         ~FitterTrans();
         Int_t Fit();
         Int_t ComputeChi2(const char* type);
@@ -31,9 +37,12 @@ class FitterTrans
         void SaveResiduals();
         void GenerateDataSet(Int_t numEvents);
         void ReadDataSet(const char* file);
+        void SetNumCPUs(unsigned int CPUs) {num_CPUs = CPUs;};
 
     protected:
     private:
+        unsigned int num_CPUs = 1;
+
         void SaveNllPlot(RooRealVar* var);
         void SaveNllPlot(RooRealVar* var1, RooRealVar* var2);
 
@@ -51,9 +60,10 @@ class FitterTrans
         Bool_t doFit;
         RooChi2Var* chi2Var;
         RooFitResult* result;
-        RooSimultaneous* simPdf;
         RooArgSet* parameters;
         RooArgList* variables;
+
+        bool time_dependent;
 
         Int_t tht_bins;
         Int_t thb_bins;
@@ -97,10 +107,14 @@ class FitterTrans
         RooRealVar* rp;
         RooRealVar* r0;
 
+        DSRhoPDFTIndep* pdf_tindep;
+
         DSRhoPDF* pdf_a;
         DSRhoPDF* pdf_b;
         DSRhoPDF* pdf_ab;
         DSRhoPDF* pdf_bb;
+        
+        RooSimultaneous* pdf_sim;
 
         /// numFitParameters holds # of NON-constant fit parameters
         RooArgSet* fitParameters;

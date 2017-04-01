@@ -1,7 +1,13 @@
+#include "DSRhoFit.h"
+
+// Standard includes
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <getopt.h>
+#include <unistd.h>
 
+// ROOT includes
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TApplication.h"
@@ -39,13 +45,10 @@
 #include "RooRandom.h"
 #include "RooExponential.h"
 
-#include "DSRhoFit.h"
+// Local includes
 #include "Constants.h"
 #include "ASSERT.h"
 #include "FitterTrans.h"
-#include "FitterTransTIndep.h"
-
-#include <unistd.h>
 
 #define DEBUG
 //#define VERBOSE
@@ -71,9 +74,20 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    if(argc != 16) {
+	char** optionless_argv = NULL;
+	// The {} causes the struct's members to be initialized to 0. Without it
+	// they would have unspecified values
+	fitter_options options = {};
+	const int optionless_argc = ProcessCmdLineOptions(argc, argv, optionless_argv, options);
+
+    int num_mandatory_arguments = options.time_independent_set ? 7 : 14;
+    if(optionless_argc != num_mandatory_arguments) {
         printf("ERROR: Wrong number of arguments.\n");
-        printf("Usage: DSRhoFit inputFile outputFile ap apa a0 ata phiw rp r0 rt sp s0 st doFit doPlot\n");
+        if (options.time_independent_set) {
+            printf("Usage: DSRhoFit inputFile outputFile ap apa a0 ata\n");
+        } else {
+            printf("Usage: DSRhoFit inputFile outputFile ap apa a0 ata phiw rp r0 rt sp s0 st\n");
+        }
         return 85;
     }
 
@@ -82,37 +96,28 @@ int main(int argc, char* argv[]) {
 
     /// This is so I have to change only the next block if I change the
     /// ordering, etc. of arguments
-    inputFile = argv[1];
-    outputFile = argv[2];
-    Int_t numPars = argc - 5;
+    inputFile = optionless_argv[1];
+    outputFile = optionless_argv[2];
+    Int_t numPars = optionless_argc - 3;
     Double_t par_input[numPars];
     for(Int_t i = 0; i < numPars; i++)
-        par_input[i] = atof(argv[i+3]);
+        par_input[i] = atof(optionless_argv[i+3]);
 
-    Int_t doFit = atoi(argv[argc-2]);
-    Int_t doPlot = atoi(argv[argc-1]);
+    Int_t doFit = false;
+    Int_t doPlot = false;
 
-    RooRealVar tha("tha","tha",0,PI);
-    RooRealVar thb("thb","thb",0,PI);
-    RooRealVar chi("chi","chi",0,2*PI);
-    RooRealVar tht("tht","tht",0,PI);
-    RooRealVar phit("phit","phit",-PI,PI);
-    RooRealVar dt("dt","dt",-10,10);
-    RooCategory decType("decType","decType");
-    decType.defineType("a",1);
-    decType.defineType("ab",2);
-    decType.defineType("b",3);
-    decType.defineType("bb",4);
+    FitterTrans* fitter = new FitterTrans(par_input, options.time_independent_set ? (!options.time_independent) : true);
+	if (options.num_CPUs_set) fitter->SetNumCPUs(options.num_CPUs);
+	if (options.make_plots_set) doPlot = options.make_plots;
+	if (options.fit_set) doFit = options.fit;
 
     if(doFit == 3) {
         ConvertBetweenHelAndTrans(par_input);
     } else if(doFit == 4) {
-        FitterTrans* fitter = new FitterTrans(par_input);
         fitter->GenerateDataSet(100000);
         fitter->GetDataSet()->write(inputFile);
     } else {
         //ConvertBetweenHelAndTrans(par_input);
-        FitterTrans* fitter = new FitterTrans(par_input);
         fitter->ReadDataSet(inputFile);
         ProcessTrans(fitter,doFit,doPlot);
     }
@@ -131,17 +136,17 @@ int main(int argc, char* argv[]) {
 int ProcessTrans(FitterTrans* fitter, Int_t doFit, Int_t doPlot) {
     if(doFit) {
         fitter->FixAllParameters();
-//        fitter->FreeParameter("ap");
-//        fitter->FreeParameter("apa");
-//        fitter->FreeParameter("a0");
-//        fitter->FreeParameter("ata");
-        fitter->FreeParameter("phiw");
-        fitter->FreeParameter("rp");
-        fitter->FreeParameter("r0");
-        fitter->FreeParameter("rt");
-        fitter->FreeParameter("sp");
-        fitter->FreeParameter("s0");
-        fitter->FreeParameter("st");
+       fitter->FreeParameter("ap");
+       fitter->FreeParameter("apa");
+       fitter->FreeParameter("a0");
+       fitter->FreeParameter("ata");
+        // fitter->FreeParameter("phiw");
+        // fitter->FreeParameter("rp");
+        // fitter->FreeParameter("r0");
+        // fitter->FreeParameter("rt");
+        // fitter->FreeParameter("sp");
+        // fitter->FreeParameter("s0");
+        // fitter->FreeParameter("st");
         fitter->Fit();
         fitter->SaveParameters(outputFile);
     }
@@ -152,7 +157,7 @@ int ProcessTrans(FitterTrans* fitter, Int_t doFit, Int_t doPlot) {
         //fitter->SaveResiduals();
         //fitter->SaveNllPlot("r0");
         //printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
-        SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
+        // SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
     }
 
     return 0;
@@ -268,7 +273,7 @@ Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* 
     return mychi2;
 }
 
-void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3, RooRealVar& dt) {
+void SavePlots(RooDataSet* dataSet, DSRhoPDFTIndep* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3, RooRealVar& dt) {
     /// Directory and format of the saved plots
     const TString dir = "plots/";
     const TString format = ".png";
@@ -314,46 +319,46 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDF* pdf, const RooRealVar& var1, const
         delete frame;
     }
 
-    /// The next 2 lines enable getting category items' names and therefore reduced datasets in a loop
-    const RooArgSet* args = dataSet->get();
-    const RooCategory* cat = (RooCategory*)args->find("decType");
-    RooDataSet* datacut;
+//     /// The next 2 lines enable getting category items' names and therefore reduced datasets in a loop
+//     const RooArgSet* args = dataSet->get();
+//     const RooCategory* cat = (RooCategory*)args->find("decType");
+//     RooDataSet* datacut;
 
-    /// Saving dt plots for all 4 decay types
-    for(int i = 1; i <= 4; i++) {
-        frame = dt.frame();
-        TString type = (char*)cat->lookupType(i)->GetName();
-        TString cut = "decType==decType::" + type;
-        name = "proj_" + (dt.GetName() + ("_" + type));
-        datacut = (RooDataSet*)dataSet->reduce(dt,cut);
-        datacut->plotOn(frame,RooFit::Name("data"));
+//     /// Saving dt plots for all 4 decay types
+//     for(int i = 1; i <= 4; i++) {
+//         frame = dt.frame();
+//         TString type = (char*)cat->lookupType(i)->GetName();
+//         TString cut = "decType==decType::" + type;
+//         name = "proj_" + (dt.GetName() + ("_" + type));
+//         datacut = (RooDataSet*)dataSet->reduce(dt,cut);
+//         datacut->plotOn(frame,RooFit::Name("data"));
 
-        pdf->setType(i);
-//        if(i == 3)
-//            pdf->setType(4);
-//        else if(i == 4)
-//            pdf->setType(3);
-//        else if(i == 1)
-//            pdf->setType(2);
-//        else if(i == 2)
-//            pdf->setType(1);
+//         pdf->setType(i);
+// //        if(i == 3)
+// //            pdf->setType(4);
+// //        else if(i == 4)
+// //            pdf->setType(3);
+// //        else if(i == 1)
+// //            pdf->setType(2);
+// //        else if(i == 2)
+// //            pdf->setType(1);
 
-        pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)));
-        frame->SetName(name);
-        c1->cd(1);
-        frame->Draw();
-        frame->Write();
+//         pdf->plotOn(frame,RooFit::Project(RooArgSet(var1,var2,var3)));
+//         frame->SetName(name);
+//         c1->cd(1);
+//         frame->Draw();
+//         frame->Write();
 
-        DrawResidualFrame(frame,dt,c1,2);
+//         DrawResidualFrame(frame,dt,c1,2);
 
-        path = dir + name + format;
-        c1->SaveAs(path);
+//         path = dir + name + format;
+//         c1->SaveAs(path);
 
-        delete frame;
-    }
+//         delete frame;
+//     }
 
-    TH2* h2_pdf = 0;
-    TH2* h2_data = 0;
+//     TH2* h2_pdf = 0;
+//     TH2* h2_data = 0;
 
     /// Saving projections of both data and pdf on 2 dimensions
 //    for(int i = 0; i < numVars; i++)
@@ -470,4 +475,83 @@ Double_t Round(Double_t number, Int_t digits) {
         number = floor(number);
 
     return number/pow(10,digits);
+}
+
+/*
+ * Parses command line input and extracts switches and options from it, e.g., -h or --help.
+ * Then it acts accordingly, e.g., displaying help or setting variables in an option struct.
+ * It also returns optionless_argv and optionless_argc (return value) for easy integration with existing code.
+ *
+ * @param argc Standard argc
+ * @param argv Standard argv
+ * @param optionless_argv Pointer where to write the new argv with processed switches removed
+ * @param options Struct which holds the variables acted upon by switches
+ */
+int ProcessCmdLineOptions(const int argc, char* const argv[], char**& optionless_argv, fitter_options& options) {
+	int c;
+	struct option long_options[] = {
+			{"cpus", required_argument, 0, 'c'},
+			{"events", required_argument, 0, 'e'},
+			{"time-independent", no_argument, 0, 'i'},
+			{"fit", no_argument, 0, 'f'},
+			{"plot", no_argument, 0, 'p'},
+			{"help", no_argument, 0, 'h'},
+			{NULL, no_argument, NULL, 0}
+	};
+	int option_index = 0;
+	while ((c = getopt_long(argc, argv, "c:e:ifph",
+			long_options, &option_index)) != -1) {
+		switch (c) {
+		case 0:
+			printf ("option %s", long_options[option_index].name);
+			if (optarg)
+				printf (" with arg %s", optarg);
+			printf ("\n");
+			break;
+		case 'c':
+			options.num_CPUs = atoi(optarg);
+			options.num_CPUs_set = true;
+			break;
+		case 'e':
+			options.num_events = atoi(optarg);
+			options.num_events_set = true;
+			break;
+		case 'i':
+			options.time_independent = true;
+			options.time_independent_set = true;
+			break;
+		case 'f':
+			options.fit = true;
+			options.fit_set = true;
+			break;
+		case 'p':
+			options.make_plots = true;
+			options.make_plots_set = true;
+			break;
+		case 'h':
+			printf("Usage: %s [OPTION]... INPUT-FILE OUTPUT_DIR\n\n", argv[0]);
+			printf("Mandatory arguments to long options are mandatory for short options too.\n");
+			printf("-c, --cpus=NUM_CPUS     number of CPU cores to use for fitting and plotting\n");
+			printf("-e, --events=NUM_EVENTS number of events to be imported from the input file\n");
+			printf("-h, --help              display this text and exit\n");
+			printf("-p, --plot              create angular/dt plots\n");
+			printf("-f, --fit               fit\n");
+			printf("-i, --time-independent  use time-independent PDF\n");
+			exit(0);
+			break;
+		default:
+			printf ("?? getopt returned character code 0%o ??\n", c);
+		}
+	}
+
+	// Create a char** that will become the new argv, with the options removed
+	const int optionless_argc = argc - optind + 1;
+	optionless_argv = new char*[optionless_argc];
+	// We want to keep the program name argument
+	optionless_argv[0] = argv[0];
+	for (int i = 1; i < optionless_argc; i++) {
+		optionless_argv[i] = argv[i - 1 + optind];
+	}
+
+	return optionless_argc;
 }

@@ -22,7 +22,7 @@
 #include "TCanvas.h"
 #include "TFile.h"
 
-FitterTrans::FitterTrans(Double_t* outer_par_input)
+FitterTrans::FitterTrans(Double_t* outer_par_input, bool outer_time_dependent)
 {
     chi2Var = 0;
     result = 0;
@@ -53,7 +53,9 @@ FitterTrans::FitterTrans(Double_t* outer_par_input)
     decType->defineType("b",3);
     decType->defineType("bb",4);
 
-    for (Int_t i = 0; i < 11; i++)
+    time_dependent = outer_time_dependent;
+    int num_pars = time_dependent ? 11 : 4;
+    for (int i = 0; i < num_pars; i++)
         par_input[i] = outer_par_input[i];
 
     /// apr and other seemingly unnecessary vars are used when calculating/printing e.g. "hp"
@@ -70,37 +72,43 @@ FitterTrans::FitterTrans(Double_t* outer_par_input)
     atr = new RooFormulaVar("atr","at*cos(ata)",RooArgSet(*at,*ata));
     ati = new RooFormulaVar("ati","at*sin(ata)",RooArgSet(*at,*ata));
 
-    /// Time-dep additional vars
+    if (time_dependent) {
+        /// Time-dep additional vars
 
-    dm = new RooRealVar("dm","dm",0.507e12);
-    phiw = new RooRealVar("phiw","phiw",par_input[4],0,2*PI);
+        dm = new RooRealVar("dm","dm",0.507e12);
+        phiw = new RooRealVar("phiw","phiw",par_input[4],0,2*PI);
 
-    rp = new RooRealVar("rp","rp",par_input[5],0.001,0.2);
-    r0 = new RooRealVar("r0","r0",par_input[6],0.001,0.2);
-    rt = new RooRealVar("rt","rt",par_input[7],0.001,0.2); /// eq. (100) in BN419 approximates this
+        rp = new RooRealVar("rp","rp",par_input[5],0.001,0.2);
+        r0 = new RooRealVar("r0","r0",par_input[6],0.001,0.2);
+        rt = new RooRealVar("rt","rt",par_input[7],0.001,0.2); /// eq. (100) in BN419 approximates this
 
-    /// s is strong phase; delta_polarization in BN419
-    sp = new RooRealVar("sp","sp",par_input[8],-3*PI,3*PI);
-    s0 = new RooRealVar("s0","s0",par_input[9],-3*PI,3*PI);
-    st = new RooRealVar("st","st",par_input[10],-3*PI,3*PI);
+        /// s is strong phase; delta_polarization in BN419
+        sp = new RooRealVar("sp","sp",par_input[8],-3*PI,3*PI);
+        s0 = new RooRealVar("s0","s0",par_input[9],-3*PI,3*PI);
+        st = new RooRealVar("st","st",par_input[10],-3*PI,3*PI);
 
-    pdf_a = new DSRhoPDF("pdf_a","pdf_a","a",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
-    pdf_b = new DSRhoPDF("pdf_b","pdf_b","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
-    pdf_ab = new DSRhoPDF("pdf_ab","pdf_ab","ab",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
-    pdf_bb = new DSRhoPDF("pdf_bb","pdf_bb","bb",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+        pdf_a = new DSRhoPDF("pdf_a","pdf_a","a",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+        pdf_b = new DSRhoPDF("pdf_b","pdf_b","b",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+        pdf_ab = new DSRhoPDF("pdf_ab","pdf_ab","ab",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
+        pdf_bb = new DSRhoPDF("pdf_bb","pdf_bb","bb",*tht,*thb,*phit,*dt,*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt,*sp,*s0,*st);
 
-    simPdf = new RooSimultaneous("simPdf","simPdf",*decType);
-    simPdf->addPdf(*pdf_a,"a");
-    simPdf->addPdf(*pdf_ab,"ab");
-    simPdf->addPdf(*pdf_b,"b");
-    simPdf->addPdf(*pdf_bb,"bb");
+        pdf_sim = new RooSimultaneous("pdf_sim","pdf_sim",*decType);
+        pdf_sim->addPdf(*pdf_a,"a");
+        pdf_sim->addPdf(*pdf_ab,"ab");
+        pdf_sim->addPdf(*pdf_b,"b");
+        pdf_sim->addPdf(*pdf_bb,"bb");
 
-    parameters = new RooArgSet(*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt);
-    parameters->add(*sp);
-    parameters->add(*s0);
-    parameters->add(*st);
+        parameters = new RooArgSet(*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt);
+        parameters->add(*sp);
+        parameters->add(*s0);
+        parameters->add(*st);
 
-    variables = new RooArgList(*tht,*thb,*phit,*dt,*decType);
+        variables = new RooArgList(*tht,*thb,*phit,*dt,*decType);
+    } else {
+        pdf_tindep = new DSRhoPDFTIndep("pdf_tindep","pdf_tindep",*tht,*thb,*phit,*ap,*apa,*a0,*ata);
+        parameters = new RooArgSet(*ap,*apa,*a0,*ata);
+        variables = new RooArgList(*tht,*thb,*phit);
+    }
 
     /// numFitParameters holds # of NON-constant fit parameters
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
@@ -140,7 +148,8 @@ FitterTrans::~FitterTrans()
     delete pdf_b;
     delete pdf_ab;
     delete pdf_bb;
-    delete simPdf;
+    delete pdf_tindep;
+    delete pdf_sim;
     delete parameters;
     delete fitParameters;
 }
@@ -148,8 +157,16 @@ FitterTrans::~FitterTrans()
 Int_t FitterTrans::Fit()
 {
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
-    result = simPdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),\
-                           RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(4));
+
+    RooAbsPdf* pdf;
+    if (time_dependent) {
+        pdf = pdf_sim;
+    } else {
+        pdf = pdf_tindep;
+    }
+    printf("*********** cpus = %i *********\n", num_CPUs);
+    result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),\
+                           RooFit::Minos(0),RooFit::Hesse(1),RooFit::Strategy(1),RooFit::NumCPU(num_CPUs));
 
     const TMatrixDSym& cor = result->correlationMatrix();
     result->Print();
@@ -242,7 +259,7 @@ Int_t FitterTrans::ComputeChi2(const char* type)
     else if (strcmp(type,"ab") == 0)  chi2Var = new RooChi2Var("chi2Var","chi2Var",*pdf_ab,*dataSet_binned);
     else if (strcmp(type,"bb") == 0)  chi2Var = new RooChi2Var("chi2Var","chi2Var",*pdf_bb,*dataSet_binned);
 
-	//chi2Var = new RooChi2Var("chi2Var","chi2Var",*simPdf,*dataSet_binned);
+	//chi2Var = new RooChi2Var("chi2Var","chi2Var",*pdf_sim,*dataSet_binned);
 
 	RooRealVar* ndof     = new RooRealVar("ndof","number of degrees of freedom",0);
 	RooRealVar* chi2red  = new RooRealVar("chi2red","reduced chi^2",0);
@@ -271,12 +288,12 @@ Double_t FitterTrans::GetChi2(const char* type)
     //if(dataSet_binned == NULL)
         CreateBinnedDataSet(type);
 
-    DSRhoPDF* pdf = 0;
+    DSRhoPDF* pdf_temp = 0;
 
-    if(strcmp(type,"a") == 0)       pdf = pdf_a;
-    else if(strcmp(type,"b") == 0)  pdf = pdf_b;
-    else if(strcmp(type,"ab") == 0) pdf = pdf_ab;
-    else if(strcmp(type,"bb") == 0) pdf = pdf_bb;
+    if(strcmp(type,"a") == 0)       pdf_temp = pdf_a;
+    else if(strcmp(type,"b") == 0)  pdf_temp = pdf_b;
+    else if(strcmp(type,"ab") == 0) pdf_temp = pdf_ab;
+    else if(strcmp(type,"bb") == 0) pdf_temp = pdf_bb;
 
     Double_t binVolume = tht->getBinWidth(0)*thb->getBinWidth(0)*phit->getBinWidth(0)*dt->getBinWidth(0);
     Int_t numBins = dataSet_binned->numEntries();
@@ -301,11 +318,11 @@ Double_t FitterTrans::GetChi2(const char* type)
                         continue;
                     }
 
-                    v = pdf->getVal(RooArgSet(*tht,*thb,*phit,*dt))*binVolume*binnedNumEntries;
+                    v = pdf_temp->getVal(RooArgSet(*tht,*thb,*phit,*dt))*binVolume*binnedNumEntries;
 
                     if(((n-v)*(n-v)/v) > 1)
                     {
-                        v = GetVPrecise(pdf);
+                        v = GetVPrecise(pdf_temp);
                         numVPrecise++;
                     }
 
@@ -337,7 +354,7 @@ Double_t FitterTrans::GetChi2(const char* type)
 
 Double_t FitterTrans::GetVPrecise(DSRhoPDF* pdf)
 {
-    /// The pdf seems to be varying quite rapidly at some places, so the approximation of constant pdf in a voxel is sometimes bad.
+    /// The pdf seems to be varying quite rapidly at some places, so the approximation of constant pdf_temp in a voxel is sometimes bad.
     /// This function gives a better approximation of a pdf value in a voxel by averaging through multiple points inside it.
 
     Double_t v = 0;
@@ -535,7 +552,7 @@ void FitterTrans::SaveResiduals()
         c_residuals->SaveAs(path);
     }
 
-    DSRhoPDF* pdf = 0;
+    DSRhoPDF* pdf_temp = 0;
     /// Loop for dt_{a,ab,b,bb}
     for(int i = 3; i < 7; i++)
     {
@@ -545,22 +562,22 @@ void FitterTrans::SaveResiduals()
         {
         case 3:
             type = "a";
-            pdf = pdf_a;
+            pdf_temp = pdf_a;
             break;
 
         case 4:
             type = "ab";
-            pdf = pdf_ab;
+            pdf_temp = pdf_ab;
             break;
 
         case 5:
             type = "b";
-            pdf = pdf_b;
+            pdf_temp = pdf_b;
             break;
 
         case 6:
             type = "bb";
-            pdf = pdf_bb;
+            pdf_temp = pdf_bb;
             break;
 
         default:
@@ -597,7 +614,7 @@ void FitterTrans::SaveResiduals()
 
             n = dataSet_binned_1D->weight(RooArgSet(*dt),0);
             if(n <= 10) continue;
-            v = GetVPrecise1D(3,pdf,dataSet_reduced);
+            v = GetVPrecise1D(3,pdf_temp,dataSet_reduced);
 
             h2_residual[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
             h1_residual_bar[i]->Fill(dt->getVal(),(n-v)/sqrt(n));
@@ -688,16 +705,16 @@ Double_t FitterTrans::SaveChi2Maps(const char* type) {
     Int_t var3_bins = phit_bins;
     Int_t var4_bins = dt_bins;
 
-    DSRhoPDF* pdf = 0;
+    DSRhoPDF* pdf_temp = 0;
 
     TFile* file = new TFile("plots/plots.root","RECREATE");
     TCanvas* c2 = new TCanvas("c2","c2",800,600);
     TString path;
 
-    if(strcmp(type,"a") == 0)       pdf = pdf_a;
-    else if(strcmp(type,"b") == 0)  pdf = pdf_b;
-    else if(strcmp(type,"ab") == 0) pdf = pdf_ab;
-    else if(strcmp(type,"bb") == 0) pdf = pdf_bb;
+    if(strcmp(type,"a") == 0)       pdf_temp = pdf_a;
+    else if(strcmp(type,"b") == 0)  pdf_temp = pdf_b;
+    else if(strcmp(type,"ab") == 0) pdf_temp = pdf_ab;
+    else if(strcmp(type,"bb") == 0) pdf_temp = pdf_bb;
 
     //if(dataSet_binned == NULL)
     CreateBinnedDataSet(type);
@@ -724,10 +741,10 @@ Double_t FitterTrans::SaveChi2Maps(const char* type) {
                     n = dataSet_binned->weight(RooArgSet(*var1,*var2,*var3,*var4),0);
                     //if(n == 0) continue;
                     if(n == 0) continue;
-                    v = pdf->getVal(RooArgSet(*var1,*var2,*var3,*var4))*binVolume*binnedNumEntries;
+                    v = pdf_temp->getVal(RooArgSet(*var1,*var2,*var3,*var4))*binVolume*binnedNumEntries;
 
                     if(((n-v)*(n-v)/v) > 1) {
-                        v = GetVPrecise(pdf);
+                        v = GetVPrecise(pdf_temp);
                     }
 
                     dchi2 = (n-v)*(n-v)/v;
@@ -879,7 +896,7 @@ void FitterTrans::SaveNllPlot(RooRealVar* var)
 
     TH1F h1_nll(name,name,steps,var->getMin(),var->getMax());
     RooAbsReal* nll;
-    nll = simPdf->createNLL(*dataSet,RooFit::NumCPU(4));
+    nll = pdf_sim->createNLL(*dataSet,RooFit::NumCPU(4));
 
     for(Int_t i = 0; i < steps; i++)
     {
@@ -920,7 +937,7 @@ void FitterTrans::SaveNllPlot(RooRealVar* var1, RooRealVar* var2)
 
     TH2F h2_nll(name,name,steps1,var1->getMin(),var1->getMax(),steps2,var2->getMin(),var2->getMax());
     RooAbsReal* nll;
-    nll = simPdf->createNLL(*dataSet,RooFit::NumCPU(2));
+    nll = pdf_sim->createNLL(*dataSet,RooFit::NumCPU(2));
     for(Int_t i = 0; i < steps1; i++)
     {
         for(Int_t j = 0; j < steps2; j++)
@@ -950,36 +967,37 @@ void FitterTrans::SaveNllPlot(RooRealVar* var1, RooRealVar* var2)
 
 void FitterTrans::SaveParameters(char* file)
 {
-
-    /// The next 2 lines enable getting category items' names and therefore reduced datasets in a loop
     const RooArgSet* args = dataSet->get();
-    const RooCategory* cat = (RooCategory*)args->find("decType");
-    RooDataSet* datacut;
     RooPlot* frame = 0;
 
-    const Int_t numParameters = 43;
+    const Int_t numParameters = time_dependent ? 39 : 18;
     Double_t* parameters = new Double_t[numParameters];
 
-    const Int_t org_pdf_type = pdf_a->getType();
+    // if (time_dependent) {
+    //     /// The next 2 lines enable getting category items' names and therefore reduced datasets in a loop
+    //     const RooCategory* cat = (RooCategory*)args->find("decType");
+    //     RooDataSet* datacut;
+    //     const Int_t org_pdf_type = pdf_a->getType();
 
-    /// Getting 1D chi^2 for all 4 decay types
-    for(int i = 1; i <= 4; i++)
-    {
-        frame = dt->frame();
-        TString type = (char*)cat->lookupType(i)->GetName();
-        TString cut = "decType==decType::" + type;
-        datacut = (RooDataSet*)dataSet->reduce(*dt,cut);
-        datacut->plotOn(frame,RooFit::Name("data"));
+    //     /// Getting 1D chi^2 for all 4 decay types
+    //     for(int i = 1; i <= 4; i++)
+    //     {
+    //         frame = dt->frame();
+    //         TString type = (char*)cat->lookupType(i)->GetName();
+    //         TString cut = "decType==decType::" + type;
+    //         datacut = (RooDataSet*)dataSet->reduce(*dt,cut);
+    //         datacut->plotOn(frame,RooFit::Name("data"));
 
-        pdf_a->setType(i);
-        pdf_a->plotOn(frame,RooFit::Project(RooArgSet(*tht,*thb,*phit)));
+    //         pdf_a->setType(i);
+    //         pdf_a->plotOn(frame,RooFit::Project(RooArgSet(*tht,*thb,*phit)));
 
-        parameters[i-1] = frame->chiSquare(11);
+    //         parameters[i-1] = frame->chiSquare(11);
 
-        delete frame;
-    }
+    //         delete frame;
+    //     }
 
-    pdf_a->setType(org_pdf_type);
+    //     pdf_a->setType(org_pdf_type);
+    // }
 
     FILE* pFile;
     pFile = fopen (file,"w");
@@ -990,79 +1008,84 @@ void FitterTrans::SaveParameters(char* file)
         return;
     }
 
-    parameters[4] = par_input[0];
-    parameters[5] = ap->getVal();
-    parameters[6] = ap->getError();
-    parameters[7] = par_input[1];
-    parameters[8] = apa->getVal();
-    parameters[9] = apa->getError();
-    parameters[10] = par_input[2];
-    parameters[11] = a0->getVal();
-    parameters[12] = a0->getError();
-    parameters[13] = 0;
-    parameters[14] = a0a->getVal();
-    parameters[15] = a0a->getError();
-    parameters[16] = sqrt(1-par_input[0]*par_input[0]-par_input[2]*par_input[2]);
-    parameters[17] = at->getVal();
+    parameters[0] = par_input[0];
+    parameters[1] = ap->getVal();
+    parameters[2] = ap->getError();
+    parameters[3] = par_input[1];
+    parameters[4] = apa->getVal();
+    parameters[5] = apa->getError();
+    parameters[6] = par_input[2];
+    parameters[7] = a0->getVal();
+    parameters[8] = a0->getError();
+    parameters[9] = 0;
+    parameters[10] = a0a->getVal();
+    parameters[11] = a0a->getError();
+    parameters[12] = sqrt(1-par_input[0]*par_input[0]-par_input[2]*par_input[2]);
+    parameters[13] = at->getVal();
     if (result == 0){
-        parameters[18] = 0;
+        parameters[14] = 0;
     }else{
-        parameters[18] = at->getPropagatedError(*result);
+        parameters[14] = at->getPropagatedError(*result);
     }
-    parameters[19] = par_input[3];
-    parameters[20] = ata->getVal();
-    parameters[21] = ata->getError();
-    parameters[22] = par_input[4];
-    parameters[23] = phiw->getVal();
-    parameters[24] = phiw->getError();
-    parameters[25] = par_input[5];
-    parameters[26] = rp->getVal();
-    parameters[27] = rp->getError();
-    parameters[28] = par_input[6];
-    parameters[29] = r0->getVal();
-    parameters[30] = r0->getError();
-    parameters[31] = par_input[7];
-    parameters[32] = rt->getVal();
-    parameters[33] = rt->getError();
-    parameters[34] = par_input[8];
-    /// To prevent the fitter from becoming stuck at the limit of strong phase
-    /// range, the range has been extended from the [-PI,PI] interval.
-    /// This is kosher as the strong phase is of course 2*PI periodic.
-    /// The following code ensures the final result is in the [-PI,PI] interval.
-    if(sp->getVal() > PI){
-        sp->setVal(sp->getVal()-2*PI);
-    }else if(sp->getVal() < -PI){
-        sp->setVal(sp->getVal()+2*PI);
+    parameters[15] = par_input[3];
+    parameters[16] = ata->getVal();
+    parameters[17] = ata->getError();
+
+    if (time_dependent) {
+        parameters[18] = par_input[4];
+        parameters[19] = phiw->getVal();
+        parameters[20] = phiw->getError();
+        parameters[21] = par_input[5];
+        parameters[22] = rp->getVal();
+        parameters[23] = rp->getError();
+        parameters[24] = par_input[6];
+        parameters[25] = r0->getVal();
+        parameters[26] = r0->getError();
+        parameters[27] = par_input[7];
+        parameters[28] = rt->getVal();
+        parameters[29] = rt->getError();
+        parameters[30] = par_input[8];
+        /// To prevent the fitter from becoming stuck at the limit of strong phase
+        /// range, the range has been extended from the [-PI,PI] interval.
+        /// This is kosher as the strong phase is of course 2*PI periodic.
+        /// The following code ensures the final result is in the [-PI,PI] interval.
+        if(sp->getVal() > PI){
+            sp->setVal(sp->getVal()-2*PI);
+        }else if(sp->getVal() < -PI){
+            sp->setVal(sp->getVal()+2*PI);
+        }
+        if(s0->getVal() > PI){
+            s0->setVal(s0->getVal()-2*PI);
+        }else if(s0->getVal() < -PI){
+            s0->setVal(s0->getVal()+2*PI);
+        }
+        if(st->getVal() > PI){
+            st->setVal(st->getVal()-2*PI);
+        }else if(st->getVal() < -PI){
+            st->setVal(st->getVal()+2*PI);
+        }
+        parameters[31] = sp->getVal();
+        parameters[32] = sp->getError();
+        parameters[33] = par_input[9];
+        parameters[34] = s0->getVal();
+        parameters[35] = s0->getError();
+        parameters[36] = par_input[10];
+        parameters[37] = st->getVal();
+        parameters[38] = st->getError();
     }
-    if(s0->getVal() > PI){
-        s0->setVal(s0->getVal()-2*PI);
-    }else if(s0->getVal() < -PI){
-        s0->setVal(s0->getVal()+2*PI);
-    }
-    if(st->getVal() > PI){
-        st->setVal(st->getVal()-2*PI);
-    }else if(st->getVal() < -PI){
-        st->setVal(st->getVal()+2*PI);
-    }
-    parameters[35] = sp->getVal();
-    parameters[36] = sp->getError();
-    parameters[37] = par_input[9];
-    parameters[38] = s0->getVal();
-    parameters[39] = s0->getError();
-    parameters[40] = par_input[10];
-    parameters[41] = st->getVal();
-    parameters[42] = st->getError();
-    Int_t separators[numParameters] = {0,0,0,2, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,2, 0,0,2, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,0};
+
+    Int_t separators[] = {0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,2, 0,0,2, 0,0,1, 0,0,1, 0,0,2, 0,0,1, 0,0,1, 0,0,2};
 
     for(Int_t i = 0; i < numParameters; i++)
     {
         /// These parameters can be both positive and negative therefore the
         /// added + in front of positive numbers keeps the columns aligned
-        if(i==34||i==35||i==37||i==38||i==40||i==41){
+        if(i==30||i==31||i==33||i==34||i==36||i==37){
             fprintf(pFile,"%+.5f ",parameters[i]);
         } else {
             fprintf(pFile,"%.5f ",parameters[i]);
         }
+        if (i == numParameters - 1) continue;
         if (separators[i] == 1)
             fprintf(pFile,"| ");
         else if (separators[i] == 2)

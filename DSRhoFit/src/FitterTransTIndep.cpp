@@ -20,9 +20,8 @@
 #include "TCanvas.h"
 #include "TFile.h"
 
-FitterTransTIndep::FitterTransTIndep(RooDataSet* outer_dataSet, Double_t* outer_par_input)
+FitterTransTIndep::FitterTransTIndep(Double_t* outer_par_input)
 {
-    dataSet = outer_dataSet;
     for(int i = 0; i < 11; i++)
         par_input[i] = outer_par_input[i];
 
@@ -68,6 +67,8 @@ FitterTransTIndep::FitterTransTIndep(RooDataSet* outer_dataSet, Double_t* outer_
 
     parameters = new RooArgSet(*ap,*apa,*a0,*ata);
 
+    variables = new RooArgList(*tht,*thb,*phit);
+
     /// numFitParameters holds # of NON-constant fit parameters
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
 
@@ -103,8 +104,12 @@ Int_t FitterTransTIndep::Fit()
 {
     numFitParameters = (parameters->selectByAttrib("Constant",kFALSE))->getSize();
     //result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true));//,RooFit::NumCPU(2));
-    result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minos(),RooFit::Hesse(),RooFit::Strategy(1));//,RooFit::NumCPU(2));
+    result = pdf->fitTo(*dataSet,RooFit::Save(),RooFit::Timer(true),RooFit::Minos(false),RooFit::Hesse(),RooFit::Strategy(1),RooFit::NumCPU(4));
     //result->Print();
+}
+
+void FitterTransTIndep::ReadDataSet(const char* file) {
+    dataSet = RooDataSet::read(file,*variables);
 }
 
 void FitterTransTIndep::CreateBinnedDataSet()
@@ -704,6 +709,68 @@ void FitterTransTIndep::GetRecoveredParameters(Int_t& numParameters, Double_t** 
     parameters[16] = par_input[3];
 
     *recoveredParameters = parameters;
+}
+
+void FitterTransTIndep::SaveParameters(char* file)
+{
+
+    /// The next 2 lines enable getting category items' names and therefore reduced datasets in a loop
+    const RooArgSet* args = dataSet->get();
+    RooPlot* frame = 0;
+
+    const Int_t numParameters = 18;
+    Double_t* parameters = new Double_t[numParameters];
+
+    FILE* pFile;
+    pFile = fopen (file,"w");
+    if (pFile == NULL)
+    {
+        printf("ERROR: couldn't open file %s for writing!\n",file);
+        delete[] parameters;
+        return;
+    }
+
+    parameters[0] = par_input[0];
+    parameters[1] = ap->getVal();
+    parameters[2] = ap->getError();
+    parameters[3] = par_input[1];
+    parameters[4] = apa->getVal();
+    parameters[5] = apa->getError();
+    parameters[6] = par_input[2];
+    parameters[7] = a0->getVal();
+    parameters[8] = a0->getError();
+    parameters[9] = 0;
+    parameters[10] = a0a->getVal();
+    parameters[11] = a0a->getError();
+    parameters[12] = sqrt(1-par_input[0]*par_input[0]-par_input[2]*par_input[2]);
+    parameters[13] = at->getVal();
+    if (result == 0){
+        parameters[14] = 0;
+    }else{
+        parameters[14] = at->getPropagatedError(*result);
+    }
+    parameters[15] = par_input[3];
+    parameters[16] = ata->getVal();
+    parameters[17] = ata->getError();
+    Int_t separators[numParameters] = {0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,0};
+
+    for(Int_t i = 0; i < numParameters; i++)
+    {
+        /// These parameters can be both positive and negative therefore the
+        /// added + in front of positive numbers keeps the columns aligned
+        if(i==34||i==35||i==37||i==38||i==40||i==41){
+            fprintf(pFile,"%+.5f ",parameters[i]);
+        } else {
+            fprintf(pFile,"%.5f ",parameters[i]);
+        }
+        if (separators[i] == 1)
+            fprintf(pFile,"| ");
+        else if (separators[i] == 2)
+            fprintf(pFile,"|| ");
+    }
+    fprintf(pFile,"\n");
+    fclose (pFile);
+    delete[] parameters;
 }
 
 RooDataHist* FitterTransTIndep::GetBinnedDataSet()
