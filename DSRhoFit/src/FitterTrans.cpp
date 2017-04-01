@@ -1,3 +1,6 @@
+#include "FitterTrans.h"
+
+// ROOT includes
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"
 #include "RooCategory.h"
@@ -8,19 +11,20 @@
 #include "RooChi2Var.h"
 #include "RooSimultaneous.h"
 #include "RooPlot.h"
+#include "RooHist.h"
 #include "RooFitResult.h"
 
 #include "TMath.h"
 #include "TIterator.h"
 #include "TLine.h"
-
-#include "DSRhoPDF.h"
-#include "FitterTrans.h"
-
 #include "TH1D.h"
 #include "TH2F.h"
 #include "TCanvas.h"
 #include "TFile.h"
+
+// Local includes
+#include "DSRhoPDF.h"
+#include "DSRhoPDFTIndep.h"
 
 FitterTrans::FitterTrans(Double_t* outer_par_input, bool outer_time_dependent)
 {
@@ -98,6 +102,8 @@ FitterTrans::FitterTrans(Double_t* outer_par_input, bool outer_time_dependent)
         pdf_sim->addPdf(*pdf_b,"b");
         pdf_sim->addPdf(*pdf_bb,"bb");
 
+        pdf = pdf_sim;
+
         parameters = new RooArgSet(*ap,*apa,*a0,*ata,*phiw,*rp,*r0,*rt);
         parameters->add(*sp);
         parameters->add(*s0);
@@ -106,6 +112,8 @@ FitterTrans::FitterTrans(Double_t* outer_par_input, bool outer_time_dependent)
         variables = new RooArgList(*tht,*thb,*phit,*dt,*decType);
     } else {
         pdf_tindep = new DSRhoPDFTIndep("pdf_tindep","pdf_tindep",*tht,*thb,*phit,*ap,*apa,*a0,*ata);
+        pdf = pdf_tindep;
+        
         parameters = new RooArgSet(*ap,*apa,*a0,*ata);
         variables = new RooArgList(*tht,*thb,*phit);
     }
@@ -1220,8 +1228,121 @@ void FitterTrans::SaveNllPlot(const char* par1, const char* par2)
         printf("ERROR: Parameter %s doesn't exist! Can't save Nll plot.\n",par2);
 }
 
+void FitterTrans::SaveVarPlot(RooRealVar* var) {
 
+    const TString dir = "plots/";
+    const TString format = ".png";
+    TString path;
+    TString name;
 
+    path = dir + "projections.root";
+
+    if (!plot_output_file) {
+        plot_output_file = new TFile(path,"RECREATE");
+    }
+
+    TCanvas* c1 = new TCanvas("c1","c1",800,800);
+    c1->Divide(0,2);
+    c1->cd(1)->SetPad(0., 0.15, 1, 1);
+    c1->cd(2)->SetPad(0., 0., 1, 0.2 );
+    RooPlot* frame = 0;
+
+    /// Create a binned pdf with the same number of events as the data, so that the 2d plots of pdf
+    /// and data are the same scale
+    //printf("Generation of binned dataset starting...\n");
+    //RooDataHist* pdf_binned = pdf->generateBinned(RooArgSet(var1,var2,var3,dt),dataSet->numEntries(),kTRUE);
+    //printf("Generation of binned dataset finished\n");
+
+    /// Saving simple projections on each of the variables
+    name = "proj_";
+    name += var->GetName();
+    frame = var->frame();
+    dataSet->plotOn(frame,RooFit::Name("data"));
+    RooAbsPdf* pdf_temp = time_dependent ? static_cast<RooAbsPdf*>(pdf_a) : static_cast<RooAbsPdf*>(pdf_tindep);
+    pdf_temp->plotOn(frame);
+    frame->SetName(name);
+    c1->cd(1);
+    frame->Draw();
+
+    DrawResidualFrame(frame,*var,c1,2);
+
+    frame->Write();
+    path = dir + name + format;
+    c1->SaveAs(path);
+    delete frame;
+}
+
+void FitterTrans::DrawResidualFrame(RooPlot* frame, RooRealVar var, TCanvas* canvas, Int_t padNumber) {
+        RooHist* hpull = frame->pullHist();
+        RooPlot* residual_frame = var.frame();
+        residual_frame->addPlotable(hpull,"P") ;
+        residual_frame->SetTitle("");
+        residual_frame->SetMinimum(-5) ;
+        residual_frame->SetMaximum(+5) ;
+        residual_frame->GetYaxis()->SetNdivisions(5,kFALSE);
+        residual_frame->GetYaxis()->SetLabelSize(0.1);
+        residual_frame->GetXaxis()->SetLabelSize(0);
+        residual_frame->GetXaxis()->SetTitleSize(0);
+        canvas->cd(padNumber);
+        residual_frame->Draw();
+        residual_frame->Write();
+
+        TLine* midLine;
+        double xMin = residual_frame->GetXaxis()->GetXmin();
+        double xMax = residual_frame->GetXaxis()->GetXmax();
+        midLine = new TLine( xMin,  0., xMax,  0. );
+        midLine->SetLineColor( kRed );
+        midLine->Draw("same");
+}
+
+void FitterTrans::SaveDtPlots() {
+
+    const TString dir = "plots/";
+    const TString format = ".png";
+    TString path;
+    TString name;
+
+    path = dir + "projections.root";
+
+    if (!plot_output_file) {
+        plot_output_file = new TFile(path,"RECREATE");
+    }
+
+    TCanvas* c1 = new TCanvas("c1","c1",800,800);
+    c1->Divide(0,2);
+    c1->cd(1)->SetPad(0., 0.15, 1, 1);
+    c1->cd(2)->SetPad(0., 0., 1, 0.2 );
+    RooPlot* frame = 0;
+
+    // The next 2 lines enable getting category items' names and therefore reduced datasets in a loop
+    const RooArgSet* args = dataSet->get();
+    const RooCategory* cat = (RooCategory*)args->find("decType");
+    RooDataSet* datacut;
+
+    /// Saving dt plots for all 4 decay types
+    for(int i = 1; i <= 4; i++) {
+        frame = dt->frame();
+        TString type = (char*)cat->lookupType(i)->GetName();
+        TString cut = "decType==decType::" + type;
+        name = "proj_" + (dt->GetName() + ("_" + type));
+        datacut = (RooDataSet*)dataSet->reduce(*dt,cut);
+        datacut->plotOn(frame,RooFit::Name("data"));
+
+        pdf_a->setType(i);
+        pdf_a->plotOn(frame,RooFit::Project(RooArgSet(*tht,*thb,*phit)));
+        frame->SetName(name);
+        c1->cd(1);
+        frame->Draw();
+        frame->Write();
+
+        DrawResidualFrame(frame,*dt,c1,2);
+
+        path = dir + name + format;
+        c1->SaveAs(path);
+
+        delete frame;
+    }
+}
 
 
 

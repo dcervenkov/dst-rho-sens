@@ -2,6 +2,8 @@
 #define FITTERTRANS_H
 
 // ROOT includes
+#include "TFile.h"
+#include "TCanvas.h"
 #include "RooSimultaneous.h"
 #include "RooChi2Var.h"
 
@@ -38,10 +40,14 @@ class FitterTrans
         void GenerateDataSet(Int_t numEvents);
         void ReadDataSet(const char* file);
         void SetNumCPUs(unsigned int CPUs) {num_CPUs = CPUs;};
+        void SaveVarPlot(RooRealVar* var);
+        void SaveDtPlots();
+        bool IsTimeDependent() {return time_dependent;};
 
     protected:
     private:
         unsigned int num_CPUs = 1;
+        TFile* plot_output_file = NULL;
 
         void SaveNllPlot(RooRealVar* var);
         void SaveNllPlot(RooRealVar* var1, RooRealVar* var2);
@@ -51,6 +57,8 @@ class FitterTrans
         Double_t GetVPrecise(DSRhoPDF* pdf);
         Double_t GetVPrecise1D(const int i,DSRhoPDF* pdf,RooDataSet* loc_dataset);
         Double_t GetVPrecise1D(const int i,RooSimultaneous* spdf,RooDataSet* loc_dataset);
+
+        void DrawResidualFrame(RooPlot* frame, RooRealVar var, TCanvas* canvas, Int_t padNumber);
 
         RooDataSet* dataSet;
         RooDataSet* dataSet_reduced;
@@ -106,6 +114,8 @@ class FitterTrans
         RooRealVar* rt;
         RooRealVar* rp;
         RooRealVar* r0;
+
+        RooAbsPdf* pdf;
 
         DSRhoPDFTIndep* pdf_tindep;
 

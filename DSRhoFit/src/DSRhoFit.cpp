@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
 
 int ProcessTrans(FitterTrans* fitter, Int_t doFit, Int_t doPlot) {
     if(doFit) {
-        fitter->FixAllParameters();
+       fitter->FixAllParameters();
        fitter->FreeParameter("ap");
        fitter->FreeParameter("apa");
        fitter->FreeParameter("a0");
@@ -158,12 +158,16 @@ int ProcessTrans(FitterTrans* fitter, Int_t doFit, Int_t doPlot) {
         //fitter->SaveNllPlot("r0");
         //printf("mychi2 from SaveChi2Maps = %f\n",mychi2);
         // SavePlots(fitter->GetDataSet(),fitter->GetPdf(),*(fitter->GetTht()),*(fitter->GetThb()),*(fitter->GetPhit()),*(fitter->GetDt()));
+        fitter->SaveVarPlot(fitter->GetTht());
+        fitter->SaveVarPlot(fitter->GetThb());
+        fitter->SaveVarPlot(fitter->GetPhit());
+        if (fitter->IsTimeDependent()) {
+            fitter->SaveDtPlots(); 
+        }
     }
 
     return 0;
 }
-
-
 
 Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* pdf, RooRealVar var1, RooRealVar var2, RooRealVar var3) {
     /// Create a histogram from the pdf with the expected number of events with no statistical fluctuation
@@ -172,7 +176,6 @@ Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* 
     const Int_t var1_bins = 30;
     const Int_t var2_bins = 30;
     const Int_t var3_bins = 30;
-    const Int_t dt_bins = 50;
 
     Double_t mychi2 = 0;
     Double_t dchi2 = 0;
@@ -310,10 +313,10 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDFTIndep* pdf, const RooRealVar& var1,
         frame->SetName(name);
         c1->cd(1);
         frame->Draw();
+
+        // DrawResidualFrame(frame,vars[i],c1,2);
+
         frame->Write();
-
-        DrawResidualFrame(frame,vars[i],c1,2);
-
         path = dir + name + format;
         c1->SaveAs(path);
         delete frame;
@@ -392,29 +395,6 @@ void SavePlots(RooDataSet* dataSet, DSRhoPDFTIndep* pdf, const RooRealVar& var1,
 //    }
 
     file->Close();
-}
-
-void DrawResidualFrame(RooPlot* frame, RooRealVar var, TCanvas* canvas, Int_t padNumber) {
-        RooHist* hpull = frame->pullHist();
-        RooPlot* residual_frame = var.frame();
-        residual_frame->addPlotable(hpull,"P") ;
-        residual_frame->SetTitle("");
-        residual_frame->SetMinimum(-5) ;
-        residual_frame->SetMaximum(+5) ;
-        residual_frame->GetYaxis()->SetNdivisions(5,kFALSE);
-        residual_frame->GetYaxis()->SetLabelSize(0.1);
-        residual_frame->GetXaxis()->SetLabelSize(0);
-        residual_frame->GetXaxis()->SetTitleSize(0);
-        canvas->cd(padNumber);
-        residual_frame->Draw();
-        residual_frame->Write();
-
-        TLine* midLine;
-        double xMin = residual_frame->GetXaxis()->GetXmin();
-        double xMax = residual_frame->GetXaxis()->GetXmax();
-        midLine = new TLine( xMin,  0., xMax,  0. );
-        midLine->SetLineColor( kRed );
-        midLine->Draw("same");
 }
 
 void ConvertBetweenHelAndTrans(Double_t* par_input) {

@@ -29,6 +29,5 @@ Double_t SaveChi2Maps(RooDataHist* data_binned, Int_t numEvents, RooGenericPdf* 
 void SavePlots(RooDataSet* dataSet, RooAbsPdf* pdf, const RooRealVar& var1, const RooRealVar& var2, const RooRealVar& var3, RooRealVar& dt);
 void ConvertBetweenHelAndTrans(Double_t* par_input);
 Double_t Round(Double_t number, Int_t digits);
-void DrawResidualFrame(RooPlot* frame, RooRealVar var, TCanvas* canvas, Int_t padNumber);
 
 #endif /* DSRHOFIT_H_ */
