@@ -60,10 +60,10 @@ Double_t DSRhoPDFTIndep::evaluate() const
     Double_t at = sqrt(1-ap*ap-a0*a0);
 
     Double_t ap0r = ap*a0*cos(-apa+a0a);
-    Double_t ap0i = ap*a0*sin(-apa+a0a);
-    Double_t a0tr = a0*at*cos(-a0a+ata);
+    // Double_t ap0i = ap*a0*sin(-apa+a0a);
+    // Double_t a0tr = a0*at*cos(-a0a+ata);
     Double_t a0ti = a0*at*sin(-a0a+ata);
-    Double_t aptr = ap*at*cos(-apa+ata);
+    // Double_t aptr = ap*at*cos(-apa+ata);
     Double_t apti = ap*at*sin(-apa+ata);
 
     Double_t value = ap*ap*2*sin(tht)*sin(tht)*sin(tht)*sin(thb)*sin(thb)*sin(thb)*sin(phit)*sin(phit)+\
@@ -114,10 +114,10 @@ Double_t DSRhoPDFTIndep::analyticalIntegral(Int_t code, const char* rangeName) c
     Double_t at = sqrt(1-ap*ap-a0*a0);
 
     Double_t ap0r = ap*a0*cos(-apa+a0a);
-    Double_t ap0i = ap*a0*sin(-apa+a0a);
+    // Double_t ap0i = ap*a0*sin(-apa+a0a);
 //    Double_t a0tr = a0*at*cos(-a0a+ata);
 //    Double_t a0ti = a0*at*sin(-a0a+ata);
-    Double_t aptr = ap*at*cos(-apa+ata);
+    // Double_t aptr = ap*at*cos(-apa+ata);
     Double_t apti = ap*at*sin(-apa+ata);
 
 

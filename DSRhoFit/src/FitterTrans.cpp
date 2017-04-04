@@ -186,6 +186,7 @@ Int_t FitterTrans::Fit() {
     // TCanvas c1;
     // result->correlationHist()->Draw("colz");
     // c1.SaveAs("corr.gif");
+    return result->status();
 }
 
 void FitterTrans::ReadDataSet(const char* file) { 
@@ -291,6 +292,8 @@ Int_t FitterTrans::ComputeChi2(const char* type) {
 
     printf("%s:\tchi2 = %f\n%s:\tndof = %f\n%s:\tchi2red = %f\n%s:\tprob = %f\n\n", type,
            chi2Var->getVal(), type, ndof->getVal(), type, chi2red->getVal(), type, prob->getVal());
+
+    return chi2Var->getVal();
 }
 
 Double_t FitterTrans::GetChi2(const char* type) {
@@ -395,9 +398,6 @@ Double_t FitterTrans::GetVPrecise(DSRhoPDF* pdf) {
     Double_t phit_binmax = phit->getVal() + phit->getBinWidth(0) / 2;
     Double_t dt_binmin = dt->getVal() - dt->getBinWidth(0) / 2;
     Double_t dt_binmax = dt->getVal() + dt->getBinWidth(0) / 2;
-
-    Int_t numPasses = 0;
-    Int_t pass = 0;
 
     /// Using *_binmax - 0.001 because when one is at a boundary of e.g. thb, thb->getVal() <
     /// thb_binmax is never violated, even though it should be equal.
@@ -520,7 +520,6 @@ void FitterTrans::SaveResiduals() {
         /// are the same for all four decay types.
         RooDataHist* dataSet_binned_1D = new RooDataHist("dataSet_binned_1D", "dataSet_binned_1D",
                                                          RooArgSet(*vars[i]), *dataSet);
-        RooAbsReal* vr;
 
         for (*vars[i] = vars[i]->getMin() + vars[i]->getBinWidth(0) / 2;
              vars[i]->getVal() < vars[i]->getMax();
@@ -585,7 +584,7 @@ void FitterTrans::SaveResiduals() {
     DSRhoPDF* pdf_temp = 0;
     /// Loop for dt_{a,ab,b,bb}
     for (int i = 3; i < 7; i++) {
-        char* type;
+        const char* type;
 
         switch (i) {
             case 3:
@@ -1009,8 +1008,8 @@ void FitterTrans::SaveNllPlot(RooRealVar* var1, RooRealVar* var2) {
 }
 
 void FitterTrans::SaveParameters(char* file) {
-    const RooArgSet* args = dataSet->get();
-    RooPlot* frame = 0;
+    // const RooArgSet* args = dataSet->get();
+    // RooPlot* frame = 0;
 
     const Int_t numParameters = time_dependent ? 39 : 18;
     Double_t* parameters = new Double_t[numParameters];
