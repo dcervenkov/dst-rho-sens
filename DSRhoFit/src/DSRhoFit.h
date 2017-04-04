@@ -19,6 +19,8 @@ struct fitter_options {
     bool make_plots_set;
     bool fit;
     bool fit_set;
+    char* fix;
+    bool fix_set;
     int num_events;
     bool num_events_set;
 };

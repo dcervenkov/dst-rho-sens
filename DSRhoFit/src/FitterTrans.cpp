@@ -1,5 +1,9 @@
 #include "FitterTrans.h"
 
+// Standard includes
+#include <sstream>
+#include <string>
+
 // ROOT includes
 #include "Constants.h"
 #include "RooCategory.h"
@@ -1144,10 +1148,40 @@ RooDataSet* FitterTrans::GetReducedDataSet() {
     return dataSet_reduced;
 }
 
+bool FitterTrans::FixParameters(const char* pars) {
+    std::string input = pars;
+    std::istringstream ss(input);
+    std::string token;
+    std::vector<std::string> par_vector;
+
+    while (std::getline(ss, token, ',')) {
+        par_vector.push_back(token);
+    }
+
+    RooRealVar* rooPar = 0;
+    for (auto par : par_vector) {
+        bool par_not_found = true;
+        TIterator* parIter = parameters->createIterator();
+        while ((rooPar = (RooRealVar*)parIter->Next())) {
+            if (rooPar->GetName() == par) {
+                rooPar->setConstant();
+                par_not_found = false;
+            }
+        }
+        if (par_not_found) {
+            printf("ERROR: Parameter %s doesn't exist.\n", par.c_str());
+            return true;
+        }
+    }
+    return false;
+}
+
 void FitterTrans::FixAllParameters() {
     RooRealVar* rooPar = 0;
     TIterator* parIter = parameters->createIterator();
-    while (rooPar = (RooRealVar*)parIter->Next()) rooPar->setConstant();
+    while ((rooPar = (RooRealVar*)parIter->Next())) {
+        rooPar->setConstant();
+    }
 }
 
 void FitterTrans::FixParameter(const char* par) {

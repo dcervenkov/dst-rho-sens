@@ -95,6 +95,11 @@ int main(int argc, char* argv[]) {
     if (options.num_CPUs_set) fitter->SetNumCPUs(options.num_CPUs);
     if (options.make_plots_set) doPlot = options.make_plots;
     if (options.fit_set) doFit = options.fit;
+    if (options.fix_set) {
+        if (fitter->FixParameters(options.fix)) {
+            return 1;
+        }
+    }
 
     if (doFit == 3) {
         ConvertBetweenHelAndTrans(par_input);
@@ -119,18 +124,6 @@ int main(int argc, char* argv[]) {
 
 int ProcessTrans(FitterTrans* fitter, Int_t doFit, Int_t doPlot) {
     if (doFit) {
-        fitter->FixAllParameters();
-        fitter->FreeParameter("ap");
-        fitter->FreeParameter("apa");
-        fitter->FreeParameter("a0");
-        fitter->FreeParameter("ata");
-        // fitter->FreeParameter("phiw");
-        // fitter->FreeParameter("rp");
-        // fitter->FreeParameter("r0");
-        // fitter->FreeParameter("rt");
-        // fitter->FreeParameter("sp");
-        // fitter->FreeParameter("s0");
-        // fitter->FreeParameter("st");
         fitter->Fit();
         fitter->SaveParameters(outputFile);
     }
@@ -351,11 +344,12 @@ int ProcessCmdLineOptions(const int argc, char* const argv[], char**& optionless
                                     {"events", required_argument, 0, 'e'},
                                     {"time-independent", no_argument, 0, 'i'},
                                     {"fit", no_argument, 0, 'f'},
+                                    {"fix", required_argument, 0, 'x'},
                                     {"plot", no_argument, 0, 'p'},
                                     {"help", no_argument, 0, 'h'},
                                     {NULL, no_argument, NULL, 0}};
     int option_index = 0;
-    while ((c = getopt_long(argc, argv, "c:e:ifph", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "c:e:ifx:ph", long_options, &option_index)) != -1) {
         switch (c) {
             case 0:
                 printf("option %s", long_options[option_index].name);
@@ -378,6 +372,10 @@ int ProcessCmdLineOptions(const int argc, char* const argv[], char**& optionless
                 options.fit = true;
                 options.fit_set = true;
                 break;
+            case 'x':
+                options.fix = optarg;
+                options.fix_set = true;
+                break;
             case 'p':
                 options.make_plots = true;
                 options.make_plots_set = true;
@@ -390,6 +388,7 @@ int ProcessCmdLineOptions(const int argc, char* const argv[], char**& optionless
                 printf("-h, --help              display this text and exit\n");
                 printf("-p, --plot              create angular/dt plots\n");
                 printf("-f, --fit               fit\n");
+                printf("-x, --fix=ARG1,ARG2,... fix specified argument(s) to input values in the fit\n");
                 printf("-i, --time-independent  use time-independent PDF\n");
                 exit(0);
                 break;

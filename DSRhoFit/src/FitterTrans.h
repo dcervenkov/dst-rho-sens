@@ -31,6 +31,7 @@ class FitterTrans {
     RooDataSet* GetReducedDataSet();
     RooDataSet* GetDataSet() { return dataSet; };
     void FixAllParameters();
+    bool FixParameters(const char* pars);
     void FixParameter(const char* par);
     void FreeParameter(const char* par);
     void PrintParameter(const char* par);
